@@ -1,3 +1,6 @@
+import random
+import string
+
 from fastapi import UploadFile
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy import text
@@ -31,3 +34,17 @@ def is_valid_image(upload_file: UploadFile) -> bool:
 
 def format_user_fullname(user: User) -> str:
     return " ".join(name_part for name_part in [user.first_name, user.middle_name, user.last_name] if name_part).strip()
+
+
+def generate_mcr_like_string() -> str:
+    digit_count: int = random.choice([4, 5])
+    digits: str = "".join(random.choices(string.digits, k=digit_count))
+    suffix: str = random.choice(string.ascii_uppercase)
+    return "M" + digits + suffix
+
+
+def generate_unique_mcr_numbers(size: int) -> list[str]:
+    mcr_numbers: set[str] = set()
+    while len(mcr_numbers) < size:
+        mcr_numbers.add(generate_mcr_like_string())
+    return list(mcr_numbers)

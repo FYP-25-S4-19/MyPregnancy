@@ -1,10 +1,10 @@
-import React, { useState } from "react";
 import { View, TextInput, Button, StyleSheet, Text } from "react-native";
+import { MeData } from "@/src/shared/typesAndInterfaces";
+import useAuthStore from "@/src/shared/authStore";
+import React, { useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { router } from "expo-router";
-import useAuthStore from "@/src/shared/authStore";
 import api from "@/src/shared/api";
-import { MeData } from "@/src/shared/typesAndInterfaces";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -76,7 +76,6 @@ export default function LoginScreen() {
         returnKeyType="done"
         placeholderTextColor="#333"
       />
-
       <Button title="Login" onPress={handleLogin} />
     </View>
   );

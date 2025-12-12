@@ -16,6 +16,10 @@ interface DoctorPreviewData {
   is_liked: boolean;
 }
 
+interface ChannelCreationResponse {
+  channel_id: string;
+}
+
 export default function ConsultationsScreen() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -30,8 +34,14 @@ export default function ConsultationsScreen() {
     },
   });
 
-  const onChatPress = (doctorID: string): void => {
-    router.push(`/main/mother/chats`);
+  const onChatPress = async (doctorID: string): Promise<void> => {
+    try {
+      const res = await api.post("/stream/chat/channel", { doctor_id: doctorID });
+      const { channel_id }: ChannelCreationResponse = res.data;
+      router.push(`/main/mother/chats/${channel_id}`);
+    } catch (err) {
+      console.error("Channel error:", err);
+    }
   };
 
   return (

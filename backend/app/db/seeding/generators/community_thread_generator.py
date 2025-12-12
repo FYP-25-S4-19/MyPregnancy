@@ -4,25 +4,66 @@ from datetime import datetime
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app.db.db_schema import CommentLike, CommunityThread, PregnantWoman, ThreadComment, User
+from app.db.db_schema import (
+    CommentLike,
+    CommunityThread,
+    PregnantWoman,
+    ThreadCategory,
+    ThreadCategoryAssociation,
+    ThreadComment,
+    User,
+)
 
 
-class ForumContentGenerator:
+class CommunityThreadGenerator:
     @staticmethod
-    def generate_threads(db: Session, faker: Faker, all_users: list[User], count: int) -> list[CommunityThread]:
+    def generate_thread_categories(db: Session) -> list[ThreadCategory]:
+        print("Generating thread categories....")
+        category_names: list[str] = [
+            "Pregnancy Tips",
+            "Nutrition",
+            "Exercise",
+            "Mental Health",
+            "Labor and Delivery",
+            "Postpartum Care",
+            "Sleep",
+            "Lifestyle",
+            "Parenting",
+            "Support",
+            "Self Care",
+        ]
+        thread_categories: list[ThreadCategory] = [ThreadCategory(label=cat_name) for cat_name in category_names]
+        db.add_all(thread_categories)
+        return thread_categories
+
+    @staticmethod
+    def generate_threads(
+        db: Session, faker: Faker, all_users: list[User], all_thread_categories: list[ThreadCategory], count: int
+    ) -> list[CommunityThread]:
         print("Generating community threads....")
 
         all_community_threads: list[CommunityThread] = []
         for _ in range(count):
-            user: User = random.choice(all_users)
-            thread = CommunityThread(
-                creator=user,
+            random_user: User = random.choice(all_users)
+            new_thread = CommunityThread(
+                creator=random_user,
                 title=faker.sentence(nb_words=random.randint(3, 9)),
                 content=faker.paragraph(nb_sentences=random.randint(3, 10)),
-                posted_at=faker.date_time_between(start_date=user.created_at, end_date=datetime.now()),
+                posted_at=faker.date_time_between(start_date=random_user.created_at, end_date=datetime.now()),
             )
-            all_community_threads.append(thread)
-            db.add(thread)
+
+            categories_sample: list[ThreadCategory] = random.sample(
+                population=all_thread_categories, k=random.randint(1, len(all_thread_categories) // 3)
+            )
+            for category_from_sample in categories_sample:
+                assoc_obj = ThreadCategoryAssociation(
+                    thread=new_thread,
+                    category=category_from_sample,
+                )
+                new_thread.thread_category_associations.append(assoc_obj)
+
+            all_community_threads.append(new_thread)
+            db.add(new_thread)
         return all_community_threads
 
     @staticmethod

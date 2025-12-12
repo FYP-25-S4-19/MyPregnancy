@@ -1,5 +1,3 @@
-import random
-
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -10,9 +8,7 @@ from app.db.db_schema import (
     AccountCreationRequestStatus,
     Admin,
     DoctorAccountCreationRequest,
-    DoctorQualificationOption,
     NutritionistAccountCreationRequest,
-    NutritionistQualificationOption,
 )
 from tests.conftest import CreateDoctorCallable
 
@@ -29,7 +25,6 @@ async def test_get_account_creation_requests_success(
         last_name="Request",
         email="doc.request@test.com",
         password="password",
-        qualification_option=DoctorQualificationOption.MD,
         qualification_img_key="key1",
     )
     nutritionist_req = NutritionistAccountCreationRequest(
@@ -37,7 +32,6 @@ async def test_get_account_creation_requests_success(
         last_name="Request",
         email="nutri.request@test.com",
         password="password",
-        qualification_option=NutritionistQualificationOption.RDN,
         qualification_img_key="key2",
     )
     db_session.add_all([doctor_req, nutritionist_req])
@@ -61,8 +55,6 @@ async def test_submit_doctor_account_creation_request_success(
     db_session: AsyncSession,
     img_file_fixture: tuple[str, bytes, str],
 ) -> None:
-    qualification_option: str = random.choice(list(DoctorQualificationOption)).value
-
     doctor_email: str = "new_doctor@test.com"
     response = await client.post(
         "/account-requests/doctors",
@@ -71,16 +63,14 @@ async def test_submit_doctor_account_creation_request_success(
             "password": "password123",
             "first_name": "New",
             "last_name": "Doctor",
-            "qualification_option": qualification_option,
         },
         files={"qualification_img": img_file_fixture},
     )
-    assert response.status_code == status.HTTP_201_CREATED, "Expected 201 CREATED for successful request submission"
+    assert response.status_code == status.HTTP_201_CREATED
 
     stmt = select(DoctorAccountCreationRequest).where(DoctorAccountCreationRequest.email == doctor_email)
     query_data = (await db_session.execute(stmt)).scalar_one_or_none()
     assert query_data is not None
-    assert query_data.qualification_option.value == qualification_option
     assert query_data.account_status == AccountCreationRequestStatus.PENDING
 
 
@@ -91,7 +81,6 @@ async def test_submit_nutritionist_account_creation_request_success(
     img_file_fixture: tuple[str, bytes, str],
 ) -> None:
     nutritionist_email: str = "new.nutri@test.com"
-    qualification_option: str = random.choice(list(NutritionistQualificationOption)).value
 
     response = await client.post(
         "/account-requests/nutritionists",
@@ -100,7 +89,6 @@ async def test_submit_nutritionist_account_creation_request_success(
             "password": "password123",
             "first_name": "New",
             "last_name": "Nutri",
-            "qualification_option": qualification_option,
         },
         files={"qualification_img": img_file_fixture},
     )
@@ -111,7 +99,6 @@ async def test_submit_nutritionist_account_creation_request_success(
     )
     query_data = (await db_session.execute(stmt)).scalar_one_or_none()
     assert query_data is not None, "Nutritionist account creation request should be in the database"
-    assert query_data.qualification_option.value == qualification_option, "Qualification option should match"
 
 
 @pytest.mark.asyncio
@@ -134,34 +121,10 @@ async def test_submit_doctor_request_email_conflict(
             "password": "password456",
             "first_name": "Conflicting",
             "last_name": "Doctor",
-            "qualification_option": random.choice(list(DoctorQualificationOption)).value,
         },
         files={"qualification_img": img_file_fixture},
     )
     assert response.status_code == status.HTTP_409_CONFLICT, "Expected 409 CONFLICT for email already in use"
-
-
-@pytest.mark.asyncio
-async def test_submit_request_invalid_qualification(
-    client: AsyncClient,
-    img_file_fixture: tuple[str, bytes, str],
-) -> None:
-    # FastAPI validation might catch this if it was Pydantic, but here it's Form data and manual check in service
-    # Service raises 400 if not in valid options
-    response = await client.post(
-        "/account-requests/doctors",
-        data={
-            "email": "invalid.qual@test.com",
-            "password": "password123",
-            "first_name": "Invalid",
-            "last_name": "Qual",
-            "qualification_option": "LIJFIUN(#*RY(OP*#NRYO*_INVALID_OPTION)(*JFN)*UF)*U",
-        },
-        files={"qualification_img": img_file_fixture},
-    )
-    assert response.status_code == status.HTTP_400_BAD_REQUEST, (
-        "Expected 400 BAD REQUEST for invalid qualification option"
-    )
 
 
 @pytest.mark.asyncio
@@ -185,7 +148,6 @@ async def test_process_request_already_processed(
         last_name="Doc",
         email="approved.doc@test.com",
         password="password",
-        qualification_option=DoctorQualificationOption.MD,
         qualification_img_key="key",
         account_status=AccountCreationRequestStatus.APPROVED,
     )
@@ -206,7 +168,6 @@ async def test_process_request_unauthorized(
         last_name="Doc",
         email="pending.doc@test.com",
         password="password",
-        qualification_option=DoctorQualificationOption.MD,
         qualification_img_key="key",
         account_status=AccountCreationRequestStatus.PENDING,
     )

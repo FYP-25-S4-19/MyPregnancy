@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import date
+from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy import Sequence, select
@@ -21,7 +22,7 @@ class JournalService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_journal_entries_for_mother(self, mother_id: int) -> list[GetJournalEntryResponse]:
+    async def get_journal_entries_for_mother(self, mother_id: UUID) -> list[GetJournalEntryResponse]:
         # Fetch all possible options
         #
         # We need this to render the "unselected" options (False).
@@ -84,7 +85,7 @@ class JournalService:
             )
         return response_list
 
-    async def upsert_journal_entry(self, mother_id: int, entry_date: date, request: UpsertJournalEntryRequest) -> None:
+    async def upsert_journal_entry(self, mother_id: UUID, entry_date: date, request: UpsertJournalEntryRequest) -> None:
         if entry_date > date.today():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Journal entry date cannot be in the future"
@@ -132,7 +133,7 @@ class JournalService:
             for bm_id in request.binary_metric_ids:
                 entry.journal_binary_metric_logs.append(JournalBinaryMetricLog(binary_metric_id=bm_id))
 
-    async def delete_journal_entry(self, mother_id: int, entry_date: date) -> None:
+    async def delete_journal_entry(self, mother_id: UUID, entry_date: date) -> None:
         stmt = select(JournalEntry).where(JournalEntry.logged_on == entry_date, JournalEntry.author_id == mother_id)
         result = await self.db.execute(stmt)
         journal_entry = result.scalars().first()

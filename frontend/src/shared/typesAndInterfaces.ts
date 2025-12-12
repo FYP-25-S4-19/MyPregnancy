@@ -1,3 +1,5 @@
+// export interface LocalMessageExtended
+
 export interface MeData {
   id: number;
   email: string;
@@ -13,3 +15,7 @@ export interface JwtData {
 }
 
 export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST";
+
+export interface ConsultMessageExtraData {
+  isConsultationRequest: boolean;
+}

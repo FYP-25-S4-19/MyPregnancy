@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MotherHomeScreen() {
   const router = useRouter();
+  const signOut = useAuthStore((state) => state.clearAuthState);
   const me = useAuthStore((state) => state.me);
 
   return (
@@ -17,8 +18,20 @@ export default function MotherHomeScreen() {
           marginBottom: sizes.m,
         }}
       >
-        Logged in as a {me?.role.toLowerCase()}
+        Logged-in as a {me?.role.toLowerCase()}
       </Text>
+
+      <TouchableOpacity style={styles.touchable} onPress={() => signOut()}>
+        <Text
+          style={{
+            color: "#6d2828",
+            fontSize: font.m,
+            fontWeight: "500",
+          }}
+        >
+          {"Sign out"}
+        </Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/mother/journal")}>
         <Text

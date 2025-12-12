@@ -1,7 +1,18 @@
 import { BottomTabNavigationOptions } from "@react-navigation/bottom-tabs";
-import { colors, font } from "./designSystem";
+import { colors, font, sizes } from "./designSystem";
+import { StyleSheet } from "react-native";
 
 export const TAB_BAR_ICON_SIZE = 24;
+
+export const globalStyles = StyleSheet.create({});
+
+export const chatStyles = StyleSheet.create({
+  inputWrapper: {
+    paddingHorizontal: sizes.m,
+    paddingBottom: sizes.xxl * 2.5,
+    backgroundColor: colors.background,
+  },
+});
 
 export const tabScreenOptions: BottomTabNavigationOptions = {
   headerShown: false,

@@ -17,7 +17,7 @@ export default function NutritionistHomeScreen() {
           marginBottom: sizes.m,
         }}
       >
-        Logged in as a {me?.role.toLowerCase()}
+        Logged-in as {me?.role.toLowerCase()}
       </Text>
 
       <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/nutritionist/articles")}>

@@ -1,39 +1,40 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-
-# from getstream import Stream
-# from getstream.models import UserRequest
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 from stream_chat import StreamChat
 
-from app.core.settings import settings
+from app.core.clients import get_stream_client
+from app.core.security import require_role
 from app.core.users_manager import current_active_user
-from app.db.db_schema import User
-from app.shared.utils import format_user_fullname
+from app.db.db_config import get_db
+from app.db.db_schema import PregnantWoman, User
+from app.features.getstream.stream_models import ChannelCreationArgs, ChannelCreationResponse, TokenResponse
+from app.features.getstream.stream_service import StreamService
 
 stream_router = APIRouter(prefix="/stream", tags=["GetStream"])
 
 
-def get_server_client():
-    if not settings.STREAM_API_KEY or not settings.STREAM_API_SECRET:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
-    return StreamChat(api_key=settings.STREAM_API_KEY, api_secret=settings.STREAM_API_SECRET)
+def get_stream_service(db: AsyncSession = Depends(get_db), client: StreamChat = Depends(get_stream_client)):
+    return StreamService(db, client)
 
 
-@stream_router.get("/token")
-async def get_stream_token(user: User = Depends(current_active_user)):
-    server_client: StreamChat = get_server_client()
-    token: str = server_client.create_token(str(user.id))
+@stream_router.get("/token", response_model=TokenResponse)
+async def get_stream_token(
+    user: User = Depends(current_active_user), stream_service: StreamService = Depends(get_stream_service)
+) -> TokenResponse:
     try:
-        server_client.upsert_user({"id": str(user.id), "name": format_user_fullname(user)})
-        return {"token": token}
+        return await stream_service.get_stream_token(user)
     except Exception as e:
         print("Error while fetching stream token:", e)
         raise
 
 
-# @stream_router.post("/chat/channel")
-# async def create_chat_channel(args: ChannelCreationArgs, mother: PregnantWoman = Depends(require_role(PregnantWoman))):
-#     # TODO: Logic for checking if there already exists a channel between this pair of "Doctor" and "Mother"
-#     server_client: StreamChat = get_server_client()
+@stream_router.post("/chat/channel", status_code=status.HTTP_200_OK, response_model=ChannelCreationResponse)
+async def create_chat_channel(
+    args: ChannelCreationArgs,
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    stream_service: StreamService = Depends(get_stream_service),
+) -> ChannelCreationResponse:
+    return await stream_service.create_chat_channel(args, mother)
 
 
 # @stream_router.post("/chat/channel/message")
