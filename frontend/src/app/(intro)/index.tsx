@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ImageBackgro
 import { useRouter } from "expo-router";
 import api from "@/src/shared/api";
 import { colors, sizes, font } from "@/src/shared/designSystem";
+import useAuthStore from "@/src/shared/authStore";
 
 /** ----- slide content ----- */
 type Slide = {

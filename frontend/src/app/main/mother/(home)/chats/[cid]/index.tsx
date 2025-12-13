@@ -18,6 +18,8 @@ import {
 } from "react-native";
 import utils from "@/src/shared/utils";
 import api from "@/src/shared/api";
+import { useStreamVideoClient } from "@stream-io/video-react-native-sdk";
+import uuid from "react-native-uuid";
 
 const ConsultRequestChip = ({ channel }: { channel: ChannelType }) => {
   const handlePress = async (): Promise<void> => {
@@ -28,7 +30,7 @@ const ConsultRequestChip = ({ channel }: { channel: ChannelType }) => {
       return;
     }
 
-    const doctor = utils.getOtherMemberFromChannel(channel, myID.toString());
+    const doctor = utils.getOtherMemberInChannel(channel, myID.toString());
     if (doctor === undefined) {
       return;
     }
@@ -71,6 +73,8 @@ export default function IndividualChatScreen() {
   const { client } = useChatContext();
   const [channelType, channelID] = (cid as string)?.split(":") || [null, null];
 
+  const streamVideoClient = useStreamVideoClient();
+
   if (!client || !channelType || !channelID) {
     return (
       <View style={styles.loadingContainer}>
@@ -87,15 +91,34 @@ export default function IndividualChatScreen() {
   if (!me?.id) {
     return;
   }
-  const doctor = utils.getOtherMemberFromChannel(channel, me.id.toString());
+  const doctor = utils.getOtherMemberInChannel(channel, me.id.toString());
   if (doctor === undefined) {
     return;
   }
   const doctorFirstName = doctor.name?.split(" ")[0] || "Missing name wthelly";
 
+  //------------------------------------------------
+  const callPressHandler = async (isVideo: boolean): Promise<void> => {
+    if (!streamVideoClient?.state.connectedUser?.id || !doctor.id) {
+      // console.log("Something is empty, returning....");
+      return;
+    }
+
+    const call = streamVideoClient.call("default", uuid.v4(), {
+      reuseInstance: false,
+    });
+    await call.getOrCreate({
+      ring: true,
+      video: isVideo,
+      data: {
+        members: [{ user_id: streamVideoClient.state.connectedUser.id }, { user_id: doctor?.id.toString() }],
+      },
+    });
+  };
+  //------------------------------------------------
   return (
     <SafeAreaView edges={["top", "left", "right"]}>
-      <ChatHeader title={`Dr ${doctorFirstName}`} />
+      <ChatHeader title={`Dr ${doctorFirstName}`} showCallingIcons onCallPress={callPressHandler} />
 
       <ChannelElement channel={channel}>
         <MessageList />

@@ -54,7 +54,7 @@ const utils = {
 
     return `${dayWithSuffix} ${month} ${formattedTime}`;
   },
-  getOtherMemberFromChannel(channel: Channel, myID: string): UserResponse | undefined {
+  getOtherMemberInChannel(channel: Channel, myID: string): UserResponse | undefined {
     if (!channel) return;
 
     const otherMembers = Object.values(channel.state.members).filter((member) => member.user_id !== myID);
