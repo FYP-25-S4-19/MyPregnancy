@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useEffect } from "react";
+import IncomingCall from "@/src/screens/IncomingCallScreen";
 
 export default function RingingScreen() {
   const allRingingCalls = useCalls().filter((c) => c.state.callingState === CallingState.RINGING);
@@ -18,7 +19,7 @@ export default function RingingScreen() {
   return (
     <StreamCall call={ringingCall}>
       <SafeAreaView style={styles.container}>
-        <RingingCallContent />
+        <RingingCallContent IncomingCall={IncomingCall} />
       </SafeAreaView>
     </StreamCall>
   );

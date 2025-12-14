@@ -25,9 +25,10 @@ async def list_of_doctors(db: AsyncSession = Depends(get_db)) -> list[DoctorPrev
     return [
         DoctorPreviewData(
             doctor_id=doctor.id,
-            profile_img_url=(
-                S3StorageInterface.get_presigned_url(doctor.profile_img_key, 30) if doctor.profile_img_key else None
-            ),
+            # profile_img_url=(
+            #     S3StorageInterface.get_presigned_url(doctor.profile_img_key, 30) if doctor.profile_img_key else None
+            # ),
+            profile_img_url=doctor.profile_img_key,
             first_name=doctor.first_name,
             is_liked=False,  # TODO
         )

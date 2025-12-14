@@ -18,8 +18,6 @@ import {
 } from "react-native";
 import utils from "@/src/shared/utils";
 import api from "@/src/shared/api";
-import { useStreamVideoClient } from "@stream-io/video-react-native-sdk";
-import uuid from "react-native-uuid";
 
 const ConsultRequestChip = ({ channel }: { channel: ChannelType }) => {
   const handlePress = async (): Promise<void> => {
@@ -46,9 +44,9 @@ const ConsultRequestChip = ({ channel }: { channel: ChannelType }) => {
 
       await channel.sendMessage({
         text: `
-              Request sent to Dr ${firstName}
+              Request sent to Dr. ${firstName}.
               [${utils.formatConsultRequestDate(startDatetime)}]
-              You'll be notified when they respond
+              You'll be notified when they respond.
             `,
         consultData: {
           appointmentID: res.data.appointment_id,
@@ -73,8 +71,6 @@ export default function IndividualChatScreen() {
   const { client } = useChatContext();
   const [channelType, channelID] = (cid as string)?.split(":") || [null, null];
 
-  const streamVideoClient = useStreamVideoClient();
-
   if (!client || !channelType || !channelID) {
     return (
       <View style={styles.loadingContainer}>
@@ -97,34 +93,17 @@ export default function IndividualChatScreen() {
   }
   const doctorFirstName = doctor.name?.split(" ")[0] || "Missing name wthelly";
 
-  //------------------------------------------------
-  const callPressHandler = async (isVideo: boolean): Promise<void> => {
-    if (!streamVideoClient?.state.connectedUser?.id || !doctor.id) {
-      // console.log("Something is empty, returning....");
-      return;
-    }
-
-    const call = streamVideoClient.call("default", uuid.v4(), {
-      reuseInstance: false,
-    });
-    await call.getOrCreate({
-      ring: true,
-      video: isVideo,
-      data: {
-        members: [{ user_id: streamVideoClient.state.connectedUser.id }, { user_id: doctor?.id.toString() }],
-      },
-    });
-  };
-  //------------------------------------------------
+  const headerHeight = 50;
   return (
     <SafeAreaView edges={["top", "left", "right"]}>
-      <ChatHeader title={`Dr ${doctorFirstName}`} showCallingIcons onCallPress={callPressHandler} />
+      <ChatHeader title={`Dr. ${doctorFirstName}`} headerHeight={headerHeight} />
 
       <ChannelElement channel={channel}>
         <MessageList />
 
         <KeyboardAvoidingView keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}>
-          <View style={chatStyles.inputWrapper}>
+          {/* Offset the entire thing upwards */}
+          <View style={[chatStyles.inputWrapper, { marginBottom: headerHeight }]}>
             <ConsultRequestChip channel={channel} />
             <MessageInput />
           </View>
@@ -141,9 +120,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.background,
   },
-
   consultationChip: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.secondary, // "#ffe2e2",
     alignSelf: "flex-start",
     paddingVertical: sizes.xs,
     paddingHorizontal: sizes.m,
@@ -152,7 +130,7 @@ const styles = StyleSheet.create({
     marginLeft: sizes.xs,
   },
   consultationText: {
-    color: colors.text,
+    color: colors.text, // "#a97070",
     fontSize: font.xs,
     fontWeight: "600",
   },

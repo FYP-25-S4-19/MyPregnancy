@@ -21,6 +21,8 @@ export default function DoctorCard({
   onChatPress,
   // onFavoritePress,
 }: DoctorCardProps) {
+  console.log("Obj Key:", image);
+
   return (
     <View style={styles.card}>
       <Image

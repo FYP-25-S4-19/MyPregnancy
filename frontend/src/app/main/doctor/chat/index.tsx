@@ -20,7 +20,8 @@ export default function DoctorChatListScreen() {
         <ChannelList
           filters={memoizedFilters}
           onSelect={(channel) => {
-            router.push(`/main/doctor/chat/${channel.cid}`);
+            // router.push(`/main/doctor/chat/${channel.cid}`);
+            router.push(`/main/chat/${channel.cid}`);
           }}
           options={{ state: true, watch: true }}
           sort={{ last_updated: -1 }}

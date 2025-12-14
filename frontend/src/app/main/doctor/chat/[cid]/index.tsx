@@ -56,7 +56,6 @@ export default function IndividualChatScreen() {
     const call = streamVideoClient.call("default", uuid.v4(), {
       reuseInstance: false,
     });
-    console.log("Creating call to ", mother.name);
     await call.getOrCreate({
       ring: true,
       video: isVideo,
@@ -64,7 +63,6 @@ export default function IndividualChatScreen() {
         members: [{ user_id: streamVideoClient.state.connectedUser.id }, { user_id: mother.id }],
       },
     });
-    console.log("Created call to ", mother.name);
   };
 
   return (

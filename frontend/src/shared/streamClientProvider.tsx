@@ -3,6 +3,7 @@ import { StreamVideo } from "@stream-io/video-react-native-sdk";
 import { Chat, OverlayProvider } from "stream-chat-expo";
 import { View, ActivityIndicator } from "react-native";
 import React, { PropsWithChildren } from "react";
+import { globalStreamTheme } from "./globalStyles";
 
 export function StreamClientProvider({ children }: PropsWithChildren) {
   const { chatClient, videoClient, isReady, isGuest } = useStreamConnection();
@@ -29,7 +30,7 @@ export function StreamClientProvider({ children }: PropsWithChildren) {
 
   // Authenticated and Connected
   return (
-    <OverlayProvider>
+    <OverlayProvider value={{ style: globalStreamTheme }}>
       <Chat client={chatClient}>
         <StreamVideo client={videoClient}>{children}</StreamVideo>
       </Chat>
