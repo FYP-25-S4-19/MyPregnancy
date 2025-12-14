@@ -1,6 +1,8 @@
 export interface MeData {
   id: number;
   email: string;
+  /** Age in years (optional) */
+  age?: number | null;
   first_name: string;
   middle_name: string | null;
   last_name: string;

@@ -1,8 +1,10 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, StatusBar } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, StatusBar, Alert } from "react-native";
 import React, { useState } from "react";
 
 import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { predictRisk, RiskPredictionResponse } from "@/src/shared/riskService";
+import useAuthStore from "@/src/shared/authStore";
 
 const Icon = ({ name, size, color }: { name: string; size: number; color: string }) => {
   let symbol = "?";
@@ -108,6 +110,10 @@ export default function App() {
   // --- DATE STATE ---
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState<"Journal" | "Kicks">("Journal");
+  const [isLoadingRisk, setIsLoadingRisk] = useState(false);
+  const [riskResult, setRiskResult] = useState<RiskPredictionResponse | null>(null);
+  // get the authenticated user object (store exposes `me`)
+  const user = useAuthStore((s) => s.me);
 
   // --- JOURNAL DATA STATE ---
   type JournalData = {
@@ -214,6 +220,82 @@ export default function App() {
     }));
   };
 
+  // Note: use `isLoadingRisk` and `handleAssessRisk` for all risk checks
+
+  // --- RISK ASSESSMENT ---
+  const handleAssessRisk = async () => {
+    const { bloodPressure, sugar, heartRate } = journal.vitals;
+    
+    // Validate inputs
+    if (!bloodPressure[0] || !bloodPressure[1] || !sugar || !heartRate) {
+      Alert.alert("Missing Data", "Please fill in all vital signs (Blood Pressure, Blood Sugar, Heart Rate)");
+      return;
+    }
+
+    // Get user age from auth store (or use default if not available)
+    const userAge = user?.age || 28;
+
+    try {
+      setIsLoadingRisk(true);
+        // Parse and validate numeric inputs
+        const systolic = Number.parseFloat(bloodPressure[0]);
+        const diastolic = Number.parseFloat(bloodPressure[1]);
+        const bsVal = Number.parseFloat(sugar);
+        const hr = Number.parseFloat(heartRate);
+
+        const badField =
+          !Number.isFinite(systolic) ||
+          !Number.isFinite(diastolic) ||
+          !Number.isFinite(bsVal) ||
+          !Number.isFinite(hr) ||
+          !Number.isFinite(userAge as number);
+
+        if (badField) {
+          Alert.alert("Invalid input", "Please enter valid numeric values for your vitals.");
+          return;
+        }
+
+        // Basic range checks (match backend validators)
+        if (userAge <= 0 || userAge > 150 || systolic < 0 || systolic > 300 || diastolic < 0 || diastolic > 300 || bsVal < 0 || bsVal > 50 || hr <= 0 || hr > 250) {
+          Alert.alert("Invalid range", "One or more inputs are out of expected ranges. Please check and try again.");
+          return;
+        }
+
+        const result = await predictRisk({
+          age: userAge,
+          systolic_bp: systolic,
+          diastolic_bp: diastolic,
+          bs: bsVal,
+          heart_rate: hr,
+        });
+      setRiskResult(result);
+      
+      // Show alert if high risk
+      if (result.is_high_risk) {
+        Alert.alert(
+          "⚠️ High Risk Alert",
+          result.message,
+          [{ text: "OK", onPress: () => {} }]
+        );
+      }
+    } catch (error: any) {
+      console.error("Risk assessment failed:", error);
+      // If the server returned validation error details, show them
+      const serverMsg = error?.response?.data?.detail || error?.response?.data || error?.message;
+      if (error?.response?.status === 422 && serverMsg) {
+        // FastAPI usually returns an array of validation errors; stringify for display
+        const friendly = typeof serverMsg === "string" ? serverMsg : JSON.stringify(serverMsg);
+        Alert.alert("Assessment Failed", `Validation error from server: ${friendly}`);
+      } else if (serverMsg) {
+        Alert.alert("Assessment Failed", String(serverMsg));
+      } else {
+        Alert.alert("Assessment Failed", "Could not assess risk. Please try again.");
+      }
+    } finally {
+      setIsLoadingRisk(false);
+    }
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
@@ -313,7 +395,49 @@ export default function App() {
             value={journal.vitals.weight}
             onChange={(v: string) => handleVitalChange("weight", v)}
           />
+          <View style={{ marginTop: sizes.s }}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleAssessRisk} disabled={isLoadingRisk}>
+              <Text style={styles.saveButtonText}>{isLoadingRisk ? "Checking..." : "Check Risk"}</Text>
+            </TouchableOpacity>
+            {riskResult ? (
+              <View style={[styles.riskCard, { borderColor: riskResult.is_high_risk ? "#e74c3c" : "#2ecc71" }]}>
+                <Text style={styles.cardTitle}>Risk Assessment</Text>
+                <Text style={{ marginBottom: sizes.s }}>{riskResult.message}</Text>
+                <Text style={{ fontWeight: "600" }}>Probability: {(riskResult.risk_probability * 100).toFixed(1)}%</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
+
+        {/* Risk Assessment Button */}
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={[styles.assessButton, isLoadingRisk && styles.assessButtonDisabled]}
+            onPress={handleAssessRisk}
+            disabled={isLoadingRisk}
+          >
+            <Text style={styles.assessButtonText}>
+              {isLoadingRisk ? "Assessing..." : "📊 Assess Risk"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Risk Result Card */}
+        {riskResult && (
+          <View style={[styles.card, riskResult.is_high_risk ? styles.riskCardHigh : styles.riskCardLow]}>
+            <Text style={styles.riskTitle}>
+              {riskResult.is_high_risk ? "⚠️ HIGH RISK" : "✓ LOW RISK"}
+            </Text>
+            <Text style={styles.riskMessage}>{riskResult.message}</Text>
+            <View style={styles.riskDetailsRow}>
+              <Text style={styles.riskDetail}>
+                Confidence: {(riskResult.risk_probability * 100).toFixed(1)}%
+              </Text>
+              <Text style={styles.riskDetail}>Mean BP: {riskResult.mean_bp.toFixed(1)} mmHg</Text>
+            </View>
+          </View>
+        )}
+
         {/* Spacer for bottom tab */}
         <View style={{ height: 80 }} />
       </ScrollView>
@@ -497,6 +621,54 @@ const styles = StyleSheet.create({
     color: colors.tabIcon,
     width: 50,
   },
+  // Risk Assessment
+  assessButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: sizes.m - sizes.xs,
+    paddingHorizontal: sizes.m,
+    borderRadius: sizes.m - sizes.xs,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  assessButtonDisabled: {
+    opacity: 0.6,
+  },
+  assessButtonText: {
+    color: colors.white,
+    fontWeight: "bold",
+    fontSize: font.m - 2,
+  },
+  riskCardHigh: {
+    backgroundColor: "#ffe6e6",
+    borderColor: "#e74c3c",
+    borderWidth: 1.5,
+  },
+  riskCardLow: {
+    backgroundColor: "#e6ffe6",
+    borderColor: "#2ecc71",
+    borderWidth: 1.5,
+  },
+  riskTitle: {
+    fontSize: font.m - 1,
+    fontWeight: "bold",
+    color: colors.text,
+    marginBottom: sizes.s,
+  },
+  riskMessage: {
+    fontSize: font.s,
+    color: colors.text,
+    marginBottom: sizes.s + sizes.xs,
+    lineHeight: 20,
+  },
+  riskDetailsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  riskDetail: {
+    fontSize: font.xs,
+    color: colors.tabIcon,
+    fontWeight: "500",
+  },
   // Bottom Bar
   bottomBar: {
     flexDirection: "row",
@@ -517,5 +689,24 @@ const styles = StyleSheet.create({
     fontSize: font.xxs,
     marginTop: sizes.xs,
     color: colors.tabIcon,
+  },
+  saveButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: sizes.s,
+    paddingHorizontal: sizes.m,
+    borderRadius: sizes.s,
+    alignItems: "center",
+    marginBottom: sizes.s,
+  },
+  saveButtonText: {
+    color: colors.white,
+    fontWeight: "700",
+  },
+  riskCard: {
+    marginTop: sizes.s,
+    padding: sizes.s,
+    borderRadius: sizes.s,
+    borderWidth: 1.5,
+    backgroundColor: colors.white,
   },
 });
