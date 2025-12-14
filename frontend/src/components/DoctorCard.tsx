@@ -1,7 +1,7 @@
-import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { colors, sizes, font } from "../shared/designSystem";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
 
 interface DoctorCardProps {
   id: string;
@@ -21,8 +21,6 @@ export default function DoctorCard({
   onChatPress,
   // onFavoritePress,
 }: DoctorCardProps) {
-  console.log("Obj Key:", image);
-
   return (
     <View style={styles.card}>
       <Image

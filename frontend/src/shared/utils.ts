@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { JwtData, MeData } from "./typesAndInterfaces";
 import { Channel, UserResponse } from "stream-chat";
+import { getDevHostIp } from "./api";
 
 const utils = {
   /**
@@ -67,9 +68,6 @@ const utils = {
   capitalizeFirstLetter(str: string): string {
     if (str.length === 0) return str;
     return str.charAt(0).toUpperCase() + str.slice(1);
-  },
-  getS3Prefix(): string {
-    return process.env.EXPO_PUBLIC_;
   },
 };
 
