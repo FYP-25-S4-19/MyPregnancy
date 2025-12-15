@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.users_manager import current_active_user
+from app.core.users_manager import current_active_user, optional_current_active_user
 from app.db.db_config import get_db
 from app.db.db_schema import User
 from app.features.community_threads.thread_models import (
     CreateCommentData,
     CreateThreadData,
+    ThreadCategoryData,
     ThreadData,
     ThreadPreviewData,
     ThreadUpdateData,
@@ -21,14 +22,26 @@ def get_threads_service(db: AsyncSession = Depends(get_db)) -> ThreadService:
     return ThreadService(db)
 
 
+@community_threads_router.get("/categories", response_model=list[ThreadCategoryData])
+async def get_thread_categories(service: ThreadService = Depends(get_threads_service)) -> list[ThreadCategoryData]:
+    return await service.get_thread_categories()
+
+
 @community_threads_router.get("/", response_model=list[ThreadPreviewData])
-async def get_thread_previews(service: ThreadService = Depends(get_threads_service)) -> list[ThreadPreviewData]:
-    return await service.get_thread_previews()
+async def get_thread_previews(
+    service: ThreadService = Depends(get_threads_service),
+    current_user: User | None = Depends(optional_current_active_user),
+) -> list[ThreadPreviewData]:
+    return await service.get_thread_previews(current_user)
 
 
 @community_threads_router.get("/{thread_id}", response_model=ThreadData)
-async def get_thread_by_id(thread_id: int, service: ThreadService = Depends(get_threads_service)) -> ThreadData:
-    return await service.get_thread_by_id(thread_id)
+async def get_thread_by_id(
+    thread_id: int,
+    service: ThreadService = Depends(get_threads_service),
+    current_user: User | None = Depends(optional_current_active_user),
+) -> ThreadData:
+    return await service.get_thread_by_id(thread_id, current_user)
 
 
 @community_threads_router.post("/", status_code=status.HTTP_201_CREATED)

@@ -20,7 +20,7 @@ export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
 }
 
-interface ThreadCategoryData {
+export interface ThreadCategoryData {
   id: number;
   label: string;
 }
@@ -32,6 +32,9 @@ export interface ThreadPreviewData {
   content: string;
   posted_at: string;
   categories: ThreadCategoryData[];
+  like_count: number;
+  comment_count: number;
+  is_liked_by_current_user: boolean;
 }
 
 export interface ThreadCommentData {
@@ -41,6 +44,8 @@ export interface ThreadCommentData {
   commenter_fullname: string;
   commented_at: string;
   content: string;
+  like_count: number;
+  is_liked_by_current_user: boolean;
 }
 
 export interface ThreadData {
@@ -51,6 +56,10 @@ export interface ThreadData {
   content: string;
   posted_at: string;
   comments: ThreadCommentData[];
+  categories?: ThreadCategoryData[];
+  like_count: number;
+  comment_count: number;
+  is_liked_by_current_user: boolean;
 }
 
 export interface CreateThreadData {

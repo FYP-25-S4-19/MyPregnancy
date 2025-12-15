@@ -8,6 +8,7 @@ from app.db.db_schema import (
     CommentLike,
     CommunityThread,
     CommunityThreadLike,
+    ThreadCategory,
     ThreadCategoryAssociation,
     ThreadComment,
     User,
@@ -29,7 +30,14 @@ class ThreadService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_thread_previews(self) -> list[ThreadPreviewData]:
+    async def get_thread_categories(self) -> list[ThreadCategoryData]:
+        """Fetch all available thread categories."""
+        stmt = select(ThreadCategory).order_by(ThreadCategory.label)
+        categories = (await self.db.execute(stmt)).scalars().all()
+        return [ThreadCategoryData(id=cat.id, label=cat.label) for cat in categories]
+
+    async def get_thread_previews(self, current_user: User | None = None) -> list[ThreadPreviewData]:
+        # Get threads with relationships
         stmt = (
             select(CommunityThread)
             .options(
@@ -37,10 +45,13 @@ class ThreadService:
                 selectinload(CommunityThread.thread_category_associations).selectinload(
                     ThreadCategoryAssociation.category
                 ),
+                selectinload(CommunityThread.comments),
+                selectinload(CommunityThread.community_thread_likes),
             )
             .order_by(CommunityThread.posted_at.desc())
         )
         query_results = (await self.db.execute(stmt)).scalars().all()
+
         return [
             ThreadPreviewData(
                 id=thread.id,
@@ -52,17 +63,25 @@ class ThreadService:
                     ThreadCategoryData(id=association.category.id, label=association.category.label)
                     for association in thread.thread_category_associations
                 ],
+                like_count=len(thread.community_thread_likes),
+                comment_count=len(thread.comments),
+                is_liked_by_current_user=(
+                    any(like.liker_id == current_user.id for like in thread.community_thread_likes)
+                    if current_user
+                    else False
+                ),
             )
             for thread in query_results
         ]
 
-    async def get_thread_by_id(self, thread_id: int) -> ThreadData:
+    async def get_thread_by_id(self, thread_id: int, current_user: User | None = None) -> ThreadData:
         stmt = (
             select(CommunityThread)
             .where(CommunityThread.id == thread_id)
             .options(
                 joinedload(CommunityThread.creator),
                 selectinload(CommunityThread.comments).joinedload(ThreadComment.commenter),
+                selectinload(CommunityThread.comments).selectinload(ThreadComment.comment_likes),
             )
         )
         thread_result = (await self.db.execute(stmt)).scalar_one_or_none()
@@ -83,6 +102,12 @@ class ThreadService:
                     commenter_fullname=format_user_fullname(comment.commenter),
                     commented_at=comment.commented_at,
                     content=comment.content,
+                    like_count=len(comment.comment_likes),
+                    is_liked_by_current_user=(
+                        any(like.liker_id == current_user.id for like in comment.comment_likes)
+                        if current_user
+                        else False
+                    ),
                 )
                 for comment in thread_result.comments
             ],

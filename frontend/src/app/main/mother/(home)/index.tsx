@@ -107,8 +107,8 @@ export default function MotherHomeScreen() {
 
         {/* Community Threads Section */}
         <CommunityThreadsSection
-          onViewAll={() => router.push("/main/mother/threads")}
-          onThreadPress={(threadId) => console.log("Thread pressed:", threadId)}
+          onViewAll={() => router.push("/main/mother/(home)/threads")}
+          onThreadPress={(threadId) => console.log("Thread pressed:", threadId)} // TODO: Link that up for realsies
         />
 
         {/* Extra spacing at bottom */}

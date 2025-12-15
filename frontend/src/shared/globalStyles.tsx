@@ -175,3 +175,223 @@ export const globalStreamTheme: DeepPartial<Theme> = {
     },
   },
 };
+
+// Thread-related reusable styles
+export const threadStyles = StyleSheet.create({
+  // Thread Card
+  threadCard: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.l,
+    marginBottom: sizes.m,
+    ...shadows.small,
+  },
+  threadTitle: {
+    fontSize: font.l,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: sizes.m,
+    lineHeight: 28,
+  },
+  threadContent: {
+    fontSize: font.s,
+    color: colors.text,
+    lineHeight: 24,
+    marginBottom: sizes.m,
+  },
+  threadMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: sizes.m,
+  },
+  metaText: {
+    fontSize: font.xs,
+    color: colors.text,
+    opacity: 0.6,
+  },
+  metaSeparator: {
+    fontSize: font.xs,
+    color: colors.text,
+    opacity: 0.4,
+    marginHorizontal: sizes.xs,
+  },
+  threadActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.l,
+  },
+  likeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.xs,
+  },
+  likeCount: {
+    fontSize: font.s,
+    color: colors.text,
+    opacity: 0.6,
+  },
+  likeCountActive: {
+    color: colors.primary,
+    opacity: 1,
+    fontWeight: "600",
+  },
+  commentCountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.xs,
+  },
+  commentCount: {
+    fontSize: font.s,
+    color: colors.text,
+    opacity: 0.6,
+  },
+
+  // Comments Section
+  commentsSection: {
+    gap: sizes.m,
+  },
+  commentCard: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.m,
+    marginBottom: sizes.s,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+    ...shadows.small,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: sizes.s,
+  },
+  commentAuthor: {
+    fontSize: font.s,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  commentTime: {
+    fontSize: font.xxs,
+    color: colors.text,
+    opacity: 0.5,
+  },
+  commentContent: {
+    fontSize: font.s,
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: sizes.s,
+  },
+  commentLikeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.xs,
+    alignSelf: "flex-start",
+  },
+  commentLikeCount: {
+    fontSize: font.xs,
+    color: colors.text,
+    opacity: 0.6,
+  },
+  commentLikeCountActive: {
+    color: colors.primary,
+    opacity: 1,
+    fontWeight: "600",
+  },
+  noCommentsContainer: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.xl,
+    alignItems: "center",
+    ...shadows.small,
+  },
+  noCommentsText: {
+    fontSize: font.s,
+    color: colors.text,
+    opacity: 0.6,
+    textAlign: "center",
+  },
+
+  // Comment Input
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.m,
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.lightGray,
+    gap: sizes.s,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    borderRadius: sizes.l,
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.s,
+    fontSize: font.s,
+    color: colors.text,
+    maxHeight: 100,
+    minHeight: 44,
+  },
+  sendButton: {
+    paddingHorizontal: sizes.l,
+    paddingVertical: sizes.s,
+    borderRadius: sizes.l,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 44,
+  },
+  sendButtonDisabled: {
+    backgroundColor: colors.lightGray,
+  },
+  sendButtonText: {
+    fontSize: font.s,
+    color: colors.white,
+    fontWeight: "600",
+  },
+  sendButtonTextDisabled: {
+    color: colors.text,
+    opacity: 0.5,
+  },
+
+  // Back Button
+  backButtonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.m,
+    gap: sizes.xs,
+  },
+  backButtonText: {
+    fontSize: font.m,
+    color: colors.text,
+    fontWeight: "500",
+  },
+
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: sizes.xl,
+  },
+  errorText: {
+    fontSize: font.m,
+    color: colors.text,
+    textAlign: "center",
+    marginBottom: sizes.m,
+  },
+  errorBackButton: {
+    marginTop: sizes.m,
+    paddingHorizontal: sizes.xl,
+    paddingVertical: sizes.m,
+    backgroundColor: colors.primary,
+    borderRadius: sizes.s,
+  },
+});

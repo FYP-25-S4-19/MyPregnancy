@@ -16,6 +16,9 @@ class ThreadPreviewData(CustomBaseModel):
     content: str
     posted_at: str
     categories: list[ThreadCategoryData] = []
+    like_count: int = 0
+    comment_count: int = 0
+    is_liked_by_current_user: bool = False
 
 
 class ThreadCommentData(CustomBaseModel):
@@ -27,6 +30,8 @@ class ThreadCommentData(CustomBaseModel):
 
     commented_at: datetime
     content: str
+    like_count: int = 0
+    is_liked_by_current_user: bool = False
 
 
 class ThreadData(CustomBaseModel):

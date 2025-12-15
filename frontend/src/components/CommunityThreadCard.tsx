@@ -1,17 +1,49 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { ThreadPreviewData } from "@/src/shared/typesAndInterfaces";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useLikeThread, useUnlikeThread } from "@/src/shared/hooks/useThreads";
 
 interface CommunityThreadCardProps {
   thread: ThreadPreviewData;
   onPress?: () => void;
   isFirst?: boolean;
   isLast?: boolean;
+
+  stretchOut?: boolean;
 }
 
-export default function CommunityThreadCard({ thread, onPress, isFirst, isLast }: CommunityThreadCardProps) {
+export default function CommunityThreadCard({
+  thread,
+  onPress,
+  isFirst,
+  isLast,
+  stretchOut,
+}: CommunityThreadCardProps) {
+  const likeThreadMutation = useLikeThread();
+  const unlikeThreadMutation = useUnlikeThread();
+
+  const handleLikePress = (e: any): void => {
+    // Stop propagation to prevent triggering the card's onPress
+    e.stopPropagation();
+
+    if (thread.is_liked_by_current_user) {
+      unlikeThreadMutation.mutate(thread.id, {
+        onError: (error) => {
+          Alert.alert("Error", "Failed to unlike thread. Please try again.");
+          console.error("Unlike thread error:", error);
+        },
+      });
+    } else {
+      likeThreadMutation.mutate(thread.id, {
+        onError: (error) => {
+          Alert.alert("Error", "Failed to like thread. Please try again.");
+          console.error("Like thread error:", error);
+        },
+      });
+    }
+  };
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -34,7 +66,12 @@ export default function CommunityThreadCard({ thread, onPress, isFirst, isLast }
 
   return (
     <TouchableOpacity
-      style={[styles.card, isFirst && styles.firstCard, isLast && styles.lastCard]}
+      style={[
+        styles.card,
+        isFirst && styles.firstCard,
+        isLast && styles.lastCard,
+        { width: stretchOut ? undefined : 300 },
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -58,11 +95,21 @@ export default function CommunityThreadCard({ thread, onPress, isFirst, isLast }
           <Text style={styles.timeAgo}>{formatTimeAgo(thread.posted_at)}</Text>
         </View>
 
-        <View style={styles.likeContainer}>
-          {/*<Text style={styles.likeIcon}>️</Text>*/}
-          <MaterialCommunityIcons style={styles.likeIcon} size={20} name="heart-outline" />
-          <Text style={styles.likeCount}>18</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.likeContainer}
+          onPress={handleLikePress}
+          disabled={likeThreadMutation.isPending || unlikeThreadMutation.isPending}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons
+            style={[styles.likeIcon, thread.is_liked_by_current_user && styles.likeIconActive]}
+            size={20}
+            name={thread.is_liked_by_current_user ? "heart" : "heart-outline"}
+          />
+          <Text style={[styles.likeCount, thread.is_liked_by_current_user && styles.likeCountActive]}>
+            {thread.like_count || 0}
+          </Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -75,7 +122,6 @@ const styles = StyleSheet.create({
     paddingVertical: sizes.m,
     paddingHorizontal: sizes.l,
     marginBottom: 10,
-    width: 340,
     marginRight: sizes.m,
     ...shadows.small,
     height: 175,
@@ -150,11 +196,22 @@ const styles = StyleSheet.create({
     gap: sizes.xs,
   },
   likeIcon: {
+    color: colors.text,
+    opacity: 0.6,
+  },
+  likeIconActive: {
     color: colors.primary,
+    opacity: 1,
   },
   likeCount: {
     fontSize: font.s,
     fontWeight: "500",
     color: colors.text,
+    opacity: 0.6,
+  },
+  likeCountActive: {
+    color: colors.primary,
+    opacity: 1,
+    fontWeight: "700",
   },
 });
