@@ -4,12 +4,18 @@ from uuid import UUID
 from app.core.custom_base_model import CustomBaseModel
 
 
+class ThreadCategoryData(CustomBaseModel):
+    id: int
+    label: str
+
+
 class ThreadPreviewData(CustomBaseModel):
     id: int
     creator_name: str
     title: str
     content: str
     posted_at: str
+    categories: list[ThreadCategoryData] = []
 
 
 class ThreadCommentData(CustomBaseModel):

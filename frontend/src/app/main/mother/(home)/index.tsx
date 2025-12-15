@@ -37,43 +37,6 @@ export default function MotherHomeScreen() {
     { id: "4", title: "Managing Stress During Pregnancy" },
   ];
 
-  const communityThreads = [
-    {
-      id: "1",
-      title: "Best exercises during second trimester?",
-      author: "Sarah Johnson",
-      replies: 24,
-      timeAgo: "2h ago",
-      preview:
-        "I'm looking for safe and effective exercises I can do during my second trimester. What has worked for you?",
-    },
-    {
-      id: "2",
-      title: "Dealing with pregnancy cravings",
-      author: "Emily Chen",
-      replies: 18,
-      timeAgo: "5h ago",
-      preview: "Anyone else craving pickles and ice cream at 3am? How do you manage unusual food cravings?",
-    },
-    {
-      id: "3",
-      title: "Nursery decoration ideas",
-      author: "Jessica Martinez",
-      replies: 31,
-      timeAgo: "1d ago",
-      preview:
-        "Share your nursery themes and decoration ideas! I'm struggling to choose between modern minimalist or woodland theme.",
-    },
-    {
-      id: "4",
-      title: "First time mom - feeling nervous",
-      author: "Amanda Wilson",
-      replies: 42,
-      timeAgo: "2d ago",
-      preview: "Is it normal to feel overwhelmed and nervous? Looking for advice from experienced moms.",
-    },
-  ];
-
   const getInitials = () => {
     const firstName = pregnancyData.userName.charAt(0).toUpperCase();
     const lastName = pregnancyData.userLastName.charAt(0).toUpperCase();
@@ -144,7 +107,6 @@ export default function MotherHomeScreen() {
 
         {/* Community Threads Section */}
         <CommunityThreadsSection
-          threads={communityThreads}
           onViewAll={() => router.push("/main/mother/threads")}
           onThreadPress={(threadId) => console.log("Thread pressed:", threadId)}
         />

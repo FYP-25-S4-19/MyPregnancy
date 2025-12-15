@@ -1,28 +1,64 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
-
-interface CommunityThread {
-  id: string;
-  title: string;
-  author: string;
-  replies: number;
-  timeAgo: string;
-  preview: string;
-}
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { colors, font, sizes } from "@/src/shared/designSystem";
+import CommunityThreadCard from "./CommunityThreadCard";
+import { useThreadsPreviews } from "@/src/shared/hooks/useThreads";
 
 interface CommunityThreadsSectionProps {
-  threads: CommunityThread[];
   onViewAll?: () => void;
-  onThreadPress?: (threadId: string) => void;
+  onThreadPress?: (threadId: number) => void;
 }
 
-export default function CommunityThreadsSection({ threads, onViewAll, onThreadPress }: CommunityThreadsSectionProps) {
+export default function CommunityThreadsSection({ onViewAll, onThreadPress }: CommunityThreadsSectionProps) {
+  const { data: threads, isLoading, isError, error, refetch } = useThreadsPreviews(5);
+
+  if (isLoading) {
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Threads</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Community Threads</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error instanceof Error ? error.message : "Failed to load threads"}</Text>
+          <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (!threads || threads.length === 0) {
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Threads</Text>
+        </View>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No threads yet. Be the first to start a conversation!</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.section}>
       {/* Header outside the cards */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Community Threads</Text>
+        <Text style={styles.sectionTitle}>Threads</Text>
         {onViewAll && (
           <TouchableOpacity onPress={onViewAll}>
             <Text style={styles.viewAllText}>View All</Text>
@@ -33,7 +69,7 @@ export default function CommunityThreadsSection({ threads, onViewAll, onThreadPr
       {/* Horizontal scrolling cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {threads.map((thread, index) => (
-          <ThreadCard
+          <CommunityThreadCard
             key={thread.id}
             thread={thread}
             onPress={() => onThreadPress?.(thread.id)}
@@ -45,50 +81,6 @@ export default function CommunityThreadsSection({ threads, onViewAll, onThreadPr
     </View>
   );
 }
-
-interface ThreadCardProps {
-  thread: CommunityThread;
-  onPress?: () => void;
-  isFirst: boolean;
-  isLast: boolean;
-}
-
-function ThreadCard({ thread, onPress, isFirst, isLast }: ThreadCardProps) {
-  return (
-    <TouchableOpacity
-      style={[styles.card, isFirst && styles.firstCard, isLast && styles.lastCard]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.authorAvatar}>
-          <Text style={styles.avatarText}>{thread.author.charAt(0).toUpperCase()}</Text>
-        </View>
-        <View style={styles.cardHeaderInfo}>
-          <Text style={styles.authorName}>{thread.author}</Text>
-          <Text style={styles.timeAgo}>{thread.timeAgo}</Text>
-        </View>
-      </View>
-
-      <Text style={styles.threadTitle} numberOfLines={2}>
-        {thread.title}
-      </Text>
-
-      <Text style={styles.threadPreview} numberOfLines={3}>
-        {thread.preview}
-      </Text>
-
-      <View style={styles.cardFooter}>
-        <View style={styles.replyContainer}>
-          <Text style={styles.replyIcon}>💬</Text>
-          <Text style={styles.replyCount}>{thread.replies} replies</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-const CARD_WIDTH = 280;
 
 const styles = StyleSheet.create({
   section: {
@@ -114,85 +106,51 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingLeft: sizes.m,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: sizes.m,
-    padding: sizes.m,
-    width: CARD_WIDTH,
-    marginRight: sizes.m,
-    ...shadows.small,
-  },
-  firstCard: {
-    marginLeft: 0,
-  },
-  lastCard: {
-    marginRight: sizes.m,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: sizes.s,
-  },
-  authorAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FFB3BA",
+  loadingContainer: {
+    height: 180,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: sizes.s,
+    marginHorizontal: sizes.m,
   },
-  avatarText: {
-    fontSize: font.xs,
-    fontWeight: "700",
-    color: colors.white,
+  errorContainer: {
+    height: 180,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: sizes.m,
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.l,
   },
-  cardHeaderInfo: {
-    flex: 1,
-  },
-  authorName: {
-    fontSize: font.xs,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  timeAgo: {
-    fontSize: font.xxs,
-    color: colors.text,
-    opacity: 0.5,
-  },
-  threadTitle: {
+  errorText: {
     fontSize: font.s,
-    fontWeight: "700",
     color: colors.text,
-    marginBottom: sizes.xs,
-    lineHeight: 22,
+    textAlign: "center",
+    marginBottom: sizes.m,
   },
-  threadPreview: {
-    fontSize: font.xs,
-    color: colors.text,
-    opacity: 0.7,
-    lineHeight: 18,
-    marginBottom: sizes.s,
+  retryButton: {
+    paddingVertical: sizes.s,
+    paddingHorizontal: sizes.l,
+    backgroundColor: colors.primary,
+    borderRadius: sizes.borderRadius,
   },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  retryText: {
+    fontSize: font.s,
+    color: colors.white,
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    height: 180,
+    justifyContent: "center",
     alignItems: "center",
-    paddingTop: sizes.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.lightGray,
+    marginHorizontal: sizes.m,
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.l,
   },
-  replyContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: sizes.xs,
-  },
-  replyIcon: {
-    fontSize: 14,
-  },
-  replyCount: {
-    fontSize: font.xs,
+  emptyText: {
+    fontSize: font.s,
     color: colors.text,
+    textAlign: "center",
     opacity: 0.6,
   },
 });

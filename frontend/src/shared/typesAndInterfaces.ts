@@ -19,3 +19,45 @@ export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST";
 export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
 }
+
+interface ThreadCategoryData {
+  id: number;
+  label: string;
+}
+
+export interface ThreadPreviewData {
+  id: number;
+  creator_name: string;
+  title: string;
+  content: string;
+  posted_at: string;
+  categories: ThreadCategoryData[];
+}
+
+export interface ThreadCommentData {
+  id: number;
+  thread_id: number;
+  commenter_id: string;
+  commenter_fullname: string;
+  commented_at: string;
+  content: string;
+}
+
+export interface ThreadData {
+  id: number;
+  creator_id: string;
+  creator_fullname: string;
+  title: string;
+  content: string;
+  posted_at: string;
+  comments: ThreadCommentData[];
+}
+
+export interface CreateThreadData {
+  title: string;
+  content: string;
+}
+
+export interface CreateCommentData {
+  content: string;
+}

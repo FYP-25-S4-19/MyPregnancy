@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.util.concurrency import e
 
 from app.core.users_manager import current_active_user
 from app.db.db_config import get_db
@@ -120,6 +119,68 @@ async def delete_comment(
 ) -> None:
     try:
         await service.delete_comment(comment_id, current_user)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@community_threads_router.post("/{thread_id}/like", status_code=status.HTTP_201_CREATED)
+async def like_thread(
+    thread_id: int,
+    service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
+    liker: User = Depends(current_active_user),
+) -> None:
+    try:
+        new_like = await service.like_thread(thread_id, liker)
+        db.add(new_like)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@community_threads_router.delete("/{thread_id}/unlike", status_code=status.HTTP_204_NO_CONTENT)
+async def unlike_thread(
+    thread_id: int,
+    service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
+    liker: User = Depends(current_active_user),
+) -> None:
+    try:
+        await service.unlike_thread(thread_id, liker)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@community_threads_router.post("/{thread_id}/comments/{comment_id}/like", status_code=status.HTTP_201_CREATED)
+async def like_comment(
+    comment_id: int,
+    service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
+    liker: User = Depends(current_active_user),
+) -> None:
+    try:
+        new_like = await service.like_comment(comment_id, liker)
+        db.add(new_like)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@community_threads_router.delete("/{thread_id}/comments/{comment_id}/unlike", status_code=status.HTTP_204_NO_CONTENT)
+async def unlike_comment(
+    comment_id: int,
+    service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
+    liker: User = Depends(current_active_user),
+) -> None:
+    try:
+        await service.unlike_comment(comment_id, liker)
         await db.commit()
     except:
         await db.rollback()
