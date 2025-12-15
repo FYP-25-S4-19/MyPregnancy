@@ -44,3 +44,11 @@ class CreateThreadData(CustomBaseModel):
 class ThreadUpdateData(CustomBaseModel):
     title: str
     content: str
+
+
+class CreateCommentData(CustomBaseModel):
+    content: str
+
+
+class UpdateCommentData(CustomBaseModel):
+    content: str

@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.util.concurrency import e
 
 from app.core.users_manager import current_active_user
 from app.db.db_config import get_db
 from app.db.db_schema import User
 from app.features.community_threads.thread_models import (
+    CreateCommentData,
     CreateThreadData,
     ThreadData,
     ThreadPreviewData,
     ThreadUpdateData,
+    UpdateCommentData,
 )
 from app.features.community_threads.thread_service import ThreadService
 
@@ -33,9 +36,15 @@ async def get_thread_by_id(thread_id: int, service: ThreadService = Depends(get_
 async def create_thread(
     thread_data: CreateThreadData,
     service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
     creator: User = Depends(current_active_user),
 ) -> None:
-    await service.create_thread(thread_data, creator)
+    try:
+        await service.create_thread(thread_data, creator)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
 
 
 @community_threads_router.put("/{thread_id}", status_code=status.HTTP_200_OK)
@@ -43,15 +52,75 @@ async def update_thread(
     thread_id: int,
     thread_data: ThreadUpdateData,
     service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(current_active_user),
 ) -> None:
-    await service.update_thread(thread_id, thread_data, current_user)
+    try:
+        await service.update_thread(thread_id, thread_data, current_user)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
 
 
 @community_threads_router.delete("/{thread_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_thread(
     thread_id: int,
     service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(current_active_user),
 ) -> None:
-    await service.delete_thread(thread_id, current_user)
+    try:
+        await service.delete_thread(thread_id, current_user)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@community_threads_router.post("/{thread_id}/comments", status_code=status.HTTP_201_CREATED)
+async def create_comment(
+    thread_id: int,
+    comment_data: CreateCommentData,
+    service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
+    commenter: User = Depends(current_active_user),
+) -> None:
+    try:
+        new_comment = await service.create_comment(thread_id, comment_data, commenter)
+        db.add(new_comment)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@community_threads_router.put("/{thread_id}/comments/{comment_id}", status_code=status.HTTP_200_OK)
+async def update_comment(
+    comment_id: int,
+    comment_data: UpdateCommentData,
+    service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(current_active_user),
+) -> None:
+    try:
+        await service.update_comment(comment_id, comment_data, current_user)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@community_threads_router.delete("/{thread_id}/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_comment(
+    comment_id: int,
+    service: ThreadService = Depends(get_threads_service),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(current_active_user),
+) -> None:
+    try:
+        await service.delete_comment(comment_id, current_user)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise

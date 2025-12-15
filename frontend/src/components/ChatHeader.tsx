@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: sizes.m,
     // paddingTop: sizes.m,
     // paddingBottom: sizes.s,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   backButton: {
     width: LEFT_AND_RIGHT_CONTAINER_WIDTH,

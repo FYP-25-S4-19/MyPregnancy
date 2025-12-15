@@ -1,9 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ImageBackground, StatusBar } from "react-native";
+import { colors, sizes, font } from "@/src/shared/designSystem";
 import { useRouter } from "expo-router";
 import api from "@/src/shared/api";
-import { colors, sizes, font } from "@/src/shared/designSystem";
-import useAuthStore from "@/src/shared/authStore";
 
 /** ----- slide content ----- */
 type Slide = {
@@ -214,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1.5,
     borderColor: colors.secondary,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
   },

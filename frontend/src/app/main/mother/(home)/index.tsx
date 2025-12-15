@@ -1,9 +1,10 @@
 import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import useAuthStore from "@/src/shared/authStore";
-import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
+import { colors, font, sizes } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import JournalCardViewOnly from "@/src/components/JournalCardView";
 import ArticlesCardViewOnly from "@/src/components/ArticlesCardViewOnly";
+import CommunityThreadsSection from "@/src/components/CommunityThreadsSection";
 import { router } from "expo-router";
 
 export default function MotherHomeScreen() {
@@ -17,8 +18,8 @@ export default function MotherHomeScreen() {
       length: 30,
       weight: 600,
     },
-    userName: me?.first_name || "Olivia",
-    userLastName: me?.last_name || "Wilson",
+    userName: me?.first_name || "<FIRST NAME>",
+    userLastName: me?.last_name || "<LAST NAME>",
   };
 
   const journalData = {
@@ -34,6 +35,43 @@ export default function MotherHomeScreen() {
     { id: "2", title: "Foods That Boost Baby's Growth" },
     { id: "3", title: "How Much Should You Be Sleeping?" },
     { id: "4", title: "Managing Stress During Pregnancy" },
+  ];
+
+  const communityThreads = [
+    {
+      id: "1",
+      title: "Best exercises during second trimester?",
+      author: "Sarah Johnson",
+      replies: 24,
+      timeAgo: "2h ago",
+      preview:
+        "I'm looking for safe and effective exercises I can do during my second trimester. What has worked for you?",
+    },
+    {
+      id: "2",
+      title: "Dealing with pregnancy cravings",
+      author: "Emily Chen",
+      replies: 18,
+      timeAgo: "5h ago",
+      preview: "Anyone else craving pickles and ice cream at 3am? How do you manage unusual food cravings?",
+    },
+    {
+      id: "3",
+      title: "Nursery decoration ideas",
+      author: "Jessica Martinez",
+      replies: 31,
+      timeAgo: "1d ago",
+      preview:
+        "Share your nursery themes and decoration ideas! I'm struggling to choose between modern minimalist or woodland theme.",
+    },
+    {
+      id: "4",
+      title: "First time mom - feeling nervous",
+      author: "Amanda Wilson",
+      replies: 42,
+      timeAgo: "2d ago",
+      preview: "Is it normal to feel overwhelmed and nervous? Looking for advice from experienced moms.",
+    },
   ];
 
   const getInitials = () => {
@@ -103,6 +141,13 @@ export default function MotherHomeScreen() {
 
         {/* Articles Card */}
         <ArticlesCardViewOnly articles={articles} onViewAll={() => router.push("/main/mother/articles")} />
+
+        {/* Community Threads Section */}
+        <CommunityThreadsSection
+          threads={communityThreads}
+          onViewAll={() => router.push("/main/mother/threads")}
+          onThreadPress={(threadId) => console.log("Thread pressed:", threadId)}
+        />
 
         {/* Extra spacing at bottom */}
         <View style={{ height: sizes.xl }} />

@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   consultationChip: {
     backgroundColor: colors.secondary, // "#ffe2e2",

@@ -94,7 +94,7 @@ export const styles = StyleSheet.create({
   inputWrapper: {
     // paddingHorizontal: sizes.m,
     paddingBottom: sizes.xxl,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
     // backgroundColor: "#FF0000",
   },
 });

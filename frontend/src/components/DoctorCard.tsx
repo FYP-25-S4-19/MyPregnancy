@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   chatButton: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
     paddingHorizontal: sizes.l,
     paddingVertical: sizes.xs,
     borderRadius: sizes.l,
