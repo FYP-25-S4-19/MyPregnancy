@@ -42,12 +42,14 @@ Next, you have 2 options for allowing your mobile device to connect
 - **Wireless:** Assuming your mobile device is on the same private network and subnet, you'd have to create 2 firewall rules
   - Allow inbound TCP 192.168.1.0/24 on port 8081 _(Expo Metro Bundler)_
   - Allow inbound TCP 192.168.1.0/24 on port 8000 _(FastAPI backend)_
+  - Allow inbound TCP 192.168.1.0/24 on port 4567 _(LocalStack)_
+
 
 - **Wired:** I have no idea how, but you can research into making use of `adb reverse`
 
 
 From now on, during development, you just have to
-- Call `npx expo start --dev-client --tunnel`, a QR code should be presented
+- Call `npx expo start --dev-client`, a QR code should be presented
 - Scan the code using the previously installed APK on your mobile device
 
 #### Android Emulator
@@ -59,7 +61,7 @@ If you have properly previously configured the Android Studio step at the start,
 
 1. `cd backend`
 2. **[First Time]**
-   - Create a Python virtual environment `uv venv .venv`
+   - Create a Python virtual environment `uv venv`
    - Activate the virtual environment
       - macOS and Linux: `source venv/bin/activate`
       - Windows: `venv\Scripts\Activate.bat`
@@ -100,7 +102,7 @@ Will can manage your LocalStack resources through the web console [here](https:/
 
 ---
 
-## Database Schema (Updated 16-Nov-25)
+## Database Schema (Updated 12-Dec-25)
 
 <img src="assets/db_schema.png">
 

@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from fastapi_users import schemas
 from pydantic import ConfigDict
@@ -6,7 +7,7 @@ from pydantic import ConfigDict
 from app.db.db_schema import UserRole
 
 
-class UserRead(schemas.BaseUser[int]):
+class UserRead(schemas.BaseUser[UUID]):
     first_name: str
     middle_name: Optional[str] = None
     last_name: str

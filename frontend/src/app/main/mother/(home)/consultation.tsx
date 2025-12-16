@@ -2,7 +2,7 @@ import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { colors, sizes, font } from "../../../../shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DoctorCard from "../../../../components/DoctorCard";
+import DoctorCard from "../../../../components/cards/DoctorCard";
 import SearchBar from "../../../../components/SearchBar";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
@@ -14,6 +14,10 @@ interface DoctorPreviewData {
   profile_img_url: string | null;
   first_name: string;
   is_liked: boolean;
+}
+
+interface ChannelCreationResponse {
+  channel_id: string;
 }
 
 export default function ConsultationsScreen() {
@@ -30,8 +34,14 @@ export default function ConsultationsScreen() {
     },
   });
 
-  const onChatPress = (doctorID: string): void => {
-    router.push(`/main/mother/chats`);
+  const onChatPress = async (doctorID: string): Promise<void> => {
+    try {
+      const res = await api.post("/stream/chat/channel", { doctor_id: doctorID });
+      const { channel_id }: ChannelCreationResponse = res.data;
+      router.push(`/main/mother/chats/${channel_id}`);
+    } catch (err) {
+      console.error("Channel error:", err);
+    }
   };
 
   return (
@@ -81,7 +91,7 @@ export default function ConsultationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: "row",

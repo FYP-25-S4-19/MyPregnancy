@@ -1,0 +1,932 @@
+[
+  {
+    "name": "Apple Pie",
+    "description": "A classic dessert with tender cooked apples and a flaky crust.",
+    "est_calories": "350-450 kcal per slice",
+    "pregnancy_benefit": "A source of quick energy and soluble fiber from the apples, which aids in digestion. Best enjoyed in moderation.",
+    "serving": 8,
+    "instructions_markdown": "* Prepare pie crust.\n* Mix sliced apples with cinnamon and sugar.\n* Fill crust and bake until golden brown.",
+    "photo_url": "apple_pie.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Baby Back Ribs",
+    "description": "Pork ribs, slow-cooked or grilled, and coated in a sweet or savory barbecue sauce.",
+    "est_calories": "600-800 kcal per serving",
+    "pregnancy_benefit": "A high source of **protein** and **Iron**. Choose leaner cuts and focus on vegetable-rich side dishes to balance the meal.",
+    "serving": 2,
+    "instructions_markdown": "* Slow-cook or smoke ribs until tender.\n* Coat with barbecue sauce.\n* Finish on the grill or broiler.",
+    "photo_url": "baby_back_ribs.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Baby Back Ribs",
+    "description": "Pork ribs, slow-cooked or grilled, and coated in a sweet or savory barbecue sauce.",
+    "est_calories": "600-800 kcal per serving",
+    "pregnancy_benefit": "A high source of **protein** and **Iron**. Choose leaner cuts and focus on vegetable-rich side dishes to balance the meal.",
+    "serving": 2,
+    "instructions_markdown": "* Slow-cook or smoke ribs until tender.\n* Coat with barbecue sauce.\n* Finish on the grill or broiler.",
+    "photo_url": "baby_back_ribs.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Baklava",
+    "description": "A rich, sweet dessert pastry made of layers of filo pastry filled with chopped nuts and sweetened with syrup or honey.",
+    "est_calories": "250-350 kcal per piece",
+    "pregnancy_benefit": "A concentrated source of energy for occasional cravings. The nuts provide trace minerals and healthy fats.",
+    "serving": 12,
+    "instructions_markdown": "* Layer filo pastry with melted butter and chopped nuts.\n* Bake until golden and pour hot syrup over the cold pastry.",
+    "photo_url": "baklava.jpg",
+    "categories": ["Vegetarian"]
+  },
+  {
+    "name": "Barbecue Chicken Quesadilla",
+    "description": "Grilled tortillas filled with chicken, barbecue sauce, and melted cheese.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "Provides protein and calcium. Use whole-wheat tortillas and add diced onions/peppers for extra fiber and vitamins.",
+    "serving": 1,
+    "instructions_markdown": "* Mix cooked chicken with BBQ sauce.\n* Place chicken and cheese between two tortillas.\n* Grill until cheese is melted and tortilla is golden.",
+    "photo_url": "barbecue_chicken_quesadilla.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Bean and Bacon Griddle Burritos",
+    "description": "Portable burritos filled with refried beans, crispy bacon, and cheese, then grilled on a griddle.",
+    "est_calories": "450-550 kcal per burrito",
+    "pregnancy_benefit": "**Fiber** from the beans aids in digestion, and the protein and carbs provide lasting fullness. Ensure bacon is cooked until crisp.",
+    "serving": 1,
+    "instructions_markdown": "* Warm a tortilla.\n* Fill with refried beans, cooked bacon pieces, and shredded cheese.\n* Roll up and grill until golden brown.",
+    "photo_url": "bean_and_bacon_griddle_burritos.jpg",
+    "categories": ["High-protein", "High-fiber", "Nut-free"]
+  },
+  {
+    "name": "Beef Carpaccio",
+    "description": "Thinly sliced raw beef, often dressed with olive oil, lemon juice, capers, and Parmesan cheese.",
+    "est_calories": "250-350 kcal per serving",
+    "pregnancy_benefit": "Not recommended for pregnant women due to raw meat. (If consumed, must be flash-frozen first to eliminate parasites.)",
+    "serving": 1,
+    "instructions_markdown": "* Thinly slice or pound raw beef tenderloin.\n* Arrange on a plate and drizzle with olive oil and lemon juice.\n* Top with capers and arugula.",
+    "photo_url": "beef_carpaccio.jpg",
+    "categories": ["Gluten-free", "Dairy-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Beef Stroganoff",
+    "description": "Tender beef slices and mushrooms in a creamy, savory sauce, often served over egg noodles.",
+    "est_calories": "550-650 kcal per serving",
+    "pregnancy_benefit": "High in **Iron** and **Vitamin B12** from the beef, crucial for energy and red blood cell formation. Serve with whole-wheat noodles.",
+    "serving": 4,
+    "instructions_markdown": "* Sauté beef strips and mushrooms.\n* Prepare sauce with beef broth and sour cream.\n* Combine and serve over noodles.",
+    "photo_url": "beef_stroganoff.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Bibimbap",
+    "description": "A Korean mixed rice dish topped with seasoned vegetables, meat (optional), and a fried egg.",
+    "est_calories": "450-550 kcal per bowl",
+    "pregnancy_benefit": "A complete, balanced meal with protein from the egg/meat, complex carbs from rice, and a wide variety of **vitamins and minerals** from the vegetables.",
+    "serving": 1,
+    "instructions_markdown": "* Cook and assemble rice, sautéed vegetables (spinach, carrots, zucchini).\n* Top with a fried egg and a light sesame oil dressing.",
+    "photo_url": "bibimbap.jpg",
+    "categories": ["Halal", "Nut-free", "High-fiber", "High-protein"]
+  },
+  {
+    "name": "Bowtie Pasta with Gorgonzola Sauce",
+    "description": "Pasta tossed in a rich, creamy sauce made with Gorgonzola cheese.",
+    "est_calories": "500-600 kcal per serving",
+    "pregnancy_benefit": "A satisfying, energy-dense comfort food. Choose hard cheeses like Gorgonzola, which are generally safe during pregnancy.",
+    "serving": 4,
+    "instructions_markdown": "* Cook bowtie pasta.\n* Melt Gorgonzola into a light cream sauce.\n* Toss with pasta and serve.",
+    "photo_url": "bowtie_pasta_with_gorgonzola_sauce.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Breakfast Burrito",
+    "description": "A satisfying wrap filled with eggs, beans, cheese, and sometimes sausage or potatoes.",
+    "est_calories": "480-580 kcal per burrito",
+    "pregnancy_benefit": "Eggs provide **Choline** for brain development, and the beans/whole-wheat tortilla offer lasting energy and fiber.",
+    "serving": 1,
+    "instructions_markdown": "* Scramble eggs.\n* Warm a large tortilla.\n* Fill with eggs, black beans, salsa, and a sprinkle of cheese.\n* Wrap tightly.",
+    "photo_url": "breakfast_burrito.jpg",
+    "categories": ["Vegetarian", "High-protein", "High-fiber"]
+  },
+  {
+    "name": "Bruschetta",
+    "description": "Toasted bread rubbed with garlic and topped with fresh tomatoes, basil, and olive oil.",
+    "est_calories": "150-200 kcal per serving",
+    "pregnancy_benefit": "Provides a high amount of **Vitamin C** from the tomatoes. A light and refreshing appetizer.",
+    "serving": 4,
+    "instructions_markdown": "* Slice and toast bread.\n* Top with diced tomatoes, garlic, basil, and olive oil.",
+    "photo_url": "bruschetta.jpg",
+    "categories": ["Vegetarian", "Vegan", "Dairy-free", "Nut-free"]
+  },
+  {
+    "name": "Caesar Salad",
+    "description": "Romaine lettuce and croutons dressed with Parmesan cheese, lemon juice, olive oil, and sometimes anchovies.",
+    "est_calories": "300-400 kcal per serving",
+    "pregnancy_benefit": "Romaine lettuce offers **Folate and Vitamin K**. Ensure dressing is made with pasteurized eggs if eating homemade.",
+    "serving": 2,
+    "instructions_markdown": "* Toss chopped Romaine lettuce with croutons and shaved Parmesan.\n* Dress with a light Caesar dressing.",
+    "photo_url": "caesar_salad.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Cannoli",
+    "description": "Italian pastry dessert consisting of tube-shaped fried dough, filled with a sweet, creamy ricotta cheese filling.",
+    "est_calories": "200-300 kcal per piece",
+    "pregnancy_benefit": "A treat to enjoy in moderation. Ricotta is a good source of **Calcium** and protein.",
+    "serving": 8,
+    "instructions_markdown": "* Form and fry pastry dough into shells.\n* Mix ricotta with sugar and flavorings (vanilla, lemon zest).\n* Pipe the filling into the cooled shells.",
+    "photo_url": "cannoli.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Caprese Salad",
+    "description": "A simple Italian salad made of sliced fresh mozzarella, tomatoes, and basil, seasoned with olive oil.",
+    "est_calories": "250-350 kcal per serving",
+    "pregnancy_benefit": "Mozzarella provides **Calcium**, while tomatoes offer **Vitamin C**. Use pasteurized mozzarella for safety.",
+    "serving": 1,
+    "instructions_markdown": "* Arrange slices of fresh mozzarella, tomato, and basil leaves.\n* Drizzle with olive oil and a dash of balsamic vinegar (optional).",
+    "photo_url": "caprese_salad.jpg",
+    "categories": ["Vegetarian", "Gluten-free", "Nut-free", "Low-carb"]
+  },
+  {
+    "name": "Caramelized Pork Tenderloin",
+    "description": "Pork tenderloin roasted or pan-seared with a sweet, sticky, caramelized glaze.",
+    "est_calories": "350-420 kcal per serving",
+    "pregnancy_benefit": "Pork tenderloin is one of the leanest meats, offering high protein and **B vitamins** with minimal fat. Ensure it is cooked thoroughly.",
+    "serving": 4,
+    "instructions_markdown": "* Sear pork tenderloin on all sides.\n* Brush with a caramelizing glaze (sugar, soy sauce, spices).\n* Roast until cooked through (145°F / 63°C).",
+    "photo_url": "caramelized_pork_tenderloin.jpg",
+    "categories": ["Dairy-free", "High-protein", "Low-fat"]
+  },
+  {
+    "name": "Carrot Cake",
+    "description": "A dense cake containing carrots mixed into the batter, often topped with cream cheese frosting.",
+    "est_calories": "400-500 kcal per slice",
+    "pregnancy_benefit": "Carrots are rich in **Beta-Carotene** (Vitamin A), important for cell growth. A treat to enjoy with a bit of nutritional value.",
+    "serving": 8,
+    "instructions_markdown": "* Mix dry and wet ingredients with shredded carrots.\n* Bake cake and let cool.\n* Frost with cream cheese frosting.",
+    "photo_url": "carrot_cake.jpg",
+    "categories": ["Vegetarian"]
+  },
+  {
+    "name": "Chicken Broccoli Casserole",
+    "description": "A creamy, baked dish combining chicken, broccoli, rice, and a cheesy sauce.",
+    "est_calories": "480-580 kcal per serving",
+    "pregnancy_benefit": "A comforting source of **Calcium, Folate, and Vitamin C** from the broccoli, and high-quality protein from the chicken.",
+    "serving": 6,
+    "instructions_markdown": "* Combine cooked chicken, rice, and steamed broccoli.\n* Mix with a creamy soup or cheese sauce.\n* Bake until bubbly.",
+    "photo_url": "chicken_broccoli_casserole.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Chicken Fajitas",
+    "description": "Sizzling strips of chicken and bell peppers seasoned and served with warm tortillas and toppings.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "Excellent source of lean **protein** and high amounts of **Vitamin C** from the bell peppers, which supports the immune system.",
+    "serving": 4,
+    "instructions_markdown": "* Season and sauté chicken and sliced bell peppers/onions.\n* Serve with warmed corn or whole-wheat tortillas and fresh salsa.",
+    "photo_url": "chicken_fajitas.jpg",
+    "categories": ["Halal", "Dairy-free", "High-protein", "Low-fat"]
+  },
+  {
+    "name": "Chicken Parm Sandwich",
+    "description": "Breaded chicken cutlet topped with marinara sauce and melted mozzarella cheese on a roll.",
+    "est_calories": "550-700 kcal per sandwich",
+    "pregnancy_benefit": "A substantial meal providing protein and calcium. Use whole-wheat rolls and baked chicken to improve health profile.",
+    "serving": 1,
+    "instructions_markdown": "* Bread and cook chicken cutlet.\n* Place on a roll, top with marinara and cheese.\n* Broil until cheese is melted.",
+    "photo_url": "chicken_parm_sandwich.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Chicken Quesadillas",
+    "description": "Flour tortillas filled with shredded chicken and melted cheese, griddled until golden.",
+    "est_calories": "400-500 kcal per quesadilla",
+    "pregnancy_benefit": "Quick and easy source of protein and calcium. Serve with salsa and avocado for Vitamin C and healthy fats.",
+    "serving": 2,
+    "instructions_markdown": "* Fill tortillas with shredded cooked chicken and cheese.\n* Cook in a pan until cheese is melted and tortilla is crisp.",
+    "photo_url": "chicken_quesadillas.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Chicken Satay and Peanut Sauce",
+    "description": "Marinated, skewered chicken, often grilled, served with a rich peanut dipping sauce.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "Chicken provides lean protein, and the peanut sauce offers healthy fats and Vitamin E (use caution if there are nut allergies).",
+    "serving": 3,
+    "instructions_markdown": "* Marinate and grill chicken on skewers.\n* Blend peanut butter, soy sauce, lime juice, and spices for the sauce.\n* Serve chicken skewers with sauce.",
+    "photo_url": "chicken_satay_and_peanut_sauce.jpg",
+    "categories": ["Halal", "High-protein", "Dairy-free"]
+  },
+  {
+    "name": "Chicken with Spinach and Mushrooms",
+    "description": "Pan-seared chicken cutlets served in a light cream sauce with fresh spinach and sautéed mushrooms.",
+    "est_calories": "380-450 kcal per serving",
+    "pregnancy_benefit": "High in **Protein**, **Folate** (spinach), and **Vitamin D** (mushrooms, if UV-treated). A great nutrient-dense, low-carb meal.",
+    "serving": 2,
+    "instructions_markdown": "* Cook chicken and set aside.\n* Sauté mushrooms and spinach in the pan.\n* Deglaze with broth or wine and add a splash of light cream to make the sauce.\n* Return chicken to pan.",
+    "photo_url": "chicken_with_spinach_and_mushrooms.jpg",
+    "categories": ["Halal", "Gluten-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Chocolate Cake",
+    "description": "A classic, rich, moist cake flavored with cocoa powder.",
+    "est_calories": "380-480 kcal per slice",
+    "pregnancy_benefit": "A comforting treat that can satisfy cravings. Dark chocolate contains trace minerals like iron and magnesium.",
+    "serving": 10,
+    "instructions_markdown": "* Prepare chocolate cake batter and bake.\n* Allow to cool completely.\n* Frost with chocolate frosting.",
+    "photo_url": "chocolate_cake.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Cilantro Beef Tacos",
+    "description": "Soft corn or flour tortillas filled with seasoned ground beef and topped with a fresh cilantro-lime mix.",
+    "est_calories": "280-380 kcal per taco",
+    "pregnancy_benefit": "Beef provides essential **Iron** and **Zinc**. Cilantro is a good source of Vitamin K and antioxidants.",
+    "serving": 3,
+    "instructions_markdown": "* Cook and season ground beef.\n* Warm tortillas.\n* Assemble tacos with beef and a topping of cilantro, lime juice, and chopped onion.",
+    "photo_url": "cilantro_beef_tacos.jpg",
+    "categories": ["Halal", "High-protein", "Gluten-free", "Dairy-free"]
+  },
+  {
+    "name": "Clam Chowder",
+    "description": "A thick, creamy soup traditionally made with clams, potatoes, and onions.",
+    "est_calories": "350-450 kcal per bowl",
+    "pregnancy_benefit": "Provides **Iron** from the clams and **Calcium** from the milk/cream base. Choose a version low in sodium.",
+    "serving": 4,
+    "instructions_markdown": "* Cook clams and set aside.\n* Sauté vegetables, add flour and milk to make a creamy base.\n* Stir in clams and potatoes and simmer.",
+    "photo_url": "clam_chowder.jpg",
+    "categories": ["Pescatarian", "Nut-free", "Low-sugar"]
+  },
+  {
+    "name": "Club Sandwich",
+    "description": "A triple-decker sandwich layered with sliced turkey, bacon, lettuce, and tomato.",
+    "est_calories": "500-600 kcal per sandwich",
+    "pregnancy_benefit": "Turkey provides lean protein. Use whole-grain bread and fresh vegetables for fiber and vitamins.",
+    "serving": 1,
+    "instructions_markdown": "* Toast three slices of bread.\n* Layer with turkey, cooked bacon, lettuce, tomato, and light mayo.\n* Cut into quarters.",
+    "photo_url": "club_sandwich.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Crab Cakes",
+    "description": "Patties made from crab meat, bread crumbs, and seasonings, often pan-fried or baked.",
+    "est_calories": "300-400 kcal per serving",
+    "pregnancy_benefit": "Good source of **Vitamin B12** and lean protein. Ensure they are cooked thoroughly and crab is a low-mercury variety.",
+    "serving": 2,
+    "instructions_markdown": "* Mix crab meat, breadcrumbs, egg, and seasoning.\n* Form into patties and pan-fry or bake until golden.",
+    "photo_url": "crab_cakes.jpg",
+    "categories": ["Pescatarian", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Crescent Turkey Casserole",
+    "description": "A quick casserole made with cooked turkey, creamy sauce, and topped with flaky crescent roll dough.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "A comforting source of **protein**. Can be made healthier by incorporating hidden vegetables into the creamy filling.",
+    "serving": 6,
+    "instructions_markdown": "* Mix cooked turkey, gravy/cream of soup, and vegetables.\n* Pour into a baking dish.\n* Top with crescent roll dough and bake until golden brown.",
+    "photo_url": "crescent_turkey_casserole.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Dumplings",
+    "description": "Savory pockets of dough filled with ground meat and/or vegetables, usually steamed or pan-fried.",
+    "est_calories": "250-350 kcal per serving (5-6 pieces)",
+    "pregnancy_benefit": "A manageable source of protein and carbohydrates for appetite-challenged days. Ensure meat filling is cooked thoroughly.",
+    "serving": 3,
+    "instructions_markdown": "* Prepare meat/vegetable filling and dough wrappers.\n* Fill and seal the dumplings.\n* Steam or pan-fry until cooked through.",
+    "photo_url": "dumplings.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Easy Spaghetti Bolognese",
+    "description": "A simple, comforting pasta dish with a rich meat sauce.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "Meat provides **Iron** and **Zinc**, while the tomato sauce is rich in **Vitamin C**. Use whole-wheat spaghetti for fiber.",
+    "serving": 4,
+    "instructions_markdown": "* Brown ground beef or turkey.\n* Simmer with canned crushed tomatoes, herbs, and seasonings.\n* Serve over cooked spaghetti.",
+    "photo_url": "easy_spaghetti_bolognese.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Eggs Benedict",
+    "description": "An American breakfast dish consisting of an English muffin topped with Canadian bacon, a poached egg, and hollandaise sauce.",
+    "est_calories": "550-650 kcal per serving",
+    "pregnancy_benefit": "Eggs are a fantastic source of **Choline**. Ensure the eggs are thoroughly cooked (not runny) or the sauce is made with pasteurized eggs.",
+    "serving": 1,
+    "instructions_markdown": "* Toast English muffin halves.\n* Top with Canadian bacon and a poached egg.\n* Drizzle with hollandaise sauce.",
+    "photo_url": "eggs_benedict.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Falafel",
+    "description": "Deep-fried balls or patties made from ground chickpeas and spices.",
+    "est_calories": "280-380 kcal per serving",
+    "pregnancy_benefit": "A great vegetarian source of **Iron and Folate** from chickpeas. Choose baked falafel to reduce fat content.",
+    "serving": 3,
+    "instructions_markdown": "* Process chickpeas, herbs, and spices.\n* Form into patties and shallow fry or bake.",
+    "photo_url": "falafel.jpg",
+    "categories": ["Vegetarian", "Vegan", "Dairy-free", "High-fiber"]
+  },
+  {
+    "name": "Filet Mignon",
+    "description": "A thick, tender cut of steak from the beef tenderloin, often pan-seared or grilled.",
+    "est_calories": "300-400 kcal per steak",
+    "pregnancy_benefit": "High-quality, lean **Protein** and **Iron**. It is critical that the steak is cooked to at least medium-well (160°F / 71°C) during pregnancy.",
+    "serving": 1,
+    "instructions_markdown": "* Season filet mignon generously.\n* Sear in a hot pan and finish in the oven (or grill) until cooked to desired doneness.",
+    "photo_url": "filet_mignon.jpg",
+    "categories": ["Gluten-free", "Dairy-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Fish and Chips",
+    "description": "Battered and deep-fried fish fillets served with thick-cut fried potatoes (chips).",
+    "est_calories": "600-750 kcal per serving",
+    "pregnancy_benefit": "A source of lean protein. Choose fish like Cod or Haddock which are low in mercury. Best enjoyed occasionally due to the deep-frying.",
+    "serving": 1,
+    "instructions_markdown": "* Dip fish fillets in batter and deep fry.\n* Fry potato chips until golden.\n* Serve with malt vinegar and salt.",
+    "photo_url": "fish_and_chips.jpg",
+    "categories": ["Pescatarian", "High-protein", "Dairy-free"]
+  },
+  {
+    "name": "French Fries",
+    "description": "Deep-fried potato strips, often served as a side.",
+    "est_calories": "300-400 kcal per side",
+    "pregnancy_benefit": "Potatoes contain **Vitamin C** and **Potassium**. A comfort food that provides quick energy; best enjoyed in moderation or baked.",
+    "serving": 2,
+    "instructions_markdown": "* Slice potatoes into strips.\n* Soak in cold water, dry thoroughly.\n* Fry or bake until golden and crispy.",
+    "photo_url": "french_fries.jpg",
+    "categories": ["Vegetarian", "Vegan", "Gluten-free", "Nut-free", "Dairy-free"]
+  },
+  {
+    "name": "French Onion Soup",
+    "description": "A soup based on beef broth, traditionally topped with croutons and a layer of melted cheese.",
+    "est_calories": "250-350 kcal per bowl",
+    "pregnancy_benefit": "Provides hydration and warm, savory broth, which can be soothing during pregnancy. Onions contain prebiotics for gut health.",
+    "serving": 4,
+    "instructions_markdown": "* Slowly caramelize sliced onions.\n* Add beef broth and simmer.\n* Top with bread and cheese, then broil until melted.",
+    "photo_url": "french_onion_soup.jpg",
+    "categories": ["Nut-free"]
+  },
+  {
+    "name": "Fried Rice",
+    "description": "A Chinese dish of cooked rice stir-fried in a wok or a frying pan, usually mixed with other ingredients like eggs, vegetables, and meat.",
+    "est_calories": "400-550 kcal per serving",
+    "pregnancy_benefit": "A convenient, balanced meal providing carbs, protein, and vegetables. Ensure the rice is fresh or properly cooled to prevent bacteria growth.",
+    "serving": 2,
+    "instructions_markdown": "* Stir-fry eggs and set aside.\n* Stir-fry vegetables (peas, carrots) and meat/tofu.\n* Add day-old cooked rice and soy sauce; stir-fry until heated through.",
+    "photo_url": "fried_rice.jpg",
+    "categories": ["Halal", "Vegetarian", "Dairy-free", "Nut-free"]
+  },
+  {
+    "name": "Glass Noodle Stir Fry",
+    "description": "Clear mung bean noodles stir-fried with vegetables and meat/seafood, known for its light texture.",
+    "est_calories": "350-450 kcal per serving",
+    "pregnancy_benefit": "A low-fat, high-volume meal. Glass noodles are easy to digest, and the dish can be loaded with colorful vegetables for nutrients.",
+    "serving": 2,
+    "instructions_markdown": "* Soak glass noodles until pliable.\n* Stir-fry desired vegetables and protein.\n* Add noodles and sauce; cook until sauce is absorbed.",
+    "photo_url": "glass_noodle_stir_fry.jpg",
+    "categories": ["Vegan", "Gluten-free", "Dairy-free", "Low-fat"]
+  },
+  {
+    "name": "Gnocchi with White Beans",
+    "description": "Soft potato gnocchi tossed with cannellini beans, kale, and a light garlic-herb sauce.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "A good source of complex carbohydrates and plant-based **Fiber** and **Folate** from the beans and kale.",
+    "serving": 3,
+    "instructions_markdown": "* Cook gnocchi until floating.\n* Sauté garlic, onions, and kale.\n* Toss gnocchi and white beans with the sautéed vegetables and season.",
+    "photo_url": "gnocchi_with_white_beans.jpg",
+    "categories": ["Vegetarian", "High-fiber", "Nut-free"]
+  },
+  {
+    "name": "Greek Chicken Pasta",
+    "description": "Pasta tossed with grilled chicken, feta cheese, olives, and fresh Mediterranean vegetables.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "Lean protein, calcium from feta, and heart-healthy monounsaturated fats from olive oil and olives.",
+    "serving": 4,
+    "instructions_markdown": "* Cook pasta.\n* Combine chicken, pasta, chopped tomatoes, cucumbers, olives, and feta.\n* Dress with a lemon and herb vinaigrette.",
+    "photo_url": "greek_chicken_pasta.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Grilled Beef and Blue Cheese Sandwich",
+    "description": "A sophisticated sandwich featuring thinly sliced grilled beef and pungent blue cheese, often on sourdough.",
+    "est_calories": "480-580 kcal per sandwich",
+    "pregnancy_benefit": "Beef provides crucial **Iron** and **Zinc**. Ensure the blue cheese used is a hard variety or made with pasteurized milk.",
+    "serving": 1,
+    "instructions_markdown": "* Grill thinly sliced beef.\n* Spread blue cheese mixture on bread.\n* Grill the sandwich until cheese is melted and bread is toasted.",
+    "photo_url": "grilled_beef_and_blue_cheese_sandwich.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Hamburger",
+    "description": "A sandwich consisting of one or more cooked patties of ground meat placed inside a sliced bun.",
+    "est_calories": "450-650 kcal per burger",
+    "pregnancy_benefit": "Ground beef is a concentrated source of highly absorbable **Iron** and **Zinc**. Ensure the patty is cooked thoroughly (no pink).",
+    "serving": 1,
+    "instructions_markdown": "* Season and grill ground beef patty.\n* Serve on a whole-wheat bun with lettuce, tomato, and condiments.",
+    "photo_url": "hamburger.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Homemade Chicken Potpie",
+    "description": "A classic comfort food: savory chicken and vegetables in a creamy sauce, topped with a flaky pastry crust.",
+    "est_calories": "500-600 kcal per serving",
+    "pregnancy_benefit": "A warm, comforting meal providing lean protein, **Vitamin A** (from carrots), and carbohydrates for sustained energy.",
+    "serving": 6,
+    "instructions_markdown": "* Cook chicken and mix with vegetables and gravy.\n* Pour filling into a baking dish.\n* Top with pastry crust and bake until golden.",
+    "photo_url": "homemade_chicken_potpie.jpg",
+    "categories": ["Halal", "Nut-free", "High-protein"]
+  },
+  {
+    "name": "Honey Garlic Pork Chops",
+    "description": "Pan-seared pork chops finished with a sticky, sweet, and savory honey-garlic glaze.",
+    "est_calories": "380-450 kcal per serving",
+    "pregnancy_benefit": "Pork is an excellent source of **Thiamine (B1)** and **Niacin (B3)**, important for energy metabolism. Ensure chops are cooked through (145°F / 63°C).",
+    "serving": 2,
+    "instructions_markdown": "* Pan-sear pork chops until cooked.\n* Prepare glaze by simmering honey, garlic, and soy sauce.\n* Coat chops in glaze and serve.",
+    "photo_url": "honey_garlic_pork_chops.jpg",
+    "categories": ["High-protein", "Nut-free", "Dairy-free"]
+  },
+  {
+    "name": "Honey Sesame Chicken",
+    "description": "Crispy chicken pieces tossed in a sweet, sticky honey-sesame sauce, often served with rice.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "A good protein source. Sesame seeds provide trace minerals like copper and manganese. Opt for baked chicken over fried.",
+    "serving": 3,
+    "instructions_markdown": "* Lightly bread and bake chicken pieces.\n* Toss with a sauce made from honey, sesame oil, and soy sauce.\n* Garnish with sesame seeds.",
+    "photo_url": "honey_sesame_chicken.jpg",
+    "categories": ["Halal", "High-protein", "Dairy-free"]
+  },
+  {
+    "name": "Hot Dog",
+    "description": "A grilled or boiled sausage served in a sliced bun, usually topped with condiments.",
+    "est_calories": "300-450 kcal per dog",
+    "pregnancy_benefit": "A comfort food. Limit consumption due to sodium, and always ensure the sausage is steaming hot to reduce listeria risk.",
+    "serving": 1,
+    "instructions_markdown": "* Grill or boil the hot dog until steaming hot.\n* Place in a bun and add desired toppings.",
+    "photo_url": "hot_dog.jpg",
+    "categories": ["Nut-free"]
+  },
+  {
+    "name": "Jacket Potato",
+    "description": "A large potato baked in its skin until soft, then split open and filled with various toppings.",
+    "est_calories": "300-500 kcal per potato (depending on filling)",
+    "pregnancy_benefit": "The skin provides **High Fiber** and **Potassium**. Top with lean protein (chili, beans, tuna) and a dollop of yogurt/cheese for calcium.",
+    "serving": 1,
+    "instructions_markdown": "* Bake potato until skin is crisp and inside is fluffy.\n* Split open and fill with desired toppings (e.g., baked beans and cheese).",
+    "photo_url": "jacket_potato.jpg",
+    "categories": ["Vegetarian", "Gluten-free", "Nut-free", "High-fiber"]
+  },
+  {
+    "name": "Lasagna",
+    "description": "Layers of pasta, meat or vegetable sauce, and cheese, baked until bubbly.",
+    "est_calories": "550-700 kcal per serving",
+    "pregnancy_benefit": "The meat or beans offer protein and iron, while the cheese provides **Calcium**. A filling meal, great for freezing portions.",
+    "serving": 6,
+    "instructions_markdown": "* Layer cooked lasagna noodles, meat/veg sauce, ricotta, and mozzarella cheese.\n* Bake until cheese is melted and browned.",
+    "photo_url": "lasagna.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Lasagna Cups",
+    "description": "Individual-sized servings of lasagna baked in a muffin tin for easy portion control.",
+    "est_calories": "250-350 kcal per cup",
+    "pregnancy_benefit": "A protein and calcium source in a perfect portion size, which is great for managing large appetite or mild heartburn.",
+    "serving": 6,
+    "instructions_markdown": "* Line muffin tins with lasagna noodles.\n* Fill with ricotta mixture, meat sauce, and mozzarella.\n* Bake until bubbly.",
+    "photo_url": "lasagna_cups.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Lemony Tortellini Bacon Salad",
+    "description": "Chilled pasta salad featuring cheese tortellini, crisp bacon, and fresh vegetables in a bright lemon dressing.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "Provides complex carbohydrates and protein. Bacon should be cooked until crisp to reduce nitrates.",
+    "serving": 4,
+    "instructions_markdown": "* Cook and cool tortellini.\n* Mix with crisp, crumbled bacon and chopped vegetables.\n* Dress with a lemon vinaigrette.",
+    "photo_url": "lemony_tortellini_bacon_salad.jpg",
+    "categories": ["Nut-free"]
+  },
+  {
+    "name": "Lobster Bisque",
+    "description": "A smooth, highly seasoned soup of French origin, classically prepared with lobster stock and cream.",
+    "est_calories": "300-400 kcal per bowl",
+    "pregnancy_benefit": "Lobster is a low-mercury shellfish, providing protein and trace minerals like **Copper**. Best enjoyed as an occasional treat due to the cream base.",
+    "serving": 4,
+    "instructions_markdown": "* Sauté vegetables and lobster shells to create a broth.\n* Blend the broth and stir in heavy cream.\n* Add cooked lobster meat and season.",
+    "photo_url": "lobster_bisque.jpg",
+    "categories": ["Pescatarian", "Nut-free"]
+  },
+  {
+    "name": "Macaroni and Cheese",
+    "description": "Cooked macaroni pasta mixed with a cheese sauce, typically cheddar.",
+    "est_calories": "450-600 kcal per serving",
+    "pregnancy_benefit": "A comforting food that is an excellent source of **Calcium**. Use whole-wheat macaroni and add puréed vegetables (like squash) to the sauce for extra nutrients.",
+    "serving": 4,
+    "instructions_markdown": "* Cook macaroni.\n* Prepare roux and whisk in milk and cheese to make a sauce.\n* Combine pasta and sauce, then bake or serve immediately.",
+    "photo_url": "macaroni_and_cheese.jpg",
+    "categories": ["Vegetarian", "Nut-free", "High-protein"]
+  },
+  {
+    "name": "Massaman Curry",
+    "description": "A rich, relatively mild Thai curry that is typically made with potatoes, peanuts, and meat (often beef or chicken).",
+    "est_calories": "500-600 kcal per serving",
+    "pregnancy_benefit": "A well-rounded meal offering protein, carbohydrates, and nutrients from the spices. Great source of healthy fats from coconut milk and peanuts.",
+    "serving": 4,
+    "instructions_markdown": "* Sauté Massaman curry paste in coconut milk.\n* Add potatoes, meat, and vegetables; simmer until cooked.\n* Stir in peanuts before serving with rice.",
+    "photo_url": "massaman_curry.jpg",
+    "categories": ["Halal", "Dairy-free"]
+  },
+  {
+    "name": "Mediterranean Turkey Skillet",
+    "description": "A one-pan dish with ground turkey, spinach, sun-dried tomatoes, and Kalamata olives.",
+    "est_calories": "380-450 kcal per serving",
+    "pregnancy_benefit": "Very high in lean **protein** and packed with **Iron and Folate** from the spinach. Olives provide monounsaturated fats.",
+    "serving": 4,
+    "instructions_markdown": "* Brown ground turkey.\n* Stir in diced tomatoes, olives, and fresh spinach.\n* Season with Mediterranean herbs and serve over quinoa or brown rice.",
+    "photo_url": "mediterranean_turkey_skillet.jpg",
+    "categories": ["Halal", "Gluten-free", "Dairy-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Mixed Vegetable Stir Fry",
+    "description": "An assortment of fresh vegetables quickly cooked in a wok with a light soy-based sauce.",
+    "est_calories": "250-350 kcal per serving",
+    "pregnancy_benefit": "An excellent way to consume a wide variety of **vitamins and antioxidants**. High in fiber and low in fat. Add tofu or edamame for protein.",
+    "serving": 2,
+    "instructions_markdown": "* Heat oil in a wok.\n* Stir-fry hard vegetables (broccoli, carrots) first, then softer ones (peppers, snap peas).\n* Add soy sauce/ginger sauce and stir-fry until vegetables are crisp-tender.",
+    "photo_url": "mixed_vegetable_stir_fry.jpg",
+    "categories": ["Vegetarian", "Vegan", "Gluten-free", "Dairy-free", "Nut-free", "Low-fat", "High-fiber"]
+  },
+  {
+    "name": "Nachos",
+    "description": "Tortilla chips covered with melted cheese and topped with various ingredients like salsa, jalapeños, and ground meat/beans.",
+    "est_calories": "550-700 kcal per serving",
+    "pregnancy_benefit": "A fun comfort food. Can be made healthy by adding black beans (protein/fiber) and lots of fresh salsa and avocado (Vitamin C and healthy fats).",
+    "serving": 4,
+    "instructions_markdown": "* Spread tortilla chips on a tray.\n* Top with beans, meat (optional), and cheese.\n* Bake until cheese is melted and serve with fresh toppings.",
+    "photo_url": "nachos.jpg",
+    "categories": ["Vegetarian", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Omelette",
+    "description": "A dish made from beaten eggs fried with butter or oil, often folded around a filling such as cheese, vegetables, or meat.",
+    "est_calories": "200-350 kcal per omelette",
+    "pregnancy_benefit": "Pure **protein** and **Choline** from eggs. Fill with vegetables like spinach and peppers to boost Folate and Vitamin C.",
+    "serving": 1,
+    "instructions_markdown": "* Whisk eggs with a splash of water/milk.\n* Pour into hot, buttered pan; cook until set.\n* Place fillings (cheese, spinach) on one half and fold.",
+    "photo_url": "omelette.jpg",
+    "categories": ["Vegetarian", "Gluten-free", "Nut-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Pad Kra Pao",
+    "description": "A popular Thai stir-fry featuring meat (often chicken or beef) and basil, served over rice, sometimes with a fried egg.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "Provides quick protein and energy. Basil contains **Vitamin K**. Ensure it's not overly spicy for sensitive stomachs.",
+    "serving": 1,
+    "instructions_markdown": "* Stir-fry ground meat with garlic, chili, and holy basil leaves.\n* Season with soy sauce and fish sauce.\n* Serve immediately over steamed rice.",
+    "photo_url": "pad_kra_pao.jpg",
+    "categories": ["Halal", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Paella",
+    "description": "A Spanish rice dish originally from Valencia, typically made with saffron, vegetables, chicken, and seafood (or a combination).",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "A source of complex carbohydrates, protein (from seafood/chicken), and healthy fats (from olive oil). Saffron is also a source of manganese.",
+    "serving": 6,
+    "instructions_markdown": "* Sauté meats/seafood and vegetables in a paella pan.\n* Add rice, broth (with saffron), and simmer until liquid is absorbed and rice is cooked.",
+    "photo_url": "paella.jpg",
+    "categories": ["Pescatarian", "Halal", "Gluten-free"]
+  },
+  {
+    "name": "Pancakes",
+    "description": "A flat cake, often thin and round, prepared from a batter and cooked on a hot surface.",
+    "est_calories": "250-400 kcal per stack",
+    "pregnancy_benefit": "A quick source of comfort and carbohydrates, especially for morning sickness. Top with fruit and yogurt instead of syrup for added nutrients.",
+    "serving": 4,
+    "instructions_markdown": "* Mix flour, eggs, milk, and leavening agents into a batter.\n* Pour batter onto a hot griddle and cook until bubbles form and edges are set.",
+    "photo_url": "pancakes.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Pastitsio",
+    "description": "A Greek baked pasta dish with ground meat and a creamy Béchamel sauce, similar to lasagna.",
+    "est_calories": "550-650 kcal per serving",
+    "pregnancy_benefit": "A filling, high-calorie meal perfect for days needing maximum sustained energy. Provides **Calcium** and **Iron**.",
+    "serving": 6,
+    "instructions_markdown": "* Layer tubular pasta in a dish.\n* Top with ground meat in tomato sauce.\n* Cover with thick Béchamel sauce and bake until golden.",
+    "photo_url": "pastitsio.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Peking Duck",
+    "description": "A famous Chinese dish where duck is seasoned and roasted until the skin is crisp, typically served with thin pancakes and hoisin sauce.",
+    "est_calories": "450-600 kcal per serving",
+    "pregnancy_benefit": "Duck is a source of **lean protein** and **Iron**. The meat is served in small, manageable portions, which is good for mild appetite.",
+    "serving": 4,
+    "instructions_markdown": "* Season and roast duck until skin is crisp.\n* Shred the duck meat.\n* Serve with thin pancakes, scallions, and hoisin sauce.",
+    "photo_url": "peking_duck.jpg",
+    "categories": ["Halal", "Dairy-free"]
+  },
+  {
+    "name": "Philly Cheesesteak",
+    "description": "A sandwich made from thinly sliced steak and melted cheese on a long hoagie roll.",
+    "est_calories": "600-750 kcal per sandwich",
+    "pregnancy_benefit": "High in **Iron** and **Protein** from the beef. Ensure the steak is cooked through, with no pink remaining.",
+    "serving": 1,
+    "instructions_markdown": "* Thinly slice and griddle beef until cooked.\n* Place meat on a roll and top with melted cheese (Provolone or Cheez Whiz).",
+    "photo_url": "philly_cheesesteak.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Pho",
+    "description": "A popular Vietnamese soup consisting of broth, rice noodles, herbs, and meat (usually beef or chicken).",
+    "est_calories": "350-450 kcal per bowl",
+    "pregnancy_benefit": "Warm broth is great for hydration and soothing. Provides protein and complex carbs; excellent source of **Folate** from the fresh herbs.",
+    "serving": 1,
+    "instructions_markdown": "* Prepare beef or chicken bone broth.\n* Assemble bowl with cooked rice noodles, thin meat slices, and fresh herbs (basil, cilantro).",
+    "photo_url": "pho.jpg",
+    "categories": ["Halal", "Gluten-free", "Dairy-free", "Low-fat"]
+  },
+  {
+    "name": "Pizza",
+    "description": "A classic Italian dish of a round, flat base topped with tomato sauce, cheese, and various other ingredients.",
+    "est_calories": "300-400 kcal per slice",
+    "pregnancy_benefit": "Cheese is an easy source of **Calcium** and protein. Top with lots of veggies (peppers, mushrooms, spinach) to boost nutrition.",
+    "serving": 8,
+    "instructions_markdown": "* Spread sauce on dough.\n* Top with mozzarella and desired vegetables/meat.\n* Bake until crust is golden.",
+    "photo_url": "pizza.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Pork Medallions in Mustard Sauce",
+    "description": "Tender slices of pork tenderloin served in a creamy, tangy Dijon mustard sauce.",
+    "est_calories": "350-420 kcal per serving",
+    "pregnancy_benefit": "Pork tenderloin is one of the leanest meats, offering high protein and **B vitamins** with minimal fat.",
+    "serving": 2,
+    "instructions_markdown": "* Pan-sear pork medallions until golden and cooked through.\n* Deglaze the pan and prepare the sauce with Dijon mustard and light cream.\n* Return pork to the pan to coat.",
+    "photo_url": "pork_medallions_in_mustard_sauce.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Pork Stroganoff",
+    "description": "Tender strips of pork and mushrooms served in a creamy sauce, typically over rice or noodles.",
+    "est_calories": "500-600 kcal per serving",
+    "pregnancy_benefit": "A rich source of **B vitamins** from the pork, which supports energy levels. Serve with whole-grain rice or noodles.",
+    "serving": 4,
+    "instructions_markdown": "* Sauté pork strips and mushrooms.\n* Prepare sauce with broth and light sour cream.\n* Combine and serve over rice or egg noodles.",
+    "photo_url": "pork_stroganoff.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Prime Rib",
+    "description": "A large, slow-roasted cut of beef rib that is highly flavorful and tender.",
+    "est_calories": "600-800 kcal per serving",
+    "pregnancy_benefit": "An excellent source of highly bioavailable **Iron, B12, and Zinc**. Ensure any cut of beef is cooked to at least medium (no rare/bloody cuts).",
+    "serving": 8,
+    "instructions_markdown": "* Season the rib roast generously.\n* Roast at a low temperature until desired doneness is reached.",
+    "photo_url": "prime_rib.jpg",
+    "categories": ["Gluten-free", "Dairy-free", "High-protein", "Low-carb"]
+  },
+  {
+    "name": "Ravioli",
+    "description": "Square pasta envelopes filled with cheese, meat, or vegetables, usually served with a light sauce.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "Cheese-filled ravioli is a good source of **Calcium** and protein. Serve with a light tomato sauce instead of heavy cream.",
+    "serving": 4,
+    "instructions_markdown": "* Cook ravioli according to package directions.\n* Toss with butter and herbs or a simple marinara sauce.",
+    "photo_url": "ravioli.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Risotto",
+    "description": "A creamy, Northern Italian rice dish cooked with broth until it reaches a thick consistency.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "A hearty dish that is easy to digest. Can be boosted with vegetables like spinach or peas for **Folate** and served with lean protein.",
+    "serving": 4,
+    "instructions_markdown": "* Sauté Arborio rice with onions.\n* Slowly add warm broth, stirring constantly until the rice is creamy and tender.\n* Stir in Parmesan cheese and butter.",
+    "photo_url": "risotto.jpg",
+    "categories": ["Vegetarian", "Gluten-free", "Nut-free"]
+  },
+  {
+    "name": "Salisbury Steak",
+    "description": "A dish made from ground beef patty and seasonings, often served with gravy and mashed potatoes.",
+    "est_calories": "500-600 kcal per serving",
+    "pregnancy_benefit": "Provides high **Iron** and **Protein**. Use lean ground beef and pair with a side of steamed green vegetables for balance.",
+    "serving": 2,
+    "instructions_markdown": "* Form and pan-fry ground beef patties.\n* Prepare a brown mushroom gravy in the same pan.\n* Serve patties smothered in gravy.",
+    "photo_url": "salisbury_steak.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Salmon",
+    "description": "A fillet of salmon prepared simply, such as baked or pan-seared.",
+    "est_calories": "250-350 kcal per fillet",
+    "pregnancy_benefit": "Exceptional source of **Omega-3 fatty acids (DHA/EPA)**, critical for the development of baby's brain and vision. Also rich in Vitamin D.",
+    "serving": 1,
+    "instructions_markdown": "* Season salmon fillet with salt, pepper, and lemon.\n* Bake, grill, or pan-sear until it flakes easily.",
+    "photo_url": "salmon.jpg",
+    "categories": ["Pescatarian", "Gluten-free", "Dairy-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Sausage Casserole",
+    "description": "A hearty baked dish combining cooked sausage, baked beans, and vegetables in a savory sauce.",
+    "est_calories": "500-600 kcal per serving",
+    "pregnancy_benefit": "Sausage provides protein, while the beans are high in **Fiber** and **Folate**. Choose low-sodium or turkey sausage to reduce fat and sodium.",
+    "serving": 4,
+    "instructions_markdown": "* Brown sausage and combine with baked beans, diced tomatoes, and seasonings.\n* Bake until bubbly and heated through.",
+    "photo_url": "sausage_casserole.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Scallops",
+    "description": "Tender, pan-seared scallops, often served with a light butter and wine sauce.",
+    "est_calories": "200-300 kcal per serving",
+    "pregnancy_benefit": "An excellent source of lean protein, **Vitamin B12**, and **Omega-3s**. Scallops are considered a low-mercury shellfish.",
+    "serving": 1,
+    "instructions_markdown": "* Pat scallops dry and season.\n* Sear in butter or oil until a crust forms and they are cooked through.\n* Serve immediately.",
+    "photo_url": "scallops.jpg",
+    "categories": ["Pescatarian", "Gluten-free", "Dairy-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Shepherd's Pie",
+    "description": "A comforting casserole with a layer of cooked ground meat (or lentils) topped with a mashed potato crust.",
+    "est_calories": "480-580 kcal per serving",
+    "pregnancy_benefit": "A complete comfort food providing protein, iron, and carbohydrates for sustained energy. Incorporate hidden vegetables (peas, carrots) for vitamins.",
+    "serving": 4,
+    "instructions_markdown": "* Cook ground meat/lentils and vegetables in gravy.\n* Top with a layer of mashed potatoes.\n* Bake until potato is browned.",
+    "photo_url": "shepherds_pie.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Spaghetti Carbonara",
+    "description": "A classic Italian pasta dish made with eggs, hard cheese (Pecorino Romano or Parmesan), cured pork (Guanciale or bacon), and black pepper.",
+    "est_calories": "550-650 kcal per serving",
+    "pregnancy_benefit": "High in protein and carbohydrates for energy. Ensure the sauce is cooked until thick and hot to minimize risk from raw egg.",
+    "serving": 2,
+    "instructions_markdown": "* Cook pasta and cured pork until crisp.\n* Whisk eggs and cheese.\n* Toss hot pasta with egg/cheese mixture and pork to form a creamy sauce.",
+    "photo_url": "spaghetti_carbonara.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Spicy Beef Stir Fry",
+    "description": "Tender beef slices stir-fried quickly with vegetables in a spicy Asian-inspired sauce.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "Provides high levels of **Iron** and **Zinc** from the beef. Serve over brown rice and include a variety of vegetables for fiber.",
+    "serving": 3,
+    "instructions_markdown": "* Slice and marinate beef.\n* Stir-fry vegetables until crisp-tender.\n* Add beef and spicy sauce; cook quickly until beef is done.",
+    "photo_url": "spicy_beef_stir_fry.jpg",
+    "categories": ["Halal", "Dairy-free", "High-protein"]
+  },
+  {
+    "name": "Spicy Thai Egg Salad",
+    "description": "Hard-boiled eggs tossed in a dressing of chili, lime juice, fish sauce, and herbs.",
+    "est_calories": "280-350 kcal per serving",
+    "pregnancy_benefit": "High in **Choline** and **Protein** from the eggs. The lime juice and herbs provide a refreshing flavor; adjust chili to taste.",
+    "serving": 1,
+    "instructions_markdown": "* Slice hard-boiled eggs.\n* Whisk together lime juice, fish sauce, chilies, and sugar/sweetener.\n* Toss eggs, sliced onions, and cilantro with the dressing.",
+    "photo_url": "spicy_thai_egg_salad.jpg",
+    "categories": ["Vegetarian", "Gluten-free", "Dairy-free", "High-protein"]
+  },
+  {
+    "name": "Spinach and Feta Stuffed Chicken",
+    "description": "Chicken breasts stuffed with a mixture of fresh spinach and salty feta cheese, then baked.",
+    "est_calories": "350-420 kcal per serving",
+    "pregnancy_benefit": "A lean, nutrient-dense meal high in **Protein** and **Folate** (from spinach). Feta provides calcium.",
+    "serving": 2,
+    "instructions_markdown": "* Slice a pocket into chicken breasts.\n* Stuff with a mixture of cooked spinach and feta cheese.\n* Bake until chicken is fully cooked.",
+    "photo_url": "spinach_and_feta_stuffed_chicken.jpg",
+    "categories": ["Halal", "Gluten-free", "Low-carb", "High-protein"]
+  },
+  {
+    "name": "Spinach Beef Soup",
+    "description": "A light but satisfying broth-based soup featuring small pieces of beef and a large amount of spinach.",
+    "est_calories": "250-350 kcal per bowl",
+    "pregnancy_benefit": "A highly hydrating dish, providing easily digestible **Iron** from the beef and **Folate** from the spinach.",
+    "serving": 4,
+    "instructions_markdown": "* Simmer beef in broth until tender.\n* Add potatoes or other vegetables.\n* Stir in a large amount of fresh spinach right before serving.",
+    "photo_url": "spinach_beef_soup.jpg",
+    "categories": ["Halal", "Gluten-free", "Dairy-free", "High-protein"]
+  },
+  {
+    "name": "Steak Diane",
+    "description": "Thin, pan-fried beef steak served with a rich sauce made from the pan juices, typically mustard, shallots, and cream.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "Steak is essential for **Iron** intake. Ensure the steak is cooked to at least medium-well (or well-done) to minimize any food safety risk.",
+    "serving": 1,
+    "instructions_markdown": "* Pan-fry the thin steak quickly.\n* Prepare the sauce using pan drippings, shallots, Dijon, and cream.\n* Serve steak smothered in sauce.",
+    "photo_url": "steak_diane.jpg",
+    "categories": ["High-protein", "Nut-free"]
+  },
+  {
+    "name": "Steamed Fish Ginger Soy Sauce",
+    "description": "A whole or filleted fish gently steamed with ginger and scallions, then drizzled with hot soy sauce.",
+    "est_calories": "250-350 kcal per serving",
+    "pregnancy_benefit": "One of the healthiest ways to consume lean **protein** and **Omega-3s**. Ginger is known to help soothe nausea.",
+    "serving": 2,
+    "instructions_markdown": "* Place fish on a plate with ginger and scallions.\n* Steam until the fish is cooked through.\n* Drizzle with hot oil and soy sauce before serving.",
+    "photo_url": "steamed_fish_ginger_soy_sauce.jpg",
+    "categories": ["Pescatarian", "Gluten-free", "Dairy-free", "Low-carb", "Low-fat", "High-protein"]
+  },
+  {
+    "name": "Strawberry Shortcake",
+    "description": "A sweet biscuit or sponge cake topped with fresh strawberries and whipped cream.",
+    "est_calories": "300-400 kcal per serving",
+    "pregnancy_benefit": "Strawberries are an excellent source of **Vitamin C and Folate**. A light, refreshing way to satisfy a sweet tooth.",
+    "serving": 4,
+    "instructions_markdown": "* Bake or prepare shortcake/biscuits.\n* Slice strawberries and mix with a little sugar.\n* Assemble by topping the cake with berries and whipped cream.",
+    "photo_url": "strawberry_shortcake.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "Tacos",
+    "description": "Folded or rolled corn or wheat tortillas filled with various ingredients like seasoned meat, beans, and fresh toppings.",
+    "est_calories": "250-350 kcal per taco",
+    "pregnancy_benefit": "A versatile food: the corn tortilla offers **Folate**, and fresh toppings (like avocado and salsa) provide healthy fats and Vitamin C.",
+    "serving": 3,
+    "instructions_markdown": "* Cook and season ground meat or beans.\n* Warm tortillas.\n* Assemble tacos with filling and desired toppings (lettuce, cheese, salsa).",
+    "photo_url": "tacos.jpg",
+    "categories": ["Halal", "Gluten-free", "High-fiber", "High-protein"]
+  },
+  {
+    "name": "Thai Green Curry",
+    "description": "A fragrant, spicy Thai curry made with coconut milk, green curry paste, and vegetables/meat.",
+    "est_calories": "400-500 kcal per serving",
+    "pregnancy_benefit": "Coconut milk provides healthy fats, and the added vegetables contribute various vitamins. Serve with brown rice to increase fiber.",
+    "serving": 4,
+    "instructions_markdown": "* Sauté green curry paste in oil.\n* Add coconut milk, vegetables, and chicken/tofu and simmer until cooked.\n* Serve with steamed rice.",
+    "photo_url": "thai_green_curry.jpg",
+    "categories": ["Vegan", "Gluten-free", "Dairy-free"]
+  },
+  {
+    "name": "Thai Pineapple Fried Rice",
+    "description": "Fried rice mixed with curry powder, raisins, cashews, and often served inside a hollowed-out pineapple.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "Pineapple contains **Bromelain** (a digestive aid) and **Vitamin C**. Use cashews in moderation, or omit if nut-free is necessary.",
+    "serving": 2,
+    "instructions_markdown": "* Stir-fry rice with egg, vegetables, meat (optional), and curry powder.\n* Stir in pineapple chunks and cashews.\n* Serve inside a hollowed-out pineapple half.",
+    "photo_url": "thai_pineapple_fried_rice.jpg",
+    "categories": ["Vegetarian", "Halal", "Dairy-free"]
+  },
+  {
+    "name": "Tom Kha Gai",
+    "description": "A creamy, slightly sour Thai soup made with coconut milk, chicken, galangal, lemongrass, and mushrooms.",
+    "est_calories": "350-450 kcal per bowl",
+    "pregnancy_benefit": "Coconut milk provides healthy fats, and the ginger/galangal is excellent for soothing **nausea**. Chicken is a source of lean protein.",
+    "serving": 4,
+    "instructions_markdown": "* Simmer chicken in coconut milk with galangal, lemongrass, and kaffir lime leaves.\n* Add fish sauce, mushrooms, and lime juice.\n* Serve hot, garnished with cilantro.",
+    "photo_url": "tom_kha_gai.jpg",
+    "categories": ["Halal", "Gluten-free", "Dairy-free", "High-protein"]
+  },
+  {
+    "name": "Tom Yum Goong",
+    "description": "A hot and sour Thai soup with shrimp (Goong) and fragrant herbs like lemongrass and galangal.",
+    "est_calories": "200-300 kcal per bowl",
+    "pregnancy_benefit": "Shrimp is a lean protein source. The broth is hydrating, and the herbs are anti-inflammatory. Go easy on the chili if sensitive to spice.",
+    "serving": 4,
+    "instructions_markdown": "* Bring broth to a boil with lemongrass, galangal, and kaffir lime leaves.\n* Add shrimp and mushrooms; cook until shrimp are pink.\n* Stir in fish sauce, lime juice, and chili paste.",
+    "photo_url": "tom_yum_goong.jpg",
+    "categories": ["Pescatarian", "Gluten-free", "Dairy-free", "High-protein", "Low-fat"]
+  },
+  {
+    "name": "Tomato and Garlic Butter Bean Dinner",
+    "description": "Creamy white beans simmered in a rich tomato and garlic sauce, perfect with crusty bread.",
+    "est_calories": "350-450 kcal per serving",
+    "pregnancy_benefit": "An excellent source of plant-based **Protein, Iron, and Fiber**, which helps manage blood sugar and prevent constipation.",
+    "serving": 2,
+    "instructions_markdown": "* Sauté garlic and herbs.\n* Add canned crushed tomatoes and canned butter beans (rinsed).\n* Simmer until the sauce thickens; serve with fresh herbs.",
+    "photo_url": "tomato_and_garlic_butter_bean_dinner.jpg",
+    "categories": ["Vegetarian", "Vegan", "Gluten-free", "High-fiber", "High-protein"]
+  },
+  {
+    "name": "Vegetarian Sausage Casserole",
+    "description": "A hearty baked dish combining vegetarian sausages, baked beans, and vegetables in a savory sauce.",
+    "est_calories": "450-550 kcal per serving",
+    "pregnancy_benefit": "A filling source of plant-based **Protein** and high levels of **Fiber** and **Folate** from the beans.",
+    "serving": 4,
+    "instructions_markdown": "* Brown vegetarian sausage and combine with baked beans, diced tomatoes, and seasonings.\n* Bake until bubbly and heated through.",
+    "photo_url": "vegetarian_sausage_casserole.jpg",
+    "categories": ["Vegetarian", "Vegan", "High-fiber", "High-protein", "Nut-free"]
+  },
+  {
+    "name": "Waffles",
+    "description": "Crisp, leavened batter cooked between two plates that are patterned to give a characteristic size, shape, and surface impression.",
+    "est_calories": "250-350 kcal per waffle",
+    "pregnancy_benefit": "A quick source of carbohydrates for morning sickness. Top with eggs/fruit/yogurt instead of syrup to boost protein and fiber.",
+    "serving": 4,
+    "instructions_markdown": "* Mix dry ingredients (flour, baking powder).\n* Mix wet ingredients (milk, eggs, butter).\n* Combine and cook in a hot waffle iron.",
+    "photo_url": "waffles.jpg",
+    "categories": ["Vegetarian", "Nut-free"]
+  },
+  {
+    "name": "White Bean and Sausage Soup",
+    "description": "A hearty, rustic soup featuring cannellini beans, kale, and slices of savory Italian sausage.",
+    "est_calories": "400-500 kcal per bowl",
+    "pregnancy_benefit": "Beans provide **Folate** and **Fiber**, while the sausage adds flavor and protein. A warming meal that is easy on the stomach.",
+    "serving": 6,
+    "instructions_markdown": "* Brown sausage and set aside.\n* Sauté vegetables (onion, celery, carrots).\n* Add broth, white beans, and sausage; simmer until flavors meld.\n* Stir in kale at the end.",
+    "photo_url": "white_bean_and_sausage_soup.jpg",
+    "categories": ["High-protein", "High-fiber", "Nut-free"]
+  }
+]

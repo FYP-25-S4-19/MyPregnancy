@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from datetime import date, datetime
 from enum import Enum
 
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import (
     DateTime,
     ForeignKey,
@@ -13,6 +14,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy import Enum as SQLAlchemyEnum
+from sqlalchemy.dialects.postgresql import UUID as PgUUID, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -50,28 +52,6 @@ class BinaryMetricCategory(Enum):
     OTHERS = "OTHERS"
 
 
-class DoctorQualificationOption(Enum):
-    MD = "MD"
-    DO = "DO"
-    MBBS = "MBBS"
-    MBChB = "MBChB"
-    BMed = "BMed"
-    BM = "BM"
-
-
-class NutritionistQualificationOption(Enum):
-    BSC_NUTRITION = "BSC_NUTRITION"
-    BSC_DIETETICS = "BSC_DIETETICS"
-    MSC_NUTRITION = "MSC_NUTRITION"
-    MSC_DIETETICS = "MSC_DIETETICS"
-    RD = "RD"
-    RDN = "RDN"
-    CNS = "CNS"
-    DIPLOMA_CLINICAL_NUTRITION = "DIPLOMA_CLINICAL_NUTRITION"
-    DIPLOMA_NUTRITION = "DIPLOMA_NUTRITION"
-    CERTIFIED_NUTRITIONIST = "CERTIFIED_NUTRITIONIST"
-
-
 class EduArticleCategory(Enum):
     NUTRITION = "NUTRITION"
     BODY = "BODY"
@@ -98,20 +78,18 @@ class NotificationType(Enum):
 # ===========================================
 # ============= GENERAL USER ================
 # ===========================================
-class User(SQLAlchemyBaseUserTable[int], Base):
+class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "users"
     __mapper_args__ = {"polymorphic_identity": "user", "polymorphic_on": "type"}
     type: Mapped[str]
 
     profile_img_key: Mapped[str | None]
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str] = mapped_column(String(64))
     middle_name: Mapped[str | None] = mapped_column(String(64))  # Middle name optional
     last_name: Mapped[str] = mapped_column(String(64))
 
     role: Mapped["UserRole"] = mapped_column(SQLAlchemyEnum(UserRole))
-    is_active: Mapped[bool] = mapped_column(server_default=text("TRUE"), index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -123,34 +101,37 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     feedback_given: Mapped["UserAppFeedback"] = relationship(back_populates="author")
     saved_edu_articles: Mapped[list["SavedEduArticle"]] = relationship(back_populates="saver")
     notifications: Mapped[list["Notification"]] = relationship(back_populates="recipient")
+    saved_recipes: Mapped[list["SavedRecipe"]] = relationship(back_populates="saver")
 
 
 class Admin(User):
     __tablename__ = "admins"
     __mapper_args__ = {"polymorphic_identity": "admin"}
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
 
 class VolunteerDoctor(User):
     __tablename__ = "volunteer_doctors"
     __mapper_args__ = {"polymorphic_identity": "volunteer_doctor"}
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
-    # Linking to their specific instance of their creds in the "medical credentials" table
-    qualification_id: Mapped[int] = mapped_column(ForeignKey("doctor_qualifications.id"))
-    qualification: Mapped["DoctorQualification"] = relationship(back_populates="doctor")
+    mcr_no_id: Mapped[int] = mapped_column(ForeignKey("mcr_numbers.id"))
+    mcr_no: Mapped["MCRNumber"] = relationship(back_populates="doctor")
+
+    qualification_img_key: Mapped[str | None]
 
     # Keep track of the "Pregnant Women" who have "saved" you
     saved_by: Mapped[list["SavedVolunteerDoctor"]] = relationship(back_populates="volunteer_doctor")
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="volunteer_doctor")
 
     articles_written: Mapped[list["EduArticle"]] = relationship(back_populates="author")
+    doctor_ratings: Mapped[list["DoctorRating"]] = relationship(back_populates="doctor")
 
 
 class PregnantWoman(User):
     __tablename__ = "pregnant_women"
     __mapper_args__ = {"polymorphic_identity": "pregnant_woman"}
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
     due_date: Mapped[date | None]  # Nullable (may not be expecting)
     date_of_birth: Mapped[date]
@@ -159,17 +140,15 @@ class PregnantWoman(User):
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="mother")
     journal_entries: Mapped[list["JournalEntry"]] = relationship(back_populates="author")
     kick_tracker_sessions: Mapped[list["KickTrackerSession"]] = relationship(back_populates="mother")
+    doctor_ratings: Mapped[list["DoctorRating"]] = relationship(back_populates="rater")
 
 
 class Nutritionist(User):
     __tablename__ = "nutritionists"
     __mapper_args__ = {"polymorphic_identity": "nutritionist"}
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
-    # Linking to their specific instance of their creds in the "medical credentials" table
-    qualification_id: Mapped[int] = mapped_column(ForeignKey("nutritionist_qualifications.id"))
-    qualification: Mapped["NutritionistQualification"] = relationship(back_populates="nutritionist")
-
+    qualification_img_key: Mapped[str | None]
     recipes_created: Mapped[list["Recipe"]] = relationship(back_populates="nutritionist")
 
 
@@ -179,27 +158,27 @@ class Nutritionist(User):
 
 
 # The actual INSTANCES of "Medical Qualification" - Each VolunteerDoctor should have one!
-class DoctorQualification(Base):
-    __tablename__ = "doctor_qualifications"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    qualification_img_key: Mapped[str | None]
-    qualification_option: Mapped["DoctorQualificationOption"] = mapped_column(SQLAlchemyEnum(DoctorQualificationOption))
+# class DoctorQualification(Base):
+#     __tablename__ = "doctor_qualifications"
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     qualification_img_key: Mapped[str]
+#     # qualification_option: Mapped["DoctorQualificationOption"] = mapped_column(SQLAlchemyEnum(DoctorQualificationOption))
 
-    # The specific "doctor" that this credential is mapped to
-    doctor: Mapped["VolunteerDoctor"] = relationship(back_populates="qualification")
+#     # The specific "doctor" that this credential is mapped to
+#     doctor: Mapped["VolunteerDoctor"] = relationship(back_populates="qualification")
 
 
 # The actual INSTANCES of "Nutritionist Qualification" - Each Nutritionist should have one!
-class NutritionistQualification(Base):
-    __tablename__ = "nutritionist_qualifications"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    qualification_img_key: Mapped[str | None]
-    qualification_option: Mapped["NutritionistQualificationOption"] = mapped_column(
-        SQLAlchemyEnum(NutritionistQualificationOption)
-    )
+# class NutritionistQualification(Base):
+#     __tablename__ = "nutritionist_qualifications"
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     qualification_img_key: Mapped[str]
+#     # qualification_option: Mapped["NutritionistQualificationOption"] = mapped_column(
+#     #     SQLAlchemyEnum(NutritionistQualificationOption)
+#     # )
 
-    # The specific "nutritionist" that this credential is mapped to
-    nutritionist: Mapped["Nutritionist"] = relationship(back_populates="qualification")
+#     # The specific "nutritionist" that this credential is mapped to
+#     nutritionist: Mapped["Nutritionist"] = relationship(back_populates="qualification")
 
 
 # ===========================================================
@@ -212,7 +191,7 @@ class EduArticle(Base):
     # >Nullable
     # Just in case we pull external articles, and they DON'T link
     # to one of the Doctors within our database
-    author_id: Mapped[int | None] = mapped_column(ForeignKey("volunteer_doctors.id"))
+    author_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("volunteer_doctors.id"))
     author: Mapped["VolunteerDoctor"] = relationship(back_populates="articles_written")
 
     # Each article has exactly 1 category (for now)
@@ -228,7 +207,7 @@ class EduArticle(Base):
 
 class SavedEduArticle(Base):
     __tablename__ = "saved_edu_articles"
-    saver_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    saver_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     saver: Mapped["User"] = relationship(back_populates="saved_edu_articles")
 
     article_id: Mapped[int] = mapped_column(ForeignKey("edu_articles.id"), primary_key=True)
@@ -238,6 +217,16 @@ class SavedEduArticle(Base):
 # ========================================================
 # ================ MISC ASSOC TABLES =====================
 # ========================================================
+class DoctorRating(Base):
+    __tablename__ = "doctor_ratings"
+
+    rater_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"), primary_key=True)
+    rater: Mapped["PregnantWoman"] = relationship(back_populates="doctor_ratings")
+
+    doctor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("volunteer_doctors.id"), primary_key=True)
+    doctor: Mapped["VolunteerDoctor"] = relationship(back_populates="doctor_ratings")
+
+    rating: Mapped[int]
 
 
 # Association table for a "Pregnant Woman" who saves a "Volunteer Doctor"
@@ -245,10 +234,10 @@ class SavedEduArticle(Base):
 class SavedVolunteerDoctor(Base):
     __tablename__ = "saved_volunteer_doctors"
 
-    mother_id: Mapped[int] = mapped_column(ForeignKey("pregnant_women.id"), primary_key=True)
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"), primary_key=True)
     mother: Mapped["PregnantWoman"] = relationship(back_populates="saved_volunteer_doctors")
 
-    volunteer_doctor_id: Mapped[int] = mapped_column(ForeignKey("volunteer_doctors.id"), primary_key=True)
+    volunteer_doctor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("volunteer_doctors.id"), primary_key=True)
     volunteer_doctor: Mapped["VolunteerDoctor"] = relationship(back_populates="saved_by")
 
 
@@ -256,15 +245,15 @@ class SavedVolunteerDoctor(Base):
 class Appointment(Base):
     __tablename__ = "appointments"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    volunteer_doctor_id: Mapped[int] = mapped_column(ForeignKey("volunteer_doctors.id"))
+    volunteer_doctor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("volunteer_doctors.id"))
     volunteer_doctor: Mapped[VolunteerDoctor] = relationship(back_populates="appointments")
 
-    mother_id: Mapped[int] = mapped_column(ForeignKey("pregnant_women.id"))
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"))
     mother: Mapped[PregnantWoman] = relationship(back_populates="appointments")
 
-    start_time: Mapped[datetime]
+    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     status: Mapped[AppointmentStatus] = mapped_column(SQLAlchemyEnum(AppointmentStatus))
 
 
@@ -291,7 +280,7 @@ class JournalEntry(Base):
     __tablename__ = "journal_entries"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    author_id: Mapped[int] = mapped_column(ForeignKey("pregnant_women.id"))
+    author_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"))
     author: Mapped["PregnantWoman"] = relationship(back_populates="journal_entries")
 
     content: Mapped[str] = mapped_column(Text)
@@ -348,6 +337,13 @@ class JournalScalarMetricLog(Base):
 # ===========================================================
 # ==================== COMMUNITY FORUM ======================
 # ===========================================================
+class ThreadCategory(Base):
+    __tablename__ = "thread_categories"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String(64), unique=True)
+    thread_category_associations: Mapped[list["ThreadCategoryAssociation"]] = relationship(back_populates="category")
+
+
 # A 'thread' is what you would usually call a 'forum post'
 #
 # I hesitated to call it 'post', just because of possible weird names that would
@@ -356,22 +352,34 @@ class CommunityThread(Base):
     __tablename__ = "community_threads"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    creator_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     creator: Mapped["User"] = relationship(back_populates="threads_created")
 
     title: Mapped[str] = mapped_column(String(255))
     content: Mapped[str] = mapped_column(Text)
-    posted_at: Mapped[datetime]
+    posted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     comments: Mapped[list["ThreadComment"]] = relationship(back_populates="thread")
     community_thread_likes: Mapped[list["CommunityThreadLike"]] = relationship(back_populates="thread")
+
+    thread_category_associations: Mapped[list["ThreadCategoryAssociation"]] = relationship(back_populates="thread")
+
+
+class ThreadCategoryAssociation(Base):
+    __tablename__ = "thread_category_associations"
+
+    thread_id: Mapped[int] = mapped_column(ForeignKey("community_threads.id"), primary_key=True)
+    thread: Mapped[CommunityThread] = relationship(back_populates="thread_category_associations")
+
+    category_id: Mapped[int] = mapped_column(ForeignKey("thread_categories.id"), primary_key=True)
+    category: Mapped[ThreadCategory] = relationship(back_populates="thread_category_associations")
 
 
 # An association table for when a "user" likes a "community thread"
 class CommunityThreadLike(Base):
     __tablename__ = "community_thread_likes"
 
-    liker_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    liker_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     liker: Mapped["User"] = relationship(back_populates="threads_liked")
 
     thread_id: Mapped[int] = mapped_column(ForeignKey("community_threads.id"), primary_key=True)
@@ -385,10 +393,10 @@ class ThreadComment(Base):
     thread_id: Mapped[int] = mapped_column(ForeignKey("community_threads.id"))
     thread: Mapped["CommunityThread"] = relationship(back_populates="comments")
 
-    commenter_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    commenter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     commenter: Mapped["User"] = relationship(back_populates="thread_comments")
 
-    commented_at: Mapped[datetime]
+    commented_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     content: Mapped[str] = mapped_column(Text)
 
     comment_likes: Mapped[list["CommentLike"]] = relationship(back_populates="comment")
@@ -399,7 +407,7 @@ class CommentLike(Base):
     __tablename__ = "comment_likes"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    liker_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    liker_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     liker: Mapped["User"] = relationship(back_populates="comments_liked")
 
     comment_id: Mapped[int] = mapped_column(ForeignKey("thread_comments.id"))
@@ -413,41 +421,73 @@ class Recipe(Base):
     __tablename__ = "recipes"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    nutritionist_id: Mapped[int] = mapped_column(ForeignKey("nutritionists.id"))
+    nutritionist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nutritionists.id"))
     nutritionist: Mapped["Nutritionist"] = relationship(back_populates="recipes_created")
 
     name: Mapped[str]
+    description: Mapped[str]
+    est_calories: Mapped[str]
+    pregnancy_benefit: Mapped[str]
+
     img_key: Mapped[str | None]
-    prepare_time_minutes: Mapped[int]
     serving_count: Mapped[int]
-    instructions: Mapped[str]
-    recipe_ingredients: Mapped[list["RecipeIngredient"]] = relationship(
-        back_populates="recipe", cascade="all, delete-orphan"
-    )
+    instructions_markdown: Mapped[str]
+
+    recipe_category_associations: Mapped[list["RecipeToCategoryAssociation"]] = relationship(back_populates="recipe")
+    saved_recipes: Mapped[list["SavedRecipe"]] = relationship(back_populates="recipe")
 
 
-class Ingredient(Base):
-    __tablename__ = "ingredients"
+class RecipeCategory(Base):
+    __tablename__ = "recipe_categories"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
-    protein_per_100g: Mapped[float | None]
-    carbs_per_100g: Mapped[float | None]
-    fats_per_100g: Mapped[float | None]
-    recipe_ingredients: Mapped[list["RecipeIngredient"]] = relationship(back_populates="ingredient")
+    label: Mapped[str] = mapped_column(unique=True)
+
+    recipe_category_associations: Mapped[list["RecipeToCategoryAssociation"]] = relationship(back_populates="category")
 
 
-# The actual association table linking "recipe" and "ingredient"
-class RecipeIngredient(Base):
-    __tablename__ = "recipe_ingredients"
-
+class RecipeToCategoryAssociation(Base):
+    __tablename__ = "recipe_to_category_associations"
     recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), primary_key=True)
-    recipe: Mapped["Recipe"] = relationship(back_populates="recipe_ingredients")
+    recipe: Mapped["Recipe"] = relationship(back_populates="recipe_category_associations")
 
-    ingredient_id: Mapped[int] = mapped_column(ForeignKey("ingredients.id"), primary_key=True)
-    ingredient: Mapped["Ingredient"] = relationship(back_populates="recipe_ingredients")
+    category_id: Mapped[int] = mapped_column(ForeignKey("recipe_categories.id"), primary_key=True)
+    category: Mapped["RecipeCategory"] = relationship(back_populates="recipe_category_associations")
 
-    amount: Mapped[int]
-    unit_of_measurement: Mapped[str]
+
+class SavedRecipe(Base):
+    __tablename__ = "saved_recipes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    saver_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    saver: Mapped["User"] = relationship(back_populates="saved_recipes")
+
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"))
+    recipe: Mapped["Recipe"] = relationship(back_populates="saved_recipes")
+
+
+# class Ingredient(Base):
+#     __tablename__ = "ingredients"
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     name: Mapped[str]
+#     protein_per_100g: Mapped[float | None]
+#     carbs_per_100g: Mapped[float | None]
+#     fats_per_100g: Mapped[float | None]
+#     recipe_ingredients: Mapped[list["RecipeIngredient"]] = relationship(back_populates="ingredient")
+
+
+# # The actual association table linking "recipe" and "ingredient"
+# class RecipeIngredient(Base):
+#     __tablename__ = "recipe_ingredients"
+
+#     recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), primary_key=True)
+#     recipe: Mapped["Recipe"] = relationship(back_populates="recipe_ingredients")
+
+#     ingredient_id: Mapped[int] = mapped_column(ForeignKey("ingredients.id"), primary_key=True)
+#     ingredient: Mapped["Ingredient"] = relationship(back_populates="recipe_ingredients")
+
+#     amount: Mapped[int]
+#     unit_of_measurement: Mapped[str]
 
 
 # ===========================================
@@ -457,18 +497,18 @@ class KickTrackerSession(Base):
     __tablename__ = "kick_tracker_sessions"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    mother_id: Mapped[int] = mapped_column(ForeignKey("pregnant_women.id"))
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"))
     mother: Mapped["PregnantWoman"] = relationship(back_populates="kick_tracker_sessions")
 
-    started_at: Mapped[datetime]
-    ended_at: Mapped[datetime]
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     kicks: Mapped[list["KickTrackerDataPoint"]] = relationship(back_populates="session")
 
 
 class KickTrackerDataPoint(Base):
     __tablename__ = "kick_tracker_data_points"
     id: Mapped[int] = mapped_column(primary_key=True)
-    kick_at: Mapped[datetime]
+    kick_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     session_id: Mapped[int] = mapped_column(ForeignKey("kick_tracker_sessions.id"))
     session: Mapped["KickTrackerSession"] = relationship(back_populates="kicks")
@@ -481,7 +521,7 @@ class UserAppFeedback(Base):
     __tablename__ = "user_app_feedback"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    author_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     author: Mapped["User"] = relationship(back_populates="feedback_given")
 
     rating: Mapped[int]
@@ -492,11 +532,11 @@ class Notification(Base):
     __tablename__ = "notifications"
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    recipient_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    recipient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     recipient: Mapped["User"] = relationship(back_populates="notifications")
 
     content: Mapped[str]
-    sent_at: Mapped[datetime]
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     # Intention - at the time of writing - is for the application layer to mark
     # a notification as "seen" once you click it
@@ -521,7 +561,6 @@ class DoctorAccountCreationRequest(Base):
     last_name: Mapped[str] = mapped_column(String(64))
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password: Mapped[str] = mapped_column()
-    qualification_option: Mapped["DoctorQualificationOption"] = mapped_column(SQLAlchemyEnum(DoctorQualificationOption))
     qualification_img_key: Mapped[str]
     account_status: Mapped["AccountCreationRequestStatus"] = mapped_column(
         SQLAlchemyEnum(AccountCreationRequestStatus), server_default=text("'PENDING'")
@@ -538,9 +577,6 @@ class NutritionistAccountCreationRequest(Base):
     last_name: Mapped[str] = mapped_column(String(64))
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password: Mapped[str] = mapped_column()
-    qualification_option: Mapped["NutritionistQualificationOption"] = mapped_column(
-        SQLAlchemyEnum(NutritionistQualificationOption)
-    )
     qualification_img_key: Mapped[str]
     account_status: Mapped["AccountCreationRequestStatus"] = mapped_column(
         SQLAlchemyEnum(AccountCreationRequestStatus), server_default=text("'PENDING'")
@@ -549,7 +585,27 @@ class NutritionistAccountCreationRequest(Base):
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class MCRNumber(Base):
+    __tablename__ = "mcr_numbers"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    value: Mapped[str] = mapped_column(String(7), unique=True)
+    doctor: Mapped[VolunteerDoctor | None] = relationship(back_populates="mcr_no")
+
+
 class ExpoPushToken(Base):
     __tablename__ = "expo_push_tokens"
-    id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     token: Mapped[str]
+
+# ===========================================
+# ============ Website Content ===============
+# ===========================================
+class Page(Base):
+    __tablename__ = "pages"
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    sections: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    background_image: Mapped[str | None] = mapped_column(Text, nullable=True)  # Base64 image
+    html: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

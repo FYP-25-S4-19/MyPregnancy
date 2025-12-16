@@ -1,82 +1,52 @@
-import { useRouter } from "expo-router";
-import { Text, TouchableOpacity, StyleSheet } from "react-native";
-import useAuthStore from "@/src/shared/authStore";
-import { font, sizes } from "@/src/shared/designSystem";
+import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
+import BabySizeSection from "@/src/components/sections/BabySizeSection";
+import JournalSection from "@/src/components/sections/JournalSection";
+import ArticleSection from "@/src/components/sections/ArticleSection";
+import HomePageHeader from "@/src/components/headers/HomePageHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { colors, sizes } from "@/src/shared/designSystem";
+import useAuthStore from "@/src/shared/authStore";
+import utils from "@/src/shared/utils";
+import { router } from "expo-router";
 
 export default function MotherHomeScreen() {
-  const router = useRouter();
   const me = useAuthStore((state) => state.me);
+  const fullname = me ? utils.formatFullname(me) : "";
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text
-        style={{
-          fontSize: font.l,
-          fontWeight: "600",
-          marginBottom: sizes.m,
-        }}
-      >
-        Logged in as a {me?.role.toLowerCase()}
-      </Text>
+    <View style={{ flex: 1 }}>
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <HomePageHeader
+            headerText={me ? utils.formatFullname(me) : ""}
+            profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
+          />
+          <BabySizeSection />
+          <JournalSection doFetchMetrics onEdit={() => router.push("/main/mother/journal")} />
+          <ArticleSection onViewAll={() => router.push("/main/mother/articles")} />
+          <View style={{ height: 20 }} />
 
-      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/mother/journal")}>
-        <Text
-          style={{
-            color: "#6d2828",
-            fontSize: font.m,
-            fontWeight: "500",
-          }}
-        >
-          {"Journal"}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/mother/articles")}>
-        <Text
-          style={{
-            color: "#6d2828",
-            fontSize: font.m,
-            fontWeight: "500",
-          }}
-        >
-          {"Articles"}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/mother/consultation")}>
-        <Text
-          style={{
-            color: "#6d2828",
-            fontSize: font.m,
-            fontWeight: "500",
-          }}
-        >
-          {"Consultation"}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/mother/chats")}>
-        <Text
-          style={{
-            color: "#6d2828",
-            fontSize: font.m,
-            fontWeight: "500",
-          }}
-        >
-          {"Chats"}
-        </Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+          <CommunityThreadsSection
+            onViewAll={() => router.push("/main/mother/(home)/threads")}
+            onThreadPress={(threadID) => router.push(`/main/(notab)/threads/${threadID}`)}
+          />
+          <View style={{ height: sizes.xl }} />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  touchable: {
-    width: "90%",
-    paddingVertical: 16,
-    borderRadius: 50,
-    alignItems: "center",
-    marginVertical: 8,
-    backgroundColor: "#FFF8F8",
-    borderWidth: 1.5,
-    borderColor: "#FADADD",
+  container: {
+    flex: 1,
+    backgroundColor: colors.veryLightPink,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  bellIcon: {
+    fontSize: 28,
   },
 });

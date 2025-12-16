@@ -16,7 +16,7 @@ from app.db.db_schema import Admin, EduArticle, EduArticleCategory, Nutritionist
 async def test_get_articles_by_category_success(client: AsyncClient, db_session: AsyncSession) -> None:
     for article_category in EduArticleCategory:
         edu_article = EduArticle(
-            author_id=1,
+            author_id=uuid.uuid4(),
             category=article_category,
             img_key="",
             title=str(uuid.uuid4()),
@@ -66,8 +66,8 @@ async def test_get_article_detailed_success(
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
-    assert data["id"] == article.id
-    assert data["author_id"] == doctor.id
+    assert str(data["id"]) == str(article.id)
+    assert str(data["author_id"]) == str(doctor.id)
     assert data["category"] == EduArticleCategory.NUTRITION.value
     assert data["title"] == article_title
     assert data["content_markdown"] == article_content
@@ -226,7 +226,7 @@ async def test_nutritionist_create_article_fail(
 @pytest.mark.asyncio
 async def test_unregistered_delete_article_fail(client: AsyncClient, db_session: AsyncSession) -> None:
     article = EduArticle(
-        author_id=1337,
+        author_id=uuid.uuid4(),
         category=EduArticleCategory.BODY,
         img_key="",
         title="Exercises that will make you strong enough to lift a small car",
@@ -270,9 +270,12 @@ async def test_delete_article_success(
 async def test_delete_article_not_authorized(
     authenticated_doctor_client: tuple[AsyncClient, VolunteerDoctor], db_session: AsyncSession
 ) -> None:
-    client, doctor = authenticated_doctor_client
+    client, _ = authenticated_doctor_client
+
+    # The article is created by some "random" UUID
+    # So when you try to delete it using the authenticated "client" above - it should rightfully fail
     article = EduArticle(
-        author_id=doctor.id + 1,
+        author_id=uuid.uuid4(),
         category=EduArticleCategory.BODY,
         img_key="",
         title="Exercises that will make you strong enough to lift a small car",
@@ -283,9 +286,7 @@ async def test_delete_article_not_authorized(
     article_id = article.id
 
     response = await client.delete(f"/articles/{article_id}")
-    assert response.status_code == status.HTTP_403_FORBIDDEN, (
-        "Trying to delete an article which was not authored by you"
-    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
     edu_article = await db_session.get(EduArticle, article_id)
     assert edu_article is not None, "Article should be still exist"

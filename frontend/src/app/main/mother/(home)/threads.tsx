@@ -1,10 +1,6 @@
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "react-native";
+import CommunityThreadsScreen from "@/src/screens/CommunityThreadsScreen";
+import React from "react";
 
-export default function MotherCommunityThreadsScreen() {
-  return (
-    <SafeAreaView edges={["top"]}>
-      <Text>TODO: Mother community threads screen</Text>
-    </SafeAreaView>
-  );
+export default function MotherAllThreadsPage() {
+  return <CommunityThreadsScreen />;
 }

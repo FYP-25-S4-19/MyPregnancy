@@ -1,9 +1,9 @@
-import * as SecureStore from "expo-secure-store";
-import { create } from "zustand";
 import { createJSONStorage, persist, StateStorage } from "zustand/middleware";
+import * as SecureStore from "expo-secure-store";
 import { MeData } from "./typesAndInterfaces";
+import { create } from "zustand";
 
-export interface AuthState {
+interface AuthState {
   me: MeData | null;
   accessToken: string | null;
 
@@ -15,8 +15,7 @@ export interface AuthState {
 
 const expoSecureStore: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    const result = await SecureStore.getItemAsync(name);
-    return result;
+    return await SecureStore.getItemAsync(name);
   },
   setItem: async (name: string, value: string): Promise<void> => {
     await SecureStore.setItemAsync(name, value);
@@ -31,16 +30,11 @@ const useAuthStore = create<AuthState>()(
     (set) => ({
       me: null,
       accessToken: null,
-      streamToken: null,
 
       setMe: (me) => set({ me }),
       setAccessToken: (token) => set({ accessToken: token }),
 
-      clearAuthState: () =>
-        set({
-          me: null,
-          accessToken: null,
-        }),
+      clearAuthState: () => set({ me: null, accessToken: null }),
     }),
     {
       name: "auth-storage",
