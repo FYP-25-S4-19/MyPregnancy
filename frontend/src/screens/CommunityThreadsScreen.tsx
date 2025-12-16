@@ -10,13 +10,17 @@ import { ThreadCategoryData } from "@/src/shared/typesAndInterfaces";
 
 type SortOption = "Latest" | "Popular";
 
-interface AllThreadsScreenProps {
+interface CommunityThreadsScreenProps {
   onBack?: () => void;
   onThreadPress?: (threadId: number) => void;
   showBackButton?: boolean;
 }
 
-export default function AllThreadsScreen({ onBack, onThreadPress, showBackButton = true }: AllThreadsScreenProps) {
+export default function CommunityThreadsScreen({
+  onBack,
+  onThreadPress,
+  showBackButton = true,
+}: CommunityThreadsScreenProps) {
   const { data: threads, isLoading, isError, error, refetch } = useThreads();
   const {
     data: threadCategories,

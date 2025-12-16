@@ -1,10 +1,10 @@
 import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import useAuthStore from "@/src/shared/authStore";
+import CommunityThreadsSection from "@/src/components/CommunityThreadsSection";
+import JournalSection from "@/src/components/sections/JournalCardSection";
+import ArticleSection from "@/src/components/sections/ArticleSection";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
-import JournalCardViewOnly from "@/src/components/JournalCardView";
-import ArticlesCardViewOnly from "@/src/components/ArticlesCardViewOnly";
-import CommunityThreadsSection from "@/src/components/CommunityThreadsSection";
+import useAuthStore from "@/src/shared/authStore";
 import { router } from "expo-router";
 
 export default function MotherHomeScreen() {
@@ -48,73 +48,75 @@ export default function MotherHomeScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{getInitials()}</Text>
+    <View style={{ flex: 1 }}>
+      <SafeAreaView edges={["top"]} style={styles.container}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{getInitials()}</Text>
+              </View>
+              <View>
+                <Text style={styles.greetingText}>Hi, Welcome back,</Text>
+                <Text style={styles.userName}>
+                  {pregnancyData.userName} {pregnancyData.userLastName}
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text style={styles.greetingText}>Hi, Welcome back,</Text>
-              <Text style={styles.userName}>
-                {pregnancyData.userName} {pregnancyData.userLastName}
-              </Text>
+            <TouchableOpacity style={styles.notificationButton}>
+              <View style={styles.notificationDot} />
+              <Text style={styles.bellIcon}>🔔</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Baby Size Card */}
+          <View style={styles.babySizeCard}>
+            <View style={styles.babyCircle}>
+              <Text style={styles.cornEmoji}>🌽</Text>
+              <Text style={styles.weekText}>Week {pregnancyData.week}</Text>
+            </View>
+
+            <View style={styles.babySizeInfo}>
+              <Text style={styles.babySizeTitle}>Your baby is now</Text>
+              <Text style={styles.babySizeSubtitle}>as big as a {pregnancyData.babySize.comparison}.</Text>
+              <View style={styles.measurements}>
+                <Text style={styles.measurementText}>Approx:</Text>
+                <Text style={styles.measurementText}>length: {pregnancyData.babySize.length} cm</Text>
+                <Text style={styles.measurementText}>weight: {pregnancyData.babySize.weight} g</Text>
+              </View>
             </View>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <View style={styles.notificationDot} />
-            <Text style={styles.bellIcon}>🔔</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Baby Size Card */}
-        <View style={styles.babySizeCard}>
-          <View style={styles.babyCircle}>
-            <Text style={styles.cornEmoji}>🌽</Text>
-            <Text style={styles.weekText}>Week {pregnancyData.week}</Text>
-          </View>
-
-          <View style={styles.babySizeInfo}>
-            <Text style={styles.babySizeTitle}>Your baby is now</Text>
-            <Text style={styles.babySizeSubtitle}>as big as a {pregnancyData.babySize.comparison}.</Text>
-            <View style={styles.measurements}>
-              <Text style={styles.measurementText}>Approx:</Text>
-              <Text style={styles.measurementText}>length: {pregnancyData.babySize.length} cm</Text>
-              <Text style={styles.measurementText}>weight: {pregnancyData.babySize.weight} g</Text>
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${getProgressPercentage()}%` }]} />
             </View>
+            <Text style={styles.weekProgress}>
+              Week {pregnancyData.week}/{pregnancyData.totalWeeks}
+            </Text>
           </View>
-        </View>
 
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${getProgressPercentage()}%` }]} />
-          </View>
-          <Text style={styles.weekProgress}>
-            Week {pregnancyData.week}/{pregnancyData.totalWeeks}
-          </Text>
-        </View>
+          <Text style={styles.progressLabel}>{getProgressPercentage()}% of your pregnancy journey!</Text>
 
-        <Text style={styles.progressLabel}>{getProgressPercentage()}% of your pregnancy journey!</Text>
+          {/* Journal Card */}
+          <JournalSection data={journalData} onEdit={() => router.push("/main/mother/journal")} />
 
-        {/* Journal Card */}
-        <JournalCardViewOnly data={journalData} onEdit={() => router.push("/main/mother/journal")} />
+          {/* Articles Card */}
+          <ArticleSection articles={articles} onViewAll={() => router.push("/main/mother/articles")} />
 
-        {/* Articles Card */}
-        <ArticlesCardViewOnly articles={articles} onViewAll={() => router.push("/main/mother/articles")} />
+          {/* Community Threads Section */}
+          <CommunityThreadsSection
+            onViewAll={() => router.push("/main/mother/(home)/threads")}
+            onThreadPress={(threadId) => console.log("Thread pressed:", threadId)} // TODO: Link that up for realsies
+          />
 
-        {/* Community Threads Section */}
-        <CommunityThreadsSection
-          onViewAll={() => router.push("/main/mother/(home)/threads")}
-          onThreadPress={(threadId) => console.log("Thread pressed:", threadId)} // TODO: Link that up for realsies
-        />
-
-        {/* Extra spacing at bottom */}
-        <View style={{ height: sizes.xl }} />
-      </ScrollView>
-    </SafeAreaView>
+          {/* Extra spacing at bottom */}
+          <View style={{ height: sizes.xl }} />
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 

@@ -10,12 +10,12 @@ interface JournalData {
   kickCounter: number | null;
 }
 
-interface JournalCardProps {
+interface JournalCardSectionProps {
   data: JournalData;
   onEdit?: () => void;
 }
 
-export default function JournalCardViewOnly({ data, onEdit }: JournalCardProps) {
+export default function JournalSection({ data, onEdit }: JournalCardSectionProps) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>

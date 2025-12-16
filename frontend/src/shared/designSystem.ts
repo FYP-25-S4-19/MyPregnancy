@@ -15,7 +15,7 @@ export const colors = {
   white: "#FFFFFF",
   black: "#000000",
   lightGray: "#D3D3D3",
-  veryLightPink: "#FFF0F0",
+  veryLightPink: "#FFE0E0",
   orange: "#f3a20a",
 };
 

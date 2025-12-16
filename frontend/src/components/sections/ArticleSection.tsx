@@ -7,12 +7,12 @@ interface Article {
   title: string;
 }
 
-interface ArticlesCardProps {
+interface ArticleSectionProps {
   articles: Article[];
   onViewAll?: () => void;
 }
 
-export default function ArticlesCardViewOnly({ articles, onViewAll }: ArticlesCardProps) {
+export default function ArticleSection({ articles, onViewAll }: ArticleSectionProps) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Articles</Text>
