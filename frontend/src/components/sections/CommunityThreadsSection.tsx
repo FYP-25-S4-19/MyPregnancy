@@ -1,8 +1,8 @@
-import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
-import { colors, font, sizes } from "@/src/shared/designSystem";
-import CommunityThreadCard from "./CommunityThreadCard";
 import { useThreadsPreviews } from "@/src/shared/hooks/useThreads";
+import { colors, font, sizes } from "@/src/shared/designSystem";
+import CommunityThreadCard from "../cards/CommunityThreadCard";
+import React from "react";
 
 interface CommunityThreadsSectionProps {
   onViewAll?: () => void;

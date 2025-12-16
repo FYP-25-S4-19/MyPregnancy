@@ -1,6 +1,6 @@
 import { Text, TouchableOpacity, View, StyleSheet } from "react-native";
-import { useMessageContext } from "stream-chat-expo";
 import { colors, sizes } from "../shared/designSystem";
+import { useMessageContext } from "stream-chat-expo";
 import utils from "../shared/utils";
 import { useState } from "react";
 import api from "../shared/api";

@@ -3,8 +3,8 @@ import { Channel as ChannelElement, MessageInput, MessageList, useChatContext } 
 import ConsultationMessageFooter from "@/src/components/ConsultationMessageFooter";
 import { useStreamVideoClient } from "@stream-io/video-react-native-sdk";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ChatHeader from "@/src/components/headers/ChatHeader";
 import { colors, sizes } from "@/src/shared/designSystem";
-import ChatHeader from "@/src/components/ChatHeader";
 import { useLocalSearchParams } from "expo-router";
 import useAuthStore from "@/src/shared/authStore";
 import utils from "@/src/shared/utils";

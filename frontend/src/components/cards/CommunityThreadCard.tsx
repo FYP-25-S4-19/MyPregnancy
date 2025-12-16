@@ -1,9 +1,9 @@
-import React from "react";
+import { useLikeThread, useUnlikeThread } from "@/src/shared/hooks/useThreads";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { ThreadPreviewData } from "@/src/shared/typesAndInterfaces";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useLikeThread, useUnlikeThread } from "@/src/shared/hooks/useThreads";
+import React from "react";
 
 interface CommunityThreadCardProps {
   thread: ThreadPreviewData;

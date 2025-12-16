@@ -1,6 +1,6 @@
+import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
 import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import CommunityThreadsSection from "@/src/components/CommunityThreadsSection";
-import JournalSection from "@/src/components/sections/JournalCardSection";
+import JournalSection from "@/src/components/sections/JournalSection";
 import ArticleSection from "@/src/components/sections/ArticleSection";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,14 +22,6 @@ export default function MotherHomeScreen() {
     userLastName: me?.last_name || "<MISSING_LNAME>",
   };
 
-  const journalData = {
-    bloodPressure: { systolic: 110, diastolic: 91 },
-    sugarLevel: 5,
-    heartRate: null,
-    weight: null,
-    kickCounter: null,
-  };
-
   const articles = [
     { id: "1", title: "Morning Sickness: What's Normal?" },
     { id: "2", title: "Foods That Boost Baby's Growth" },
@@ -43,7 +35,7 @@ export default function MotherHomeScreen() {
     return `${firstName}${lastName}`;
   };
 
-  const getProgressPercentage = () => {
+  const getProgressPercentage = (): number => {
     return Math.round((pregnancyData.week / pregnancyData.totalWeeks) * 100);
   };
 
@@ -125,7 +117,7 @@ export default function MotherHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFE8E8", // Light pink background
+    backgroundColor: colors.veryLightPink,
   },
   scrollView: {
     flex: 1,

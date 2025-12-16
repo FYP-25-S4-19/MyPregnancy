@@ -1,5 +1,5 @@
-import { AppointmentPreviewData, AppointmentStatus } from "../shared/typesAndInterfaces";
-import { colors, font, shadows, sizes } from "../shared/designSystem";
+import { AppointmentPreviewData, AppointmentStatus } from "../../shared/typesAndInterfaces";
+import { colors, font, shadows, sizes } from "../../shared/designSystem";
 import { Text, View, StyleSheet } from "react-native";
 
 export interface AppointmentCardProps {

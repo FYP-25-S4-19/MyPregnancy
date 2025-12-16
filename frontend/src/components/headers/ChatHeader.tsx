@@ -1,6 +1,6 @@
 import { TouchableOpacity, View, StyleSheet, Text } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors, font, sizes } from "../shared/designSystem";
+import { colors, font, sizes } from "../../shared/designSystem";
 import { router } from "expo-router";
 
 interface ChatHeaderProps {

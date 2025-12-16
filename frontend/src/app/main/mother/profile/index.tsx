@@ -1,7 +1,7 @@
-import PregnancyDetailsCard from "@/src/components/PregnancyDetailsCard";
+import PregnancyDetailsCard from "@/src/components/cards/PregnancyDetailsCard";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
-import MotherProfileCard from "@/src/components/MotherProfileCard";
+import MotherProfileCard from "@/src/components/cards/MotherProfileCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { sizes } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";

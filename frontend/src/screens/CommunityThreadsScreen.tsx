@@ -1,12 +1,12 @@
-import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, font, sizes } from "@/src/shared/designSystem";
 import { useThreadCategories, useThreads } from "@/src/shared/hooks/useThreads";
-import CommunityThreadCard from "@/src/components/CommunityThreadCard";
-import { router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import CommunityThreadCard from "@/src/components/cards/CommunityThreadCard";
 import { ThreadCategoryData } from "@/src/shared/typesAndInterfaces";
+import { colors, font, sizes } from "@/src/shared/designSystem";
+import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useState, useMemo } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 type SortOption = "Latest" | "Popular";
 

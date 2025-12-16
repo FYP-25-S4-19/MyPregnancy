@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useAppointmentsForMonthQuery } from "../shared/hooks/useAppointments";
-import AppointmentCard from "../components/AppointmentCard";
+import AppointmentCard from "../components/cards/AppointmentCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, sizes, font } from "../shared/designSystem";
 import { Calendar, DateData } from "react-native-calendars";
