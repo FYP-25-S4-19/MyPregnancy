@@ -1,4 +1,3 @@
-// export interface LocalMessageExtended
 export type AppointmentStatus = "ACCEPTED" | "REJECTED" | "PENDING_ACCEPT_REJECT";
 
 export interface AppointmentPreviewData {
@@ -15,6 +14,11 @@ export interface MeData {
   middle_name: string | null;
   last_name: string;
   role: RoleType;
+}
+
+export interface ArticlePreviewData {
+  id: number;
+  title: string;
 }
 
 export interface JwtData {

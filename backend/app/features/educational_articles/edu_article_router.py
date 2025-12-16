@@ -7,6 +7,7 @@ from app.db.db_schema import VolunteerDoctor
 from app.features.educational_articles.edu_article_models import (
     ArticleDetailedResponse,
     ArticleOverviewResponse,
+    ArticlePreviewData,
 )
 from app.features.educational_articles.edu_article_service import EduArticleService
 
@@ -17,7 +18,21 @@ def get_edu_articles_service(db: AsyncSession = Depends(get_db)) -> EduArticleSe
     return EduArticleService(db)
 
 
-@edu_articles_router.get("/", response_model=list[ArticleOverviewResponse], status_code=status.HTTP_200_OK)
+@edu_articles_router.get("/categories", response_model=list[str])
+async def get_article_categories(
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> list[str]:
+    return await service.get_article_categories()
+
+
+@edu_articles_router.get("/previews", response_model=list[ArticlePreviewData])
+async def get_article_previews(
+    limit: int, service: EduArticleService = Depends(get_edu_articles_service)
+) -> list[ArticlePreviewData]:
+    return await service.get_article_previews(limit)
+
+
+@edu_articles_router.get("/", response_model=list[ArticleOverviewResponse])
 async def get_article_overviews_by_category(
     category: str, service: EduArticleService = Depends(get_edu_articles_service)
 ):

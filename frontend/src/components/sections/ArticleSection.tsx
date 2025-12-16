@@ -1,24 +1,21 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
-
-interface Article {
-  id: string;
-  title: string;
-}
+import { useArticlePreviewsQuery } from "@/src/shared/hooks/useArticles";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React from "react";
 
 interface ArticleSectionProps {
-  articles: Article[];
   onViewAll?: () => void;
 }
 
-export default function ArticleSection({ articles, onViewAll }: ArticleSectionProps) {
+export default function ArticleSection({ onViewAll }: ArticleSectionProps) {
+  const { data: articles } = useArticlePreviewsQuery(5) || [];
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Articles</Text>
 
       <View style={styles.articlesContainer}>
-        {articles.map((article) => (
+        {articles?.map((article) => (
           <View key={article.id} style={styles.articleItem}>
             <Text style={styles.bullet}>•</Text>
             <Text style={styles.articleTitle}>{article.title}</Text>
@@ -51,7 +48,7 @@ const styles = StyleSheet.create({
     marginBottom: sizes.m,
   },
   articlesContainer: {
-    gap: sizes.s,
+    gap: sizes.xs,
     marginBottom: sizes.m,
   },
   articleItem: {

@@ -22,13 +22,6 @@ export default function MotherHomeScreen() {
     userLastName: me?.last_name || "<MISSING_LNAME>",
   };
 
-  const articles = [
-    { id: "1", title: "Morning Sickness: What's Normal?" },
-    { id: "2", title: "Foods That Boost Baby's Growth" },
-    { id: "3", title: "How Much Should You Be Sleeping?" },
-    { id: "4", title: "Managing Stress During Pregnancy" },
-  ];
-
   const getInitials = (): string => {
     const firstName = pregnancyData.userName.charAt(0).toUpperCase();
     const lastName = pregnancyData.userLastName.charAt(0).toUpperCase();
@@ -96,7 +89,7 @@ export default function MotherHomeScreen() {
           <JournalSection doFetchMetrics onEdit={() => router.push("/main/mother/journal")} />
 
           {/* Articles Card */}
-          <ArticleSection articles={articles} onViewAll={() => router.push("/main/mother/articles")} />
+          <ArticleSection onViewAll={() => router.push("/main/mother/articles")} />
 
           <View style={{ height: 20 }} />
 

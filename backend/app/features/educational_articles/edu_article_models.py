@@ -3,6 +3,11 @@ from uuid import UUID
 from app.core.custom_base_model import CustomBaseModel
 
 
+class ArticlePreviewData(CustomBaseModel):
+    id: int
+    title: str
+
+
 class ArticleOverviewResponse(CustomBaseModel):
     id: int
     title: str
