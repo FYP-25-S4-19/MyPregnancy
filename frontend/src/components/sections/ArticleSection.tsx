@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     ...shadows.small,
   },
   title: {
-    fontSize: font.l,
+    fontSize: font.m,
     fontWeight: "700",
     color: colors.text,
     marginBottom: sizes.m,

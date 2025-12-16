@@ -8,6 +8,7 @@ import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
 import React, { useState } from "react";
 import utils from "@/src/shared/utils";
+import { router } from "expo-router";
 
 export default function MotherProfileScreen() {
   const me = useAuthStore((state) => state.me);
@@ -35,7 +36,7 @@ export default function MotherProfileScreen() {
   };
 
   const handleSendFeedback = () => {
-    console.log("Send feedback pressed");
+    router.push("/main/(notab)/feedback");
   };
 
   const handleChangePassword = () => {
