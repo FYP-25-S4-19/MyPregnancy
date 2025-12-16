@@ -23,9 +23,12 @@ export const websiteAPI = {
   getPublicPages: () => api.get('/website/pages/public'),
   getPublicPage: (slug: string) => api.get(`/website/pages/public/${slug}`),
   getAllPages: () => api.get('/website/pages'),
-  getPage: (slug: string) => api.get(`/website/pages/${slug}`),
-  createPage: (data: any) => api.post('/website/pages', data),
-  updatePage: (slug: string, data: any) => api.put(`/website/pages/${slug}`, data),
+  getPage: (slug: string) => 
+    api.get(`/website/pages/${slug}`),  
+  
+  updatePage: (slug: string, data: any) => 
+    api.put(`/website/pages/${slug}`, data),  
+  
   deletePage: (slug: string) => api.delete(`/website/pages/${slug}`),
 };
 

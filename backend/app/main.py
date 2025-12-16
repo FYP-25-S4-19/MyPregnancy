@@ -19,6 +19,7 @@ from app.features.getstream.stream_router import stream_router
 from app.features.journal.journal_router import journal_router
 from app.features.miscellaneous.misc_routes import misc_router
 from app.schemas import UserCreate, UserRead, UserUpdate
+from app.features.miscellaneous.misc_routes import router
 
 if not settings.APP_ENV:
     raise ValueError("APP_ENV is not set in environment variables")
@@ -64,7 +65,9 @@ app.include_router(stream_router)
 app.include_router(recipe_router)
 app.include_router(community_threads_router)
 app.include_router(misc_router)
+app.include_router(router)
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+
 
 
 # ============================================================================
