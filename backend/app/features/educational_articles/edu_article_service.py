@@ -1,5 +1,5 @@
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -7,6 +7,7 @@ from app.db.db_schema import EduArticle, EduArticleCategory, VolunteerDoctor
 from app.features.educational_articles.edu_article_models import (
     ArticleDetailedResponse,
     ArticleOverviewResponse,
+    ArticlePreviewData,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import format_user_fullname
@@ -15,6 +16,14 @@ from app.shared.utils import format_user_fullname
 class EduArticleService:
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    async def get_article_categories(self) -> list[str]:
+        return [cat.value for cat in list(EduArticleCategory)]
+
+    async def get_article_previews(self, limit: int) -> list[ArticlePreviewData]:
+        stmt = select(EduArticle).order_by(func.random()).limit(limit)
+        result = (await self.db.execute(stmt)).scalars().all()
+        return [ArticlePreviewData(id=article.id, title=article.title) for article in result]
 
     async def get_article_overviews_by_category(self, category: str) -> list[ArticleOverviewResponse]:
         if category not in [cat.value for cat in list(EduArticleCategory)]:

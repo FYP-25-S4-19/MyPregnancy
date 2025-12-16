@@ -14,11 +14,7 @@ from app.db.db_config import get_db
 from app.db.db_schema import (
     Admin,
     Base,
-    DoctorQualification,
-    DoctorQualificationOption,
     Nutritionist,
-    NutritionistQualification,
-    NutritionistQualificationOption,
     PregnantWoman,
     UserRole,
     VolunteerDoctor,
@@ -151,26 +147,20 @@ async def volunteer_doctor_factory(db_session: AsyncSession) -> CreateDoctorCall
     async def _create_doctor(**kwargs) -> VolunteerDoctor:
         unique_id = str(uuid.uuid4())
 
-        if "qualification" not in kwargs:
-            qualification = DoctorQualification(qualification_option=DoctorQualificationOption.MD)
-        else:
-            qualification = kwargs.pop("qualification")
-
         defaults = {
             "role": UserRole.VOLUNTEER_DOCTOR,
             "email": f"doctor_{unique_id}@test.com",
             "hashed_password": "hashed_password_123",
+            "mcr_no_id": 1,
             "first_name": "John",
             "last_name": "Doe",
         }
 
         user_data = defaults | kwargs
         doctor = VolunteerDoctor(**user_data)
-        doctor.qualification = qualification
 
         db_session.add(doctor)
         await db_session.commit()
-        await db_session.refresh(doctor, attribute_names=["qualification"])
         return doctor
 
     return _create_doctor
@@ -250,16 +240,6 @@ CreateNutritionistCallable = Callable[
 async def nutritionist_factory(db_session: AsyncSession) -> CreateNutritionistCallable:
     async def _create_nutritionist(**kwargs) -> Nutritionist:
         unique_id = str(uuid.uuid4())
-
-        # Create qualification if not provided
-        if "qualification_id" not in kwargs:
-            qualification = NutritionistQualification(
-                qualification_option=NutritionistQualificationOption.CERTIFIED_NUTRITIONIST
-            )
-            db_session.add(qualification)
-            await db_session.flush()
-            kwargs["qualification_id"] = qualification.id
-
         defaults = {
             "role": UserRole.NUTRITIONIST,
             "email": f"nutritionist_{unique_id}@test.com",

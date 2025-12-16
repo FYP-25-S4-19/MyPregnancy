@@ -1,9 +1,10 @@
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app.core.password_hasher_config import get_password_hasher
+from app.core.password_hasher import get_password_hasher
 from app.db.db_config import SessionLocal
 from app.db.seeding.generators.defaults_generator import DefaultsGenerator
+from app.db.seeding.generators.recipes_generator import RecipesGenerator
 from app.shared.utils import clear_db
 
 if __name__ == "__main__":
@@ -15,6 +16,10 @@ if __name__ == "__main__":
 
         # Initialize defaults
         DefaultsGenerator.generate_defaults(db_session)
+
+        # Recipes
+        RecipesGenerator.generate_all_recipes(db_session, [], [], "./seed_data/recipes/_data.json")
+
         print("Finished seeding the database defaults!")
     except Exception as e:
         print(f"Exception occurred while seeding database: {e}")

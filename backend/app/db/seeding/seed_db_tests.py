@@ -1,7 +1,7 @@
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app.core.password_hasher_config import get_password_hasher
+from app.core.password_hasher import get_password_hasher
 from app.db.db_config import SessionLocal
 from app.db.seeding.generators.defaults_generator import DefaultsGenerator
 from app.shared.utils import clear_db

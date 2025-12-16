@@ -1,8 +1,10 @@
+import json
 import random
+from dataclasses import dataclass
 from math import floor
 
-from faker import Faker
 from sqlalchemy.orm import Session
+from starlette.types import ASGIApp
 
 from app.db.db_schema import (
     EduArticle,
@@ -12,20 +14,31 @@ from app.db.db_schema import (
 )
 
 
+@dataclass
+class ArticleDataModel:
+    title: str
+    content: str
+
+
 class EduArticlesGenerator:
     @staticmethod
-    def generate_edu_articles(db: Session, faker: Faker, count: int) -> list[EduArticle]:
+    def generate_edu_articles(db: Session, articles_json_path: str) -> list[EduArticle]:
         print("Generating educational articles.....")
 
         all_edu_articles: list[EduArticle] = []
-        for _ in range(count):
-            article = EduArticle(
-                category=random.choice(list(EduArticleCategory)),
-                title=faker.words(nb=random.randint(2, 10)),
-                content_markdown=faker.paragraphs(nb=random.randint(2, 10)),
-            )
-            all_edu_articles.append(article)
-            db.add(article)
+        with open(articles_json_path, "r") as file:
+            raw_articles_data = json.load(file)
+            articles_data: list[ArticleDataModel] = [ArticleDataModel(**article) for article in raw_articles_data]
+
+            for article_data in articles_data:
+                article = EduArticle(
+                    category=random.choice(list(EduArticleCategory)),
+                    title=article_data.title,
+                    content_markdown=article_data.content,
+                )
+                all_edu_articles.append(article)
+                db.add(article)
+
         return all_edu_articles
 
     @staticmethod

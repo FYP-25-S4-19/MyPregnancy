@@ -1,4 +1,11 @@
+from uuid import UUID
+
 from app.core.custom_base_model import CustomBaseModel
+
+
+class ArticlePreviewData(CustomBaseModel):
+    id: int
+    title: str
 
 
 class ArticleOverviewResponse(CustomBaseModel):
@@ -8,7 +15,7 @@ class ArticleOverviewResponse(CustomBaseModel):
 
 class ArticleDetailedResponse(CustomBaseModel):
     id: int
-    author_id: int
+    author_id: UUID
     author: str
     category: str
     img_key: str | None

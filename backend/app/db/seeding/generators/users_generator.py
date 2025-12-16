@@ -8,11 +8,8 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app.db.db_schema import (
-    DoctorQualification,
-    DoctorQualificationOption,
+    MCRNumber,
     Nutritionist,
-    NutritionistQualification,
-    NutritionistQualificationOption,
     PregnantWoman,
     UserRole,
     VolunteerDoctor,
@@ -21,35 +18,6 @@ from app.shared.s3_storage_interface import S3StorageInterface
 
 
 class UsersGenerator:
-    @staticmethod
-    def generate_users(
-        db: Session,
-        faker: Faker,
-        password_hasher: PasswordHasher,
-        preg_women_profiles_filepath: str,
-        doctor_profiles_filepath: str,
-        nutritionists_profiles_filepath: str,
-        qualifications_filepath: str,
-    ) -> tuple[list[PregnantWoman], list[VolunteerDoctor], list[Nutritionist]]:
-        preg_women: list[PregnantWoman] = UsersGenerator.generate_pregnant_women(
-            db, faker, password_hasher, preg_women_profiles_filepath
-        )
-        doctors: list[VolunteerDoctor] = UsersGenerator.generate_volunteer_doctors(
-            db,
-            faker,
-            password_hasher,
-            doctor_profiles_filepath,
-            qualifications_filepath,
-        )
-        nutritionists: list[Nutritionist] = UsersGenerator.generate_nutritionists(
-            db,
-            faker,
-            password_hasher,
-            nutritionists_profiles_filepath,
-            qualifications_filepath,
-        )
-        return preg_women, doctors, nutritionists
-
     @staticmethod
     def generate_pregnant_women(
         db: Session,
@@ -100,6 +68,7 @@ class UsersGenerator:
         password_hasher: PasswordHasher,
         profile_img_folder: str,
         qualifications_img_folder: str,
+        mcr_pool: list[MCRNumber],
     ) -> list[VolunteerDoctor]:
         if not os.path.exists(profile_img_folder):
             raise ValueError(f"Profile image folder does not exist: {profile_img_folder}")
@@ -119,10 +88,10 @@ class UsersGenerator:
             fullname = folder_item.stem
             fullname_parts = fullname.split("_")
 
-            doc_qualification = DoctorQualification(
-                qualification_img_key="",  # Empty, for now.....
-                qualification_option=random.choice(list(DoctorQualificationOption)),
-            )
+            # doc_qualification = DoctorQualification(
+            #     qualification_img_key="",  # Empty, for now.....
+            #     # qualification_option=random.choice(list(DoctorQualificationOption)),
+            # )
             doctor = VolunteerDoctor(
                 first_name=fullname_parts[0],
                 middle_name=fullname_parts[1] if len(fullname_parts) >= 3 else "",
@@ -130,7 +99,7 @@ class UsersGenerator:
                 role=UserRole.VOLUNTEER_DOCTOR,
                 email=f"{fullname}@gmail.com",
                 hashed_password=password_hasher.hash(fullname),
-                qualification=doc_qualification,
+                mcr_no=mcr_pool.pop(),
                 created_at=faker.date_time_between(start_date="-3y", end_date="now"),
             )
             db.add(doctor)
@@ -143,7 +112,7 @@ class UsersGenerator:
             )
             if qualification_s3_key is None:
                 raise ValueError("Failed to upload medical degree image to S3 storage")
-            doctor.qualification.qualification_img_key = qualification_s3_key
+            doctor.qualification_img_key = qualification_s3_key
 
             # Assign the profile picture
             profile_img_filepath = str(folder_item)
@@ -152,7 +121,6 @@ class UsersGenerator:
                 raise ValueError("Failed to upload profile image to S3 storage")
             doctor.profile_img_key = profile_s3_key
 
-            doc_qualification.doctor = doctor
             all_doctors.append(doctor)
         return all_doctors
 
@@ -180,10 +148,10 @@ class UsersGenerator:
             fullname = folder_item.stem
             fullname_parts = fullname.split("_")
 
-            qualification = NutritionistQualification(
-                qualification_img_key="",  # Empty, for now.....
-                qualification_option=random.choice(list(NutritionistQualificationOption)),
-            )
+            # qualification = NutritionistQualification(
+            #     qualification_img_key="",  # Empty, for now.....
+            #     # qualification_option=random.choice(list(NutritionistQualificationOption)),
+            # )
             nutritionist = Nutritionist(
                 first_name=fullname_parts[0],
                 middle_name=fullname_parts[1] if len(fullname_parts) >= 3 else "",
@@ -191,7 +159,6 @@ class UsersGenerator:
                 role=UserRole.NUTRITIONIST,
                 email=f"{fullname}@gmail.com",
                 hashed_password=password_hasher.hash(fullname),
-                qualification=qualification,
                 created_at=faker.date_time_between(start_date="-3y", end_date="now"),
             )
             db.add(nutritionist)
@@ -204,7 +171,7 @@ class UsersGenerator:
             )
             if qualification_s3_key is None:
                 raise ValueError("Failed to upload medical degree image to S3 storage")
-            nutritionist.qualification.qualification_img_key = qualification_s3_key
+            nutritionist.qualification_img_key = qualification_s3_key
 
             # Assign the profile picture
             profile_img_filepath = str(folder_item)
@@ -213,7 +180,6 @@ class UsersGenerator:
                 raise ValueError("Failed to upload profile image to S3 storage")
             nutritionist.profile_img_key = profile_s3_key
 
-            qualification.nutritionist = nutritionist
             all_nutritionists.append(nutritionist)
         return all_nutritionists
 
@@ -241,4 +207,3 @@ class UsersGenerator:
     #         all_admins.append(admin)
     #     db.commit()
     #     return all_admins
-    #

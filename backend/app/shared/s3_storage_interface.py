@@ -1,15 +1,38 @@
 import mimetypes
 import uuid
 from typing import BinaryIO
+from uuid import UUID
 
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import UploadFile
 
-from app.core.aws_clients import s3_client
+from app.core.clients import s3_client
 from app.core.settings import settings
 
 
 class S3StorageInterface:
+    # =================================================================
+    # =========================== RECIPES =============================
+    # =================================================================
+    RECIPE_PREFIX = "recipes"
+
+    @staticmethod
+    def put_recipe_img(recipe_id: int, recipe_img: UploadFile) -> str | None:
+        return S3StorageInterface._upload_file_stream(
+            prefix=S3StorageInterface.RECIPE_PREFIX,
+            file_name=str(recipe_id),
+            file_obj=recipe_img.file,
+            content_type=str(recipe_img.content_type),
+        )
+
+    @staticmethod
+    def put_recipe_img_from_filepath(recipe_id: int, recipe_img_filepath: str) -> str | None:
+        return S3StorageInterface._put_img_from_filepath(
+            prefix=S3StorageInterface.RECIPE_PREFIX,
+            file_name=str(recipe_id),
+            img_filepath=recipe_img_filepath,
+        )
+
     # =======================================================================================
     # ============== STAGING AREA FOR QUALIFICATIONS (DOCTOR + NUTRITIONIST) ================
     # =======================================================================================
@@ -32,7 +55,7 @@ class S3StorageInterface:
         )
 
     @staticmethod
-    def promote_staging_qualification_img(user_id: int, staging_img_key: str) -> str | None:
+    def promote_staging_qualification_img(user_id: UUID, staging_img_key: str) -> str | None:
         """
         Moves a qualification image from the staging area to the permanent qualifications storage.
 
@@ -80,7 +103,7 @@ class S3StorageInterface:
     QUALIFICATION_PREFIX = "qualifications"
 
     @staticmethod
-    def put_qualification_img(user_id: int, qualification_img: UploadFile) -> str | None:
+    def put_qualification_img(user_id: UUID, qualification_img: UploadFile) -> str | None:
         return S3StorageInterface._upload_file_stream(
             prefix=S3StorageInterface.QUALIFICATION_PREFIX,
             file_name=str(user_id),
@@ -89,7 +112,7 @@ class S3StorageInterface:
         )
 
     @staticmethod
-    def put_qualification_img_from_filepath(user_id: int, qualification_img_filepath: str) -> str | None:
+    def put_qualification_img_from_filepath(user_id: UUID, qualification_img_filepath: str) -> str | None:
         return S3StorageInterface._put_img_from_filepath(
             file_name=str(user_id),
             img_filepath=qualification_img_filepath,
@@ -102,7 +125,7 @@ class S3StorageInterface:
     PROFILE_PREFIX = "profile-images"
 
     @staticmethod
-    def put_profile_img(user_id: int, profile_img: UploadFile) -> str | None:
+    def put_profile_img(user_id: UUID, profile_img: UploadFile) -> str | None:
         return S3StorageInterface._upload_file_stream(
             prefix=S3StorageInterface.PROFILE_PREFIX,
             file_name=str(user_id),
@@ -111,7 +134,7 @@ class S3StorageInterface:
         )
 
     @staticmethod
-    def put_profile_img_from_filepath(user_id: int, profile_img_filepath: str) -> str | None:
+    def put_profile_img_from_filepath(user_id: UUID, profile_img_filepath: str) -> str | None:
         return S3StorageInterface._put_img_from_filepath(
             file_name=str(user_id),
             img_filepath=profile_img_filepath,
@@ -197,3 +220,20 @@ class S3StorageInterface:
         except (BotoCoreError, ClientError) as e:
             print(f"Error uploading file stream: {e}")
             return None
+
+    # @staticmethod
+    # def clear_bucket() -> None:
+    #     response = s3_client.list_objects_v2(Bucket=bucket_name)
+
+    #     if "Contents" in response:
+    #         # Loop through each object and delete it
+    #         for obj in response["Contents"]:
+    #             print(f"Deleting {obj['Key']}...")
+    #             s3.delete_object(Bucket=bucket_name, Key=obj["Key"])
+
+    #         # Check for pagination
+    #         while response.get("IsTruncated"):  # If there are more objects to be listed
+    #             response = s3.list_objects_v2(Bucket=bucket_name, ContinuationToken=response["NextContinuationToken"])
+    #             for obj in response["Contents"]:
+    #                 print(f"Deleting {obj['Key']}...")
+    #                 s3.delete_object(Bucket=bucket_name, Key=obj["Key"])

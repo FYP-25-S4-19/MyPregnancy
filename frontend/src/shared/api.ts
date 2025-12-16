@@ -9,7 +9,7 @@ if (process.env.EXPO_PUBLIC_APP_ENV !== "dev" && process.env.EXPO_PUBLIC_APP_ENV
   throw new Error("EXPO_PUBLIC_APP_ENV should be set to either 'dev' or 'prod' explicitly");
 }
 
-const getDevHostIp = (): string => {
+export const getDevHostIp = (): string => {
   // Emulator check
   const isEmulator = !Device.isDevice;
   if (isEmulator) {

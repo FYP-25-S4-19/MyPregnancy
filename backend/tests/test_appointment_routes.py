@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta
 from typing import Callable
 
@@ -54,7 +55,7 @@ async def test_create_appointment_doctor_not_found(
 ) -> None:
     client, _ = authenticated_pregnant_woman_client
     start_time: datetime = datetime.now() + timedelta(days=1)
-    invalid_doctor_id: int = 9999
+    invalid_doctor_id = uuid.uuid4()
     response = await client.post(
         "/appointments/",
         content=CreateAppointmentRequest(doctor_id=invalid_doctor_id, start_time=start_time).model_dump_json(),
@@ -114,7 +115,7 @@ async def test_edit_appointment_not_found(
     new_start_time: datetime = datetime.now() + timedelta(days=10)
     edit_response = await client.patch(
         "/appointments/",
-        content=EditAppointmentRequest(appointment_id=9999, new_start_time=new_start_time).model_dump_json(),
+        content=EditAppointmentRequest(appointment_id=uuid.uuid4(), new_start_time=new_start_time).model_dump_json(),
     )
     assert edit_response.status_code == status.HTTP_404_NOT_FOUND, (
         "Editing a non-existent appointment should return 404"
@@ -169,7 +170,7 @@ async def test_delete_appointment_success(
     await db_session.commit()
 
     delete_response = await client.delete(f"/appointments/{appointment.id}")
-    assert delete_response.status_code == status.HTTP_204_NO_CONTENT, "Deleting appointment should return 204"
+    assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
     deleted_appointment = await db_session.get(Appointment, appointment.id)
     assert deleted_appointment is None, "Appointment should be deleted from the database"
@@ -180,10 +181,8 @@ async def test_delete_appointment_not_found(
     authenticated_pregnant_woman_client: tuple[AsyncClient, PregnantWoman],
 ) -> None:
     client, _ = authenticated_pregnant_woman_client
-    delete_response = await client.delete("/appointments/9999")
-    assert delete_response.status_code == status.HTTP_404_NOT_FOUND, (
-        "Deleting non-existent appointment should return 404"
-    )
+    delete_response = await client.delete(f"/appointments/{uuid.uuid4()}")
+    assert delete_response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -206,9 +205,7 @@ async def test_delete_appointment_for_other_user(
     await db_session.commit()
 
     delete_response = await authorized_client.delete(f"/appointments/{other_mother_appointment.id}")
-    assert delete_response.status_code == status.HTTP_403_FORBIDDEN, (
-        "Should not allow deleting appointment belonging to another user"
-    )
+    assert delete_response.status_code == status.HTTP_403_FORBIDDEN
 
 
 # =========================================================================
@@ -231,7 +228,7 @@ async def test_accept_appointment_success(
     db_session.add(appointment)
     await db_session.commit()
     accept_response = await client.patch(f"/appointments/{appointment.id}/accept")
-    assert accept_response.status_code == status.HTTP_204_NO_CONTENT, "Accepting appointment should return 204"
+    assert accept_response.status_code == status.HTTP_204_NO_CONTENT
 
     updated_appointment = await db_session.get(Appointment, appointment.id)
     assert updated_appointment is not None, "Appointment should exist in the database"
@@ -255,7 +252,7 @@ async def test_reject_appointment_success(
     db_session.add(appointment)
     await db_session.commit()
     reject_response = await client.patch(f"/appointments/{appointment.id}/reject")
-    assert reject_response.status_code == status.HTTP_204_NO_CONTENT, "Rejecting appointment should return a 204"
+    assert reject_response.status_code == status.HTTP_204_NO_CONTENT
 
     updated_appointment = await db_session.get(Appointment, appointment.id)
     assert updated_appointment is not None, "Appointment should exist in the database"
@@ -267,10 +264,8 @@ async def test_accept_appointment_not_found(
     authenticated_doctor_client: tuple[AsyncClient, VolunteerDoctor],
 ) -> None:
     client, _ = authenticated_doctor_client
-    accept_response = await client.patch("/appointments/9999/accept")
-    assert accept_response.status_code == status.HTTP_404_NOT_FOUND, (
-        "Accepting non-existent appointment should return 404"
-    )
+    accept_response = await client.patch(f"/appointments/{uuid.uuid4()}/accept")
+    assert accept_response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio
@@ -278,10 +273,8 @@ async def test_reject_appointment_not_found(
     authenticated_doctor_client: tuple[AsyncClient, VolunteerDoctor],
 ) -> None:
     client, _ = authenticated_doctor_client
-    reject_response = await client.patch("/appointments/9999/reject")
-    assert reject_response.status_code == status.HTTP_404_NOT_FOUND, (
-        "Rejecting non-existent appointment should return 404"
-    )
+    reject_response = await client.patch(f"/appointments/{uuid.uuid4()}/reject")
+    assert reject_response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio
