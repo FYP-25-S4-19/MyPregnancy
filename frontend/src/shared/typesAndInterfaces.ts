@@ -1,7 +1,7 @@
 // export interface LocalMessageExtended
 
 export interface MeData {
-  id: number;
+  id: string;
   email: string;
   first_name: string;
   middle_name: string | null;

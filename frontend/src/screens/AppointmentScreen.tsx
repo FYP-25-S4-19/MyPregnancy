@@ -1,22 +1,10 @@
-import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import AppointmentCard, { AppointmentData } from "../components/AppointmentCard";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, sizes, font } from "../shared/designSystem";
 import { Calendar, DateData } from "react-native-calendars";
 import { Ionicons } from "@expo/vector-icons";
-
-import { colors, sizes, font, shadows } from "../shared/designSystem";
-
-// --- TYPES & INTERFACES ---
-
-type AppointmentStatus = "Accepted" | "Rejected" | "Pending";
-
-interface AppointmentData {
-  id: string;
-  dateString: string;
-  time: string;
-  doctor: string;
-  status: AppointmentStatus;
-}
+import React, { useState } from "react";
 
 interface MarkedDateCustomStyles {
   marked?: boolean;
@@ -24,10 +12,6 @@ interface MarkedDateCustomStyles {
   selected?: boolean;
   selectedColor?: string;
   selectedTextColor?: string;
-}
-
-interface AppointmentCardProps {
-  item: AppointmentData;
 }
 
 const APPOINTMENTS: AppointmentData[] = [
@@ -54,46 +38,6 @@ const APPOINTMENTS: AppointmentData[] = [
   },
 ];
 
-const AppointmentCard: React.FC<AppointmentCardProps> = ({ item }) => {
-  const getStatusColor = (status: AppointmentStatus): string => {
-    switch (status) {
-      case "Accepted":
-        return colors.success;
-      case "Rejected":
-        return colors.fail;
-      case "Pending":
-        return colors.warning;
-      default:
-        return colors.text;
-    }
-  };
-
-  const formattedDate = new Date(item.dateString).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-  });
-
-  return (
-    <View style={styles.cardContainer}>
-      <Text style={styles.cardTitle}>
-        {formattedDate} {item.time}
-      </Text>
-
-      <View style={styles.cardRow}>
-        <View style={styles.dash} />
-        <Text style={styles.cardDetail}>with {item.doctor}</Text>
-      </View>
-
-      <View style={styles.cardRow}>
-        <View style={[styles.dash, { backgroundColor: getStatusColor(item.status) }]} />
-        <Text style={[styles.cardStatus, { color: getStatusColor(item.status) }]}>{item.status}</Text>
-      </View>
-    </View>
-  );
-};
-
-// --- COMPONENT: Status Legend ---
-
 const StatusLegend: React.FC = () => (
   <View style={styles.legendContainer}>
     <View style={styles.legendItem}>
@@ -111,12 +55,9 @@ const StatusLegend: React.FC = () => (
   </View>
 );
 
-// --- MAIN SCREEN ---
-
 export default function AppointmentScreen() {
   const [selectedDate, setSelectedDate] = useState<string>("2025-11-04");
 
-  // Strictly typed return value for the marking logic
   const getMarkedDates = (): Record<string, MarkedDateCustomStyles> => {
     const marks: Record<string, MarkedDateCustomStyles> = {};
 
@@ -131,7 +72,6 @@ export default function AppointmentScreen() {
       };
     });
 
-    // Merge the selection style on top of existing marks
     const existingMark = marks[selectedDate] || {};
 
     marks[selectedDate] = {
@@ -201,6 +141,28 @@ export default function AppointmentScreen() {
 }
 
 const styles = StyleSheet.create({
+  legendContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginTop: sizes.s,
+    paddingLeft: sizes.s,
+    gap: sizes.l,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.xs,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    fontSize: font.xs,
+    color: colors.text,
+  },
+
   container: {
     flex: 1,
     backgroundColor: colors.white,
@@ -241,27 +203,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: "bold",
   },
-  legendContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    marginTop: sizes.s,
-    paddingLeft: sizes.s,
-    gap: sizes.l,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: sizes.xs,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    fontSize: font.xs,
-    color: colors.text,
-  },
   sectionContainer: {
     marginTop: sizes.xl,
   },
@@ -270,39 +211,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.text,
     marginBottom: sizes.m,
-  },
-  cardContainer: {
-    backgroundColor: colors.white,
-    borderRadius: sizes.borderRadius,
-    padding: sizes.m,
-    marginBottom: sizes.m,
-    borderWidth: 1,
-    borderColor: colors.inputFieldBackground,
-    ...shadows.small,
-  },
-  cardTitle: {
-    fontSize: font.m,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: sizes.xs,
-  },
-  cardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  dash: {
-    width: 20,
-    height: 1,
-    backgroundColor: colors.text,
-    marginRight: sizes.s,
-  },
-  cardDetail: {
-    fontSize: font.s,
-    color: colors.text,
-  },
-  cardStatus: {
-    fontSize: font.s,
-    fontWeight: "600",
   },
 });

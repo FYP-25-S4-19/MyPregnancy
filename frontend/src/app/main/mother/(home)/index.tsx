@@ -18,8 +18,8 @@ export default function MotherHomeScreen() {
       length: 30,
       weight: 600,
     },
-    userName: me?.first_name || "<FIRST NAME>",
-    userLastName: me?.last_name || "<LAST NAME>",
+    userName: me?.first_name || "<MISSING_FNAME>",
+    userLastName: me?.last_name || "<MISSING_LNAME>",
   };
 
   const journalData = {
@@ -101,15 +101,17 @@ export default function MotherHomeScreen() {
           <Text style={styles.progressLabel}>{getProgressPercentage()}% of your pregnancy journey!</Text>
 
           {/* Journal Card */}
-          <JournalSection data={journalData} onEdit={() => router.push("/main/mother/journal")} />
+          <JournalSection userID={me?.id || ""} onEdit={() => router.push("/main/mother/journal")} />
 
           {/* Articles Card */}
           <ArticleSection articles={articles} onViewAll={() => router.push("/main/mother/articles")} />
 
+          <View style={{ height: 20 }} />
+
           {/* Community Threads Section */}
           <CommunityThreadsSection
             onViewAll={() => router.push("/main/mother/(home)/threads")}
-            onThreadPress={(threadId) => console.log("Thread pressed:", threadId)} // TODO: Link that up for realsies
+            onThreadPress={(threadID) => router.push(`/main/(notab)/threads/${threadID}`)}
           />
 
           {/* Extra spacing at bottom */}

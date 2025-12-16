@@ -1,21 +1,57 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
+import { useJournalPreviewData } from "@/src/shared/hooks/useJournalMetrics";
 
-interface JournalData {
-  bloodPressure: { systolic: number; diastolic: number } | null;
-  sugarLevel: number | null;
-  heartRate: number | null;
-  weight: number | null;
-  kickCounter: number | null;
-}
-
-interface JournalCardSectionProps {
-  data: JournalData;
+interface JournalSectionProps {
+  doFetchMetrics?: boolean;
   onEdit?: () => void;
 }
 
-export default function JournalSection({ data, onEdit }: JournalCardSectionProps) {
+export default function JournalSection({ doFetchMetrics = false, onEdit }: JournalSectionProps) {
+  if (!doFetchMetrics) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>My Journal</Text>
+            <Text style={styles.subtitle}>Tap to write your daily journal!</Text>
+          </View>
+          {onEdit && (
+            <TouchableOpacity onPress={onEdit}>
+              <Text style={styles.editButton}>Edit</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.metricsContainer}>
+          <MetricRow label="Blood Pressure" unit="" />
+          <MetricRow label="Sugar Level" unit="mmol/L" />
+          <MetricRow label="Heart Rate" unit="bpm" />
+          <MetricRow label="Weight" unit="kg" />
+          <MetricRow label="Kick Counter" unit="kicks" />
+        </View>
+      </View>
+    );
+  }
+
+  const { data, isLoading, isFetching, isError } = useJournalPreviewData(new Date());
+  if (isLoading || isFetching) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.title}>Loading Journal...</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.title}>Error loading journal data.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -31,15 +67,11 @@ export default function JournalSection({ data, onEdit }: JournalCardSectionProps
       </View>
 
       <View style={styles.metricsContainer}>
-        <MetricRow
-          label="Blood Pressure"
-          value={data.bloodPressure ? `${data.bloodPressure.systolic} / ${data.bloodPressure.diastolic}` : ""}
-          unit=""
-        />
-        <MetricRow label="Sugar Level" value={data.sugarLevel?.toString() || ""} unit="mmol/L" />
-        <MetricRow label="Heart Rate" value={data.heartRate?.toString() || ""} unit="bpm" />
+        <MetricRow label="Blood Pressure" value={data ? `${data.bp_systolic} / ${data.bp_diastolic}` : ""} unit="" />
+        <MetricRow label="Sugar Level" value={data.sugar_level?.toString() || ""} unit="mmol/L" />
+        <MetricRow label="Heart Rate" value={data.heart_rate?.toString() || ""} unit="bpm" />
         <MetricRow label="Weight" value={data.weight?.toString() || ""} unit="kg" />
-        <MetricRow label="Kick Counter" value={data.kickCounter?.toString() || ""} unit="kicks" />
+        <MetricRow label="Kick Counter" value={data.kick_count?.toString() || ""} unit="kicks" />
       </View>
     </View>
   );
@@ -47,7 +79,7 @@ export default function JournalSection({ data, onEdit }: JournalCardSectionProps
 
 interface MetricRowProps {
   label: string;
-  value: string;
+  value?: string;
   unit: string;
 }
 
