@@ -103,7 +103,6 @@ export const profileStyles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // Form styles
   formContainer: {
     gap: sizes.m,
   },
@@ -115,9 +114,9 @@ export const profileStyles = StyleSheet.create({
     color: colors.black,
     opacity: 0.5,
     fontWeight: "500",
+    marginLeft: sizes.xs,
   },
   input: {
-    // backgroundColor: colors.,
     borderRadius: sizes.borderRadius,
     paddingHorizontal: sizes.m,
     paddingVertical: sizes.s,
@@ -125,6 +124,25 @@ export const profileStyles = StyleSheet.create({
     color: colors.black,
     borderWidth: 1,
     borderColor: colors.lightGray,
+  },
+
+  // Action button styles
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: sizes.s,
+    paddingHorizontal: sizes.s,
+  },
+  actionButtonText: {
+    fontSize: font.s,
+    color: colors.text,
+    fontWeight: "500",
+  },
+  actionButtonArrow: {
+    fontSize: font.l,
+    color: colors.lightGray,
+    fontWeight: "300",
   },
 });
 
