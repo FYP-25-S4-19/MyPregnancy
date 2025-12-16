@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     fontSize: font.s,
     color: colors.text,
     fontWeight: "500",
+    textDecorationLine: "underline",
   },
   metricsContainer: {
     gap: sizes.s,

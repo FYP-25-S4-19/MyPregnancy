@@ -1,10 +1,10 @@
 import PregnancyDetailsCard from "@/src/components/cards/PregnancyDetailsCard";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import MotherProfileCard from "@/src/components/cards/MotherProfileCard";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { sizes } from "@/src/shared/designSystem";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import useAuthStore from "@/src/shared/authStore";
+import { colors, shadows, sizes } from "@/src/shared/designSystem";
 import React, { useState } from "react";
 import utils from "@/src/shared/utils";
 
@@ -12,7 +12,6 @@ export default function MotherProfileScreen() {
   const me = useAuthStore((state) => state.me);
   const signOut = useAuthStore((state) => state.clearAuthState);
 
-  // Mock data - replace with actual data from API
   const [profileData, setProfileData] = useState({
     fullName: me ? utils.formatFullname(me) : "Olivia Wilson",
     dateOfBirth: "01/01/1998",
@@ -40,7 +39,6 @@ export default function MotherProfileScreen() {
   };
 
   const handleChangePhoto = () => {
-    // TODO: Implement photo picker logic
     console.log("Change photo pressed");
   };
 
@@ -58,7 +56,17 @@ export default function MotherProfileScreen() {
         {/* Pregnancy Details Card */}
         <PregnancyDetailsCard data={pregnancyData} onUpdateField={handlePregnancyUpdate} />
 
-        <TouchableOpacity onPress={signOut}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.white,
+            padding: 3,
+            marginHorizontal: sizes.m,
+            borderRadius: sizes.m,
+            alignItems: "center",
+            ...shadows.medium,
+          }}
+          onPress={signOut}
+        >
           <Text>Logout</Text>
         </TouchableOpacity>
 

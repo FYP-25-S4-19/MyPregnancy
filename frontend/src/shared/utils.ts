@@ -69,6 +69,12 @@ const utils = {
     if (str.length === 0) return str;
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
+  firstLetterOfEveryWordCapitalized(str: string): string {
+    return str
+      .split(" ")
+      .map((word) => (word.length > 0 ? word.charAt(0).toUpperCase() : ""))
+      .join("");
+  },
 };
 
 export default utils;
