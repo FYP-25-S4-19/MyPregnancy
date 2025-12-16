@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import AppointmentCard, { AppointmentData } from "../components/AppointmentCard";
+import { useAppointmentsForMonthQuery } from "../shared/hooks/useAppointments";
+import AppointmentCard from "../components/AppointmentCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, sizes, font } from "../shared/designSystem";
 import { Calendar, DateData } from "react-native-calendars";
@@ -14,29 +15,29 @@ interface MarkedDateCustomStyles {
   selectedTextColor?: string;
 }
 
-const APPOINTMENTS: AppointmentData[] = [
-  {
-    id: "1",
-    dateString: "2025-11-01",
-    time: "11:00AM",
-    doctor: "Dr. John",
-    status: "Rejected",
-  },
-  {
-    id: "2",
-    dateString: "2025-11-04",
-    time: "11:00AM",
-    doctor: "Dr. John",
-    status: "Accepted",
-  },
-  {
-    id: "3",
-    dateString: "2025-11-08",
-    time: "09:30AM",
-    doctor: "Dr. Sarah",
-    status: "Pending",
-  },
-];
+// const APPOINTMENTS: AppointmentData[] = [
+//   {
+//     id: "1",
+//     dateString: "2025-11-01",
+//     time: "11:00AM",
+//     doctor: "Dr. John",
+//     status: "Rejected",
+//   },
+//   {
+//     id: "2",
+//     dateString: "2025-11-04",
+//     time: "11:00AM",
+//     doctor: "Dr. John",
+//     status: "Accepted",
+//   },
+//   {
+//     id: "3",
+//     dateString: "2025-11-08",
+//     time: "09:30AM",
+//     doctor: "Dr. Sarah",
+//     status: "Pending",
+//   },
+// ];
 
 const StatusLegend: React.FC = () => (
   <View style={styles.legendContainer}>
@@ -58,15 +59,51 @@ const StatusLegend: React.FC = () => (
 export default function AppointmentScreen() {
   const [selectedDate, setSelectedDate] = useState<string>("2025-11-04");
 
+  const { data: appointments, isLoading, isFetching, isRefetching, isError } = useAppointmentsForMonthQuery();
+
+  if (isLoading || isFetching || isRefetching) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="chevron-back" size={28} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Appointment</Text>
+          <View style={{ width: 28 }} />
+        </View>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ color: colors.text }}>Loading appointments...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton}>
+            <Ionicons name="chevron-back" size={28} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Appointment</Text>
+          <View style={{ width: 28 }} />
+        </View>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ color: colors.text }}>Error loading appointments. Please try again later.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const getMarkedDates = (): Record<string, MarkedDateCustomStyles> => {
     const marks: Record<string, MarkedDateCustomStyles> = {};
 
-    APPOINTMENTS.forEach((appt) => {
+    appointments.forEach((appt) => {
       let dotColor = colors.warning;
-      if (appt.status === "Accepted") dotColor = colors.success;
-      if (appt.status === "Rejected") dotColor = colors.fail;
+      if (appt.status === "ACCEPTED") dotColor = colors.success;
+      if (appt.status === "REJECTED") dotColor = colors.fail;
 
-      marks[appt.dateString] = {
+      marks[appt.date_time] = {
         marked: true,
         dotColor: dotColor,
       };
@@ -96,8 +133,8 @@ export default function AppointmentScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.calendarHeaderContainer}>
-          <Text style={styles.monthText}>November</Text>
-          <Text style={styles.yearText}>2025</Text>
+          <Text style={styles.monthText}>{new Date().toLocaleString("en-US", { month: "long" })}</Text>
+          <Text style={styles.yearText}>{new Date().getFullYear()}</Text>
         </View>
 
         <Calendar
@@ -129,8 +166,8 @@ export default function AppointmentScreen() {
 
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Consultation Request</Text>
-          {APPOINTMENTS.map((item) => (
-            <AppointmentCard key={item.id} item={item} />
+          {appointments.map((appt) => (
+            <AppointmentCard key={appt.appointment_id} data={appt} />
           ))}
         </View>
 

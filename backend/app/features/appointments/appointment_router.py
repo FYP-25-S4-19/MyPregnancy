@@ -10,6 +10,7 @@ from app.db.db_config import get_db
 from app.db.db_schema import PregnantWoman, User, VolunteerDoctor
 from app.features.appointments.appointment_models import (
     AcceptRejectAppointmentRequest,
+    AppointmentPreviewData,
     AppointmentResponse,
     CreateAppointmentRequest,
     CreateAppointmentResponse,
@@ -42,6 +43,14 @@ async def create_appointment(
     except:
         await db.rollback()
         raise
+
+
+@appointments_router.get("/month", response_model=list[AppointmentPreviewData])
+async def get_appointment_previews_for_month(
+    service: AppointmentService = Depends(get_appointment_service),
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+) -> list[AppointmentPreviewData]:
+    return await service.get_appointment_previews_for_month(mother)
 
 
 @appointments_router.get("/", response_model=list[AppointmentResponse])

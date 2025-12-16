@@ -1,7 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { useJournalPreviewData } from "@/src/shared/hooks/useJournalMetrics";
+import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React from "react";
 
 interface JournalSectionProps {
   doFetchMetrics?: boolean;

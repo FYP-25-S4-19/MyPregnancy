@@ -1,4 +1,12 @@
 // export interface LocalMessageExtended
+export type AppointmentStatus = "ACCEPTED" | "REJECTED" | "PENDING_ACCEPT_REJECT";
+
+export interface AppointmentPreviewData {
+  appointment_id: string;
+  date_time: string;
+  doctor_fname: string;
+  status: AppointmentStatus;
+}
 
 export interface MeData {
   id: string;

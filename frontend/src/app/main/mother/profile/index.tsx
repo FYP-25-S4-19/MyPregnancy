@@ -1,15 +1,16 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { sizes } from "@/src/shared/designSystem";
+import PregnancyDetailsCard from "@/src/components/PregnancyDetailsCard";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import MotherProfileCard from "@/src/components/MotherProfileCard";
-import PregnancyDetailsCard from "@/src/components/PregnancyDetailsCard";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { sizes } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
+import React, { useState } from "react";
 import utils from "@/src/shared/utils";
 
 export default function MotherProfileScreen() {
   const me = useAuthStore((state) => state.me);
+  const signOut = useAuthStore((state) => state.clearAuthState);
 
   // Mock data - replace with actual data from API
   const [profileData, setProfileData] = useState({
@@ -56,6 +57,10 @@ export default function MotherProfileScreen() {
 
         {/* Pregnancy Details Card */}
         <PregnancyDetailsCard data={pregnancyData} onUpdateField={handlePregnancyUpdate} />
+
+        <TouchableOpacity onPress={signOut}>
+          <Text>Logout</Text>
+        </TouchableOpacity>
 
         {/* Extra spacing at bottom */}
         <View style={{ height: sizes.xl }} />

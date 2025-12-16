@@ -37,7 +37,7 @@ export default function MotherHomeScreen() {
     { id: "4", title: "Managing Stress During Pregnancy" },
   ];
 
-  const getInitials = () => {
+  const getInitials = (): string => {
     const firstName = pregnancyData.userName.charAt(0).toUpperCase();
     const lastName = pregnancyData.userLastName.charAt(0).toUpperCase();
     return `${firstName}${lastName}`;
@@ -101,7 +101,7 @@ export default function MotherHomeScreen() {
           <Text style={styles.progressLabel}>{getProgressPercentage()}% of your pregnancy journey!</Text>
 
           {/* Journal Card */}
-          <JournalSection userID={me?.id || ""} onEdit={() => router.push("/main/mother/journal")} />
+          <JournalSection doFetchMetrics onEdit={() => router.push("/main/mother/journal")} />
 
           {/* Articles Card */}
           <ArticleSection articles={articles} onViewAll={() => router.push("/main/mother/articles")} />

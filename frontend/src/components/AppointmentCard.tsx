@@ -1,35 +1,26 @@
+import { AppointmentPreviewData, AppointmentStatus } from "../shared/typesAndInterfaces";
 import { colors, font, shadows, sizes } from "../shared/designSystem";
 import { Text, View, StyleSheet } from "react-native";
 
-type AppointmentStatus = "Accepted" | "Rejected" | "Pending";
-
-export interface AppointmentData {
-  id: string;
-  dateString: string;
-  time: string;
-  doctor: string;
-  status: AppointmentStatus;
-}
-
 export interface AppointmentCardProps {
-  item: AppointmentData;
+  data: AppointmentPreviewData;
 }
 
-const AppointmentCard: React.FC<AppointmentCardProps> = ({ item }) => {
+const AppointmentCard: React.FC<AppointmentCardProps> = ({ data }) => {
   const getStatusColor = (status: AppointmentStatus): string => {
     switch (status) {
-      case "Accepted":
+      case "ACCEPTED":
         return colors.success;
-      case "Rejected":
+      case "REJECTED":
         return colors.fail;
-      case "Pending":
+      case "PENDING_ACCEPT_REJECT":
         return colors.warning;
       default:
         return colors.text;
     }
   };
 
-  const formattedDate = new Date(item.dateString).toLocaleDateString("en-GB", {
+  const formattedDate = new Date(data.date_time).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
   });
@@ -37,17 +28,24 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({ item }) => {
   return (
     <View style={styles.cardContainer}>
       <Text style={styles.cardTitle}>
-        {formattedDate} {item.time}
+        {formattedDate} {data.date_time.slice(11, 16)}
       </Text>
 
       <View style={styles.cardRow}>
         <View style={styles.dash} />
-        <Text style={styles.cardDetail}>with {item.doctor}</Text>
+        <Text style={styles.cardDetail}>with Dr. {data.doctor_fname}</Text>
       </View>
 
       <View style={styles.cardRow}>
-        <View style={[styles.dash, { backgroundColor: getStatusColor(item.status) }]} />
-        <Text style={[styles.cardStatus, { color: getStatusColor(item.status) }]}>{item.status}</Text>
+        <View style={styles.dash} />
+        <Text style={[styles.cardStatus, { color: getStatusColor(data.status) }]}>
+          {((): string => {
+            if (data.status === "ACCEPTED") return "Accepted";
+            if (data.status === "REJECTED") return "Rejected";
+            if (data.status === "PENDING_ACCEPT_REJECT") return "Pending";
+            return "ERROR: Check the 'status' returned from the appointment data";
+          })()}
+        </Text>
       </View>
     </View>
   );

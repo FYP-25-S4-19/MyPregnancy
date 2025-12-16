@@ -14,7 +14,7 @@ export const useJournalPreviewData = (entryDate: Date) => {
   return useQuery({
     queryKey: ["journal preview data"],
     queryFn: async (): Promise<JournalPreviewData> => {
-      const response = await api.get<JournalPreviewData>(`/journal/${entryDate.toISOString()}`);
+      const response = await api.get<JournalPreviewData>(`/journals/${entryDate.toISOString().split("T")[0]}`);
       return response.data;
     },
   });
