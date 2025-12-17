@@ -5,8 +5,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import Nutritionist, Recipe, User
+from app.db.db_schema import (
+    Nutritionist,
+    Recipe,
+    RecipeCategory,
+    RecipeToCategoryAssociation,
+    User,
+)
 from app.features.recipes.recipe_models import (
+    RecipeCategoryResponse,
     RecipeDetailedResponse,
     RecipePreviewResponse,
     RecipePreviewsPaginatedResponse,
@@ -19,10 +26,22 @@ class RecipeService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def get_recipe_categories(self) -> list[RecipeCategoryResponse]:
+        result = await self.db.execute(select(RecipeCategory))
+        categories = result.scalars().all()
+        return [RecipeCategoryResponse(id=category.id, label=category.label) for category in categories]
+
     async def get_recipe_previews(
         self, limit: int, user: User | None, cursor: int | None = None
     ) -> RecipePreviewsPaginatedResponse:
-        query_stmt = select(Recipe).options(selectinload(Recipe.saved_recipes)).order_by(Recipe.id)
+        query_stmt = (
+            select(Recipe)
+            .options(
+                selectinload(Recipe.saved_recipes),
+                selectinload(Recipe.recipe_category_associations).selectinload(RecipeToCategoryAssociation.category),
+            )
+            .order_by(Recipe.id)
+        )
         if cursor is not None:
             query_stmt = query_stmt.where(Recipe.id > cursor)
 
@@ -41,6 +60,7 @@ class RecipeService:
             RecipePreviewResponse(
                 id=recipe.id,
                 name=recipe.name,
+                category=recipe.recipe_category_associations[0].category.label,
                 img_url=(get_s3_bucket_prefix() + recipe.img_key) if recipe.img_key else "",
                 description=recipe.description,
                 is_saved=(any(saved.saver_id == user.id for saved in recipe.saved_recipes) if user else False),
@@ -55,7 +75,14 @@ class RecipeService:
         )
 
     async def get_recipe_by_id(self, recipe_id: int, user: User | None) -> RecipeDetailedResponse:
-        query_stmt = select(Recipe).options(selectinload(Recipe.saved_recipes)).where(Recipe.id == recipe_id)
+        query_stmt = (
+            select(Recipe)
+            .options(
+                selectinload(Recipe.saved_recipes),
+                selectinload(Recipe.recipe_category_associations).selectinload(RecipeToCategoryAssociation.category),
+            )
+            .where(Recipe.id == recipe_id)
+        )
         recipe = (await self.db.execute(query_stmt)).scalars().first()
         if not recipe:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
@@ -73,6 +100,7 @@ class RecipeService:
             serving_count=recipe.serving_count,
             ingredients=recipe.ingredients,
             instructions=recipe.instructions_markdown,
+            category=recipe.recipe_category_associations[0].category.label,
             is_saved=is_saved,
         )
 

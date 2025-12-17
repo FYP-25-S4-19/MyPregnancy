@@ -1,57 +1,29 @@
-import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList } from "react-native";
+import { RecipeCategory, RecipePaginatedResponse } from "@/src/shared/typesAndInterfaces";
+import { colors, sizes, font } from "../../../../shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
-import { router } from "expo-router";
-
-import { colors, sizes, font } from "../../../../shared/designSystem";
-import api from "@/src/shared/api";
 import RecipeCard from "../../../../components/RecipeCard";
+import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { router } from "expo-router";
+import api from "@/src/shared/api";
 
-/* =========================
-   Backend Recipe Interface
-========================= */
-interface RecipeData {
-  id: number;
-  name: string;
-  description: string;
-  est_calories: string;
-  pregnancy_benefit: string;
-  serving_count: number;
-  img_key: string | null;
-}
-
-/* =========================
-   Categories (UI only for now)
-========================= */
-const CATEGORIES = ["All", "Halal", "Vegetarian", "Gluten-Free", "Low-Carb"];
-
-/* =========================
-   Image helper
-========================= */
-const getRecipeImage = (imgKey: string | null) => {
-  if (!imgKey) {
-    return "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe";
-  }
-
-  // later: S3 / Cloudinary
-  return `https://your-cdn.com/${imgKey}`;
-};
-
-/* =========================
-   Screen
-========================= */
 export default function RecipesScreen() {
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  /* =========================
-     Fetch recipes from backend
-  ========================= */
-  const { data: recipes = [], isLoading } = useQuery({
-    queryKey: ["recipes"],
-    queryFn: async (): Promise<RecipeData[]> => {
-      const res = await api.get("/recipes");
+  const { data: recipeCategories } = useQuery({
+    queryKey: ["Recipe categories"],
+    queryFn: async () => {
+      const res = await api.get<RecipeCategory[]>("/recipes/categories");
+      return res.data;
+    },
+  });
+
+  const { data: recipesResponse, isLoading } = useQuery({
+    queryKey: ["Paginated recipe previews"],
+    queryFn: async () => {
+      const res = await api.get<RecipePaginatedResponse>(`/recipes/previews?limit=${7}`);
       return res.data;
     },
   });
@@ -67,9 +39,7 @@ export default function RecipesScreen() {
         {/* ================= BANNER ================= */}
         <View style={styles.bannerContainer}>
           <Image
-            source={{
-              uri: "https://images.unsplash.com/photo-1543353071-087f9a7ce56e",
-            }}
+            source={{ uri: "https://images.unsplash.com/photo-1543353071-087f9a7ce56e" }}
             style={styles.bannerImage}
           />
 
@@ -88,13 +58,15 @@ export default function RecipesScreen() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
-            {CATEGORIES.map((cat) => (
+            {recipeCategories?.map((cat) => (
               <TouchableOpacity
-                key={cat}
-                style={[styles.categoryChip, selectedCategory === cat && styles.categoryChipActive]}
-                onPress={() => setSelectedCategory(cat)}
+                key={cat.id}
+                style={[styles.categoryChip, selectedCategory === cat.label && styles.categoryChipActive]}
+                onPress={() => setSelectedCategory(cat.label)}
               >
-                <Text style={[styles.categoryText, selectedCategory === cat && styles.categoryTextActive]}>{cat}</Text>
+                <Text style={[styles.categoryText, selectedCategory === cat.label && styles.categoryTextActive]}>
+                  {cat.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -106,7 +78,7 @@ export default function RecipesScreen() {
             <Text style={{ textAlign: "center", marginTop: 20 }}>Loading recipes...</Text>
           ) : (
             <FlatList
-              data={recipes}
+              data={recipesResponse?.recipes || []}
               keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}
               renderItem={({ item }) => (
@@ -114,13 +86,10 @@ export default function RecipesScreen() {
                   id={item.id}
                   name={item.name}
                   description={item.description}
-                  estCalories={item.est_calories}
-                  pregnancyBenefit={item.pregnancy_benefit}
-                  servingCount={item.serving_count}
-                  image={getRecipeImage(item.img_key)}
+                  imgUrl={item.img_url}
                   isSaved={false}
-                  onViewPress={() => router.push(`/main/mother/recipe`)}
-                  onSavePress={() => console.log("Save recipe:", item.id)}
+                  onViewPress={() => router.push(`/main/mother/recipe/${item.id}`)}
+                  onSavePress={() => console.log("TODO Save recipe:", item.id)}
                 />
               )}
             />
@@ -131,9 +100,6 @@ export default function RecipesScreen() {
   );
 }
 
-/* =========================
-   Styles
-========================= */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

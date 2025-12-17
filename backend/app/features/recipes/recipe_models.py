@@ -1,11 +1,17 @@
 from app.core.custom_base_model import CustomBaseModel
 
 
+class RecipeCategoryResponse(CustomBaseModel):
+    id: int
+    label: str
+
+
 class RecipePreviewResponse(CustomBaseModel):
     id: int
     name: str
     img_url: str
     description: str
+    category: str | None
     is_saved: bool
 
 
@@ -25,4 +31,5 @@ class RecipeDetailedResponse(CustomBaseModel):
     serving_count: int
     ingredients: str
     instructions: str
+    category: str | None
     is_saved: bool

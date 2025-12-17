@@ -6,6 +6,7 @@ from app.core.users_manager import optional_current_active_user
 from app.db.db_config import get_db
 from app.db.db_schema import Nutritionist, User
 from app.features.recipes.recipe_models import (
+    RecipeCategoryResponse,
     RecipeDetailedResponse,
     RecipePreviewsPaginatedResponse,
 )
@@ -16,6 +17,13 @@ recipe_router = APIRouter(prefix="/recipes", tags=["Recipes"])
 
 def get_recipe_service(db: AsyncSession = Depends(get_db)) -> RecipeService:
     return RecipeService(db)
+
+
+@recipe_router.get("/categories", response_model=list[RecipeCategoryResponse])
+async def get_recipe_categories(
+    service: RecipeService = Depends(get_recipe_service),
+) -> list[RecipeCategoryResponse]:
+    return await service.get_recipe_categories()
 
 
 @recipe_router.get("/previews", response_model=RecipePreviewsPaginatedResponse)
