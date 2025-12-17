@@ -1,13 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  FlatList,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -67,7 +59,6 @@ export default function RecipesScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* ================= HEADER ================= */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>RECIPES</Text>
@@ -93,35 +84,17 @@ export default function RecipesScreen() {
         <View style={styles.categoryContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Category</Text>
-            <MaterialCommunityIcons
-              name="heart-multiple-outline"
-              size={24}
-              color={colors.primary}
-            />
+            <MaterialCommunityIcons name="heart-multiple-outline" size={24} color={colors.primary} />
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryList}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
             {CATEGORIES.map((cat) => (
               <TouchableOpacity
                 key={cat}
-                style={[
-                  styles.categoryChip,
-                  selectedCategory === cat && styles.categoryChipActive,
-                ]}
+                style={[styles.categoryChip, selectedCategory === cat && styles.categoryChipActive]}
                 onPress={() => setSelectedCategory(cat)}
               >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    selectedCategory === cat && styles.categoryTextActive,
-                  ]}
-                >
-                  {cat}
-                </Text>
+                <Text style={[styles.categoryText, selectedCategory === cat && styles.categoryTextActive]}>{cat}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -130,9 +103,7 @@ export default function RecipesScreen() {
         {/* ================= RECIPE LIST ================= */}
         <View style={styles.listContainer}>
           {isLoading ? (
-            <Text style={{ textAlign: "center", marginTop: 20 }}>
-              Loading recipes...
-            </Text>
+            <Text style={{ textAlign: "center", marginTop: 20 }}>Loading recipes...</Text>
           ) : (
             <FlatList
               data={recipes}
@@ -148,12 +119,8 @@ export default function RecipesScreen() {
                   servingCount={item.serving_count}
                   image={getRecipeImage(item.img_key)}
                   isSaved={false}
-                  onViewPress={() =>
-                    router.push(`/main/mother/recipe`)
-                  }
-                  onSavePress={() =>
-                    console.log("Save recipe:", item.id)
-                  }
+                  onViewPress={() => router.push(`/main/mother/recipe`)}
+                  onSavePress={() => console.log("Save recipe:", item.id)}
                 />
               )}
             />
@@ -170,7 +137,7 @@ export default function RecipesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.veryLightPink,
   },
 
   header: {

@@ -21,6 +21,7 @@ class RecipeModel(CustomBaseModel):
     description: str
     est_calories: str
     pregnancy_benefit: str
+    ingredients: str
     serving: int
     instructions_markdown: str
     photo_url: str
@@ -82,6 +83,7 @@ class RecipesGenerator:
                 pregnancy_benefit=recipe_json.pregnancy_benefit,
                 img_key=recipe_json.photo_url,
                 serving_count=recipe_json.serving,
+                ingredients=recipe_json.ingredients,
                 instructions_markdown=recipe_json.instructions_markdown,
             )
             recipe_cat_assocs_to_add: list[RecipeToCategoryAssociation] = []

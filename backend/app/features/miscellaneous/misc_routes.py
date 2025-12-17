@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.db_config import get_db
 from app.db.db_schema import MCRNumber, VolunteerDoctor
 from app.features.miscellaneous.misc_models import DoctorPreviewData
-from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import get_s3_bucket_prefix
 
 misc_router = APIRouter(tags=["Miscellaneous"])
