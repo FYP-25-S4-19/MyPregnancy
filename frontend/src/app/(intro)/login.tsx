@@ -42,7 +42,7 @@ export default function LoginScreen() {
       const meRes = await api.get("/users/me");
       const meData: MeData = meRes.data;
       setMe(meData);
-      router.push("/main");
+      router.replace("/main");
     } catch (err) {
       console.error(err);
       logout();

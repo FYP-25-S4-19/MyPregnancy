@@ -87,7 +87,9 @@ if __name__ == "__main__":
         print("Finished seeding metric logs (binary, scalar, BP)!\n")
 
         # ------ Generation of educational articles ---------
-        edu_articles: list[EduArticle] = EduArticlesGenerator.generate_edu_articles(db_session, faker, 40)
+        edu_articles: list[EduArticle] = EduArticlesGenerator.generate_edu_articles(
+            db_session, "./seed_data/edu_articles.json"
+        )
         EduArticlesGenerator.generate_saved_edu_articles(db_session, edu_articles, preg_women)
         print("Finished seeding educational article content!\n")
 
@@ -98,7 +100,7 @@ if __name__ == "__main__":
         # ------- Generation of miscellaneous content -------
         MiscGenerator.generate_user_app_feedback(db_session, faker, all_users, 0.25)
         MiscGenerator.generate_kick_tracker_sessions(db_session, faker, preg_women)
-        # MiscGenerator.generate_appointments(db_session, faker, doctors, preg_women, 0.7)
+        MiscGenerator.generate_appointments(db_session, faker, doctors, preg_women, 0.7)
         MiscGenerator.generate_doctor_ratings(db_session, preg_women, doctors)
         MiscGenerator.generate_mother_save_doctor(db_session, preg_women, doctors)
         print("Finished seeding miscellaneous content!\n")

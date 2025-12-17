@@ -6,6 +6,7 @@ from PIL import Image, UnidentifiedImageError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.core.settings import settings
 from app.db.db_schema import User
 
 
@@ -48,3 +49,11 @@ def generate_unique_mcr_numbers(size: int) -> list[str]:
     while len(mcr_numbers) < size:
         mcr_numbers.add(generate_mcr_like_string())
     return list(mcr_numbers)
+
+
+def get_s3_bucket_prefix() -> str:
+    return (
+        "https://mypregnancy-bucket.s3.amazonaws.com/"
+        if settings.APP_ENV == "prod"
+        else "http://localhost:4567/mypregnancy-bucket/"
+    )

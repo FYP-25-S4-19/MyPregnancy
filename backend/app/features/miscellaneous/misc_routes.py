@@ -6,6 +6,7 @@ from app.db.db_config import get_db
 from app.db.db_schema import MCRNumber, VolunteerDoctor
 from app.features.miscellaneous.misc_models import DoctorPreviewData
 from app.shared.s3_storage_interface import S3StorageInterface
+from app.shared.utils import get_s3_bucket_prefix
 
 misc_router = APIRouter(tags=["Miscellaneous"])
 
@@ -25,9 +26,10 @@ async def list_of_doctors(db: AsyncSession = Depends(get_db)) -> list[DoctorPrev
     return [
         DoctorPreviewData(
             doctor_id=doctor.id,
-            profile_img_url=(
-                S3StorageInterface.get_presigned_url(doctor.profile_img_key, 30) if doctor.profile_img_key else None
-            ),
+            # profile_img_url=(
+            #     S3StorageInterface.get_presigned_url(doctor.profile_img_key, 30) if doctor.profile_img_key else None
+            # ),
+            profile_img_url=get_s3_bucket_prefix() + doctor.profile_img_key if doctor.profile_img_key else None,
             first_name=doctor.first_name,
             is_liked=False,  # TODO
         )

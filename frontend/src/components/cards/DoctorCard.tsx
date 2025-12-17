@@ -1,7 +1,7 @@
-import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { colors, sizes, font } from "../../shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, sizes, font } from "../shared/designSystem";
+import React from "react";
 
 interface DoctorCardProps {
   id: string;
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   chatButton: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
     paddingHorizontal: sizes.l,
     paddingVertical: sizes.xs,
     borderRadius: sizes.l,

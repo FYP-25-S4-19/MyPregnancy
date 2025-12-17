@@ -4,12 +4,21 @@ from uuid import UUID
 from app.core.custom_base_model import CustomBaseModel
 
 
+class ThreadCategoryData(CustomBaseModel):
+    id: int
+    label: str
+
+
 class ThreadPreviewData(CustomBaseModel):
     id: int
     creator_name: str
     title: str
     content: str
     posted_at: str
+    categories: list[ThreadCategoryData] = []
+    like_count: int = 0
+    comment_count: int = 0
+    is_liked_by_current_user: bool = False
 
 
 class ThreadCommentData(CustomBaseModel):
@@ -21,6 +30,8 @@ class ThreadCommentData(CustomBaseModel):
 
     commented_at: datetime
     content: str
+    like_count: int = 0
+    is_liked_by_current_user: bool = False
 
 
 class ThreadData(CustomBaseModel):
@@ -43,4 +54,12 @@ class CreateThreadData(CustomBaseModel):
 
 class ThreadUpdateData(CustomBaseModel):
     title: str
+    content: str
+
+
+class CreateCommentData(CustomBaseModel):
+    content: str
+
+
+class UpdateCommentData(CustomBaseModel):
     content: str

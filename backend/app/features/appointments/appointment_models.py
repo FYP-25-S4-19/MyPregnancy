@@ -13,6 +13,13 @@ class CreateAppointmentResponse(CustomBaseModel):
     appointment_id: UUID
 
 
+class AppointmentPreviewData(CustomBaseModel):
+    appointment_id: UUID
+    date_time: datetime
+    doctor_fname: str
+    status: str
+
+
 class AcceptRejectAppointmentRequest(CustomBaseModel):
     message_id: UUID
 

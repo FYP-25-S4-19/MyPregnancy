@@ -1,103 +1,19 @@
-import { StreamVideoClient, StreamVideo, User } from "@stream-io/video-react-native-sdk";
-import React, { useEffect, useState, PropsWithChildren } from "react";
+import { useStreamConnection } from "./hooks/useStreamConnection";
+import { StreamVideo } from "@stream-io/video-react-native-sdk";
 import { Chat, OverlayProvider } from "stream-chat-expo";
-import streamTokenProvider from "./streamTokenProvider";
 import { View, ActivityIndicator } from "react-native";
-import { StreamChat } from "stream-chat";
-import useAuthStore from "./authStore";
-import utils from "./utils";
-
-const PUBLIC_STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY!;
+import React, { PropsWithChildren } from "react";
+import { globalStreamTheme } from "./globalStyles";
 
 export function StreamClientProvider({ children }: PropsWithChildren) {
-  const [chatClient, setChatClient] = useState<StreamChat | null>(null);
-  const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const { chatClient, videoClient, isReady, isGuest } = useStreamConnection();
 
-  const me = useAuthStore((state) => state.me);
+  if (isGuest) {
+    return <>{children}</>;
+  }
 
-  useEffect(() => {
-    if (!me) {
-      setChatClient(null);
-      setVideoClient(null);
-      setIsReady(true);
-      return;
-    }
-
-    let isMounted = true;
-
-    let currentChat: StreamChat | null = null;
-    let currentVideo: StreamVideoClient | null = null;
-    setIsReady(false);
-
-    const initClients = async () => {
-      try {
-        const user: User = {
-          id: me.id.toString(),
-          name: utils.formatFullname(me),
-          // image: me.profile_img_key,
-        };
-
-        // Chat setup - If the singleton is connected to someone else, disconnect first
-        const chat = StreamChat.getInstance(PUBLIC_STREAM_API_KEY);
-        if (chat.userID && chat.userID !== user.id) {
-          await chat.disconnectUser();
-        }
-
-        if (chat.userID !== user.id) {
-          await chat.connectUser(user, streamTokenProvider);
-        }
-        currentChat = chat;
-
-        // Video setup
-        let video = StreamVideoClient.getOrCreateInstance({
-          apiKey: PUBLIC_STREAM_API_KEY,
-          user,
-          tokenProvider: streamTokenProvider,
-        });
-
-        // Handle User Mismatch for Video
-        //
-        // If the singleton exists but has a different user (from previous login),
-        // we must disconnect and create a new instance.
-        if (video.state.connectedUser && video.state.connectedUser.id !== user.id) {
-          await video.disconnectUser();
-          video = new StreamVideoClient({
-            apiKey: PUBLIC_STREAM_API_KEY,
-            user,
-            tokenProvider: streamTokenProvider,
-          });
-        }
-        currentVideo = video;
-
-        if (isMounted) {
-          setChatClient(chat);
-          setVideoClient(video);
-          setIsReady(true);
-        }
-      } catch (e) {
-        console.error("Stream Init Failed", e);
-        if (isMounted) setIsReady(true);
-      }
-    };
-    initClients();
-
-    return () => {
-      isMounted = false;
-
-      if (currentChat) {
-        currentChat.disconnectUser().catch((e) => console.log("Chat disconnect error", e));
-      }
-
-      if (currentVideo) {
-        currentVideo.disconnectUser().catch((e) => console.log("Video disconnect error", e));
-      }
-
-      setChatClient(null);
-      setVideoClient(null);
-    };
-  }, [me?.id]); // Only re-run if the User ID changes
-
+  // Connection in progress
+  // We MUST show this, otherwise children mount and try to use context that doesn't exist
   if (!isReady) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -106,12 +22,15 @@ export function StreamClientProvider({ children }: PropsWithChildren) {
     );
   }
 
-  if (!chatClient || !videoClient) {
+  // Render app without Stream Wrappers
+  // This allows guests to use the app without crashing on missing ChatContext
+  if (isGuest || !chatClient || !videoClient) {
     return <>{children}</>;
   }
 
+  // Authenticated and Connected
   return (
-    <OverlayProvider>
+    <OverlayProvider value={{ style: globalStreamTheme }}>
       <Chat client={chatClient}>
         <StreamVideo client={videoClient}>{children}</StreamVideo>
       </Chat>

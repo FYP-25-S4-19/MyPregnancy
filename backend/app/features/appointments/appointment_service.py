@@ -9,6 +9,7 @@ from stream_chat import StreamChat
 
 from app.db.db_schema import Appointment, AppointmentStatus, PregnantWoman, User, UserRole, VolunteerDoctor
 from app.features.appointments.appointment_models import (
+    AppointmentPreviewData,
     AppointmentResponse,
     EditAppointmentRequest,
 )
@@ -35,6 +36,29 @@ class AppointmentService:
         self.db.add(appointment)
         await self.db.flush()
         return appointment.id
+
+    async def get_appointment_previews_for_month(self, mother: PregnantWoman) -> list[AppointmentPreviewData]:
+        now = datetime.now(timezone.utc)
+        first_day_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+        stmt = (
+            select(Appointment)
+            .where(Appointment.mother_id == mother.id, Appointment.start_time > first_day_of_month)
+            .options(selectinload(Appointment.volunteer_doctor))
+        )
+        appointments_for_month = (await self.db.execute(stmt)).scalars().all()
+
+        response: list[AppointmentPreviewData] = []
+        for appointment in appointments_for_month:
+            doctor: VolunteerDoctor = appointment.volunteer_doctor
+            response.append(
+                AppointmentPreviewData(
+                    appointment_id=appointment.id,
+                    date_time=appointment.start_time,
+                    doctor_fname=doctor.first_name,
+                    status=appointment.status.value,
+                )
+            )
+        return response
 
     async def get_all_appointments(self, user: User) -> list[AppointmentResponse]:
         is_participant: bool = user.role == UserRole.PREGNANT_WOMAN or user.role == UserRole.VOLUNTEER_DOCTOR

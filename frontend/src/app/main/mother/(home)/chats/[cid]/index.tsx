@@ -1,8 +1,8 @@
 import { Channel as ChannelElement, MessageList, MessageInput, useChatContext } from "stream-chat-expo";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ChatHeader from "@/src/components/headers/ChatHeader";
 import { chatStyles } from "@/src/shared/globalStyles";
-import ChatHeader from "@/src/components/ChatHeader";
 import { Channel as ChannelType } from "stream-chat";
 import { useLocalSearchParams } from "expo-router";
 import useAuthStore from "@/src/shared/authStore";
@@ -28,7 +28,7 @@ const ConsultRequestChip = ({ channel }: { channel: ChannelType }) => {
       return;
     }
 
-    const doctor = utils.getOtherMemberFromChannel(channel, myID.toString());
+    const doctor = utils.getOtherMemberInChannel(channel, myID.toString());
     if (doctor === undefined) {
       return;
     }
@@ -44,9 +44,9 @@ const ConsultRequestChip = ({ channel }: { channel: ChannelType }) => {
 
       await channel.sendMessage({
         text: `
-              Request sent to Dr ${firstName}
+              Request sent to Dr. ${firstName}.
               [${utils.formatConsultRequestDate(startDatetime)}]
-              You'll be notified when they respond
+              You'll be notified when they respond.
             `,
         consultData: {
           appointmentID: res.data.appointment_id,
@@ -87,21 +87,23 @@ export default function IndividualChatScreen() {
   if (!me?.id) {
     return;
   }
-  const doctor = utils.getOtherMemberFromChannel(channel, me.id.toString());
+  const doctor = utils.getOtherMemberInChannel(channel, me.id.toString());
   if (doctor === undefined) {
     return;
   }
   const doctorFirstName = doctor.name?.split(" ")[0] || "Missing name wthelly";
 
+  const headerHeight = 50;
   return (
     <SafeAreaView edges={["top", "left", "right"]}>
-      <ChatHeader title={`Dr ${doctorFirstName}`} />
+      <ChatHeader title={`Dr. ${doctorFirstName}`} headerHeight={headerHeight} />
 
       <ChannelElement channel={channel}>
         <MessageList />
 
         <KeyboardAvoidingView keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}>
-          <View style={chatStyles.inputWrapper}>
+          {/* Offset the entire thing upwards */}
+          <View style={[chatStyles.inputWrapper, { marginBottom: headerHeight }]}>
             <ConsultRequestChip channel={channel} />
             <MessageInput />
           </View>
@@ -116,11 +118,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
-
   consultationChip: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.secondary, // "#ffe2e2",
     alignSelf: "flex-start",
     paddingVertical: sizes.xs,
     paddingHorizontal: sizes.m,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     marginLeft: sizes.xs,
   },
   consultationText: {
-    color: colors.text,
+    color: colors.text, // "#a97070",
     fontSize: font.xs,
     fontWeight: "600",
   },

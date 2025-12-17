@@ -1,12 +1,13 @@
-import { RingingCallContent, StreamCall, useCalls } from "@stream-io/video-react-native-sdk";
+import { CallingState, RingingCallContent, StreamCall, useCalls } from "@stream-io/video-react-native-sdk";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useEffect } from "react";
+import IncomingCall from "@/src/screens/IncomingCallScreen";
 
 export default function RingingScreen() {
-  const calls = useCalls().filter((c) => c.ringing);
-  const ringingCall = calls[0];
+  const allRingingCalls = useCalls().filter((c) => c.state.callingState === CallingState.RINGING);
+  const ringingCall = allRingingCalls[0];
 
   useEffect(() => {
     if (!ringingCall) {
@@ -18,7 +19,7 @@ export default function RingingScreen() {
   return (
     <StreamCall call={ringingCall}>
       <SafeAreaView style={styles.container}>
-        <RingingCallContent />
+        <RingingCallContent IncomingCall={IncomingCall} />
       </SafeAreaView>
     </StreamCall>
   );

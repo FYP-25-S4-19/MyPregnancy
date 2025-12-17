@@ -1,12 +1,15 @@
-import { useCalls } from "@stream-io/video-react-native-sdk";
-import { Redirect, Stack } from "expo-router";
+import { CallListener } from "@/src/components/CallListener";
+import useAuthStore from "@/src/shared/authStore";
+import { Stack } from "expo-router";
 
 export default function MainLayout() {
-  const calls = useCalls().filter((c) => c.ringing);
-  const ringingCall = calls.length > 0 ? calls[0] : null;
-  if (ringingCall) {
-    return <Redirect href="/(notab)/ringing" />;
-  }
+  const me = useAuthStore((state) => state.me);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      {/* Only mount the listener if we are a logged-in user (not a guest) */}
+      {me && <CallListener />}
+      <Stack screenOptions={{ headerShown: false }} />
+    </>
+  );
 }

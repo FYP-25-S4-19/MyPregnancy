@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { JwtData, MeData } from "./typesAndInterfaces";
 import { Channel, UserResponse } from "stream-chat";
+import { getDevHostIp } from "./api";
 
 const utils = {
   /**
@@ -54,7 +55,7 @@ const utils = {
 
     return `${dayWithSuffix} ${month} ${formattedTime}`;
   },
-  getOtherMemberFromChannel(channel: Channel, myID: string): UserResponse | undefined {
+  getOtherMemberInChannel(channel: Channel, myID: string): UserResponse | undefined {
     if (!channel) return;
 
     const otherMembers = Object.values(channel.state.members).filter((member) => member.user_id !== myID);
@@ -67,6 +68,12 @@ const utils = {
   capitalizeFirstLetter(str: string): string {
     if (str.length === 0) return str;
     return str.charAt(0).toUpperCase() + str.slice(1);
+  },
+  firstLetterOfEveryWordCapitalized(str: string): string {
+    return str
+      .split(" ")
+      .map((word) => (word.length > 0 ? word.charAt(0).toUpperCase() : ""))
+      .join("");
   },
 };
 
