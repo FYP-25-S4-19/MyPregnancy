@@ -8,13 +8,17 @@ from sqlalchemy.orm import Session
 from app.db.db_schema import (
     Appointment,
     AppointmentStatus,
+    DoctorRating,
     KickTrackerDataPoint,
     KickTrackerSession,
+    MCRNumber,
     PregnantWoman,
+    SavedVolunteerDoctor,
     User,
     UserAppFeedback,
     VolunteerDoctor,
 )
+from app.shared.utils import generate_unique_mcr_numbers
 
 
 class MiscGenerator:
@@ -49,7 +53,7 @@ class MiscGenerator:
                 rand_time: datetime = faker.date_time_between(
                     start_date=mother.created_at,
                     end_date=(
-                        mother.created_at + timedelta(days=random.randint(1, 15), minutes=random.randint(0, 1000))
+                        mother.created_at + timedelta(days=random.randint(1, 21), minutes=random.randint(0, 1000))
                     ),
                 )
                 db.add(
@@ -97,3 +101,41 @@ class MiscGenerator:
 
         db.add_all(kick_tracker_sessions)
         return kick_tracker_sessions
+
+    @staticmethod
+    def generate_mcr_numbers(db_session: Session, size: int) -> list[MCRNumber]:
+        print("Generating MCR Numbers.....")
+        mcr_numbers = [MCRNumber(value=mcr_no) for mcr_no in generate_unique_mcr_numbers(size=size)]
+        db_session.add_all(mcr_numbers)
+        return mcr_numbers
+
+    @staticmethod
+    def generate_mother_save_doctor(
+        db: Session, all_mothers: list[PregnantWoman], all_doctors: list[VolunteerDoctor]
+    ) -> None:
+        print("Generating 'mother save doctors' entries....")
+
+        mother_save_doctor: list[SavedVolunteerDoctor] = []
+        for doctor in all_doctors:
+            mothers_sample_size = random.randint(0, len(all_mothers) // 2)
+            mothers_sample: list[PregnantWoman] = random.sample(population=all_mothers, k=mothers_sample_size)
+            for mother in mothers_sample:
+                save_entry = SavedVolunteerDoctor(mother=mother, volunteer_doctor=doctor)
+                mother_save_doctor.append(save_entry)
+
+        db.add_all(mother_save_doctor)
+
+    @staticmethod
+    def generate_doctor_ratings(
+        db: Session, all_mothers: list[PregnantWoman], all_doctors: list[VolunteerDoctor]
+    ) -> None:
+        print("Generating doctor ratings.....")
+
+        doctor_ratings: list[DoctorRating] = []
+        for doctor in all_doctors:
+            mothers_sample_size = random.randint(0, len(all_mothers) // 2)
+            mothers_sample: list[PregnantWoman] = random.sample(population=all_mothers, k=mothers_sample_size)
+            for mother in mothers_sample:
+                rating_entry = DoctorRating(rater=mother, doctor=doctor, rating=random.randint(1, 5))
+                doctor_ratings.append(rating_entry)
+        db.add_all(doctor_ratings)

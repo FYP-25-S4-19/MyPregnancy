@@ -37,6 +37,15 @@ class ScalarMetricView:
     unit_of_measurement: str
 
 
+class JournalPreviewData(CustomBaseModel):
+    bp_systolic: int | None
+    bp_diastolic: int | None
+    sugar_level: int
+    heart_rate: int
+    weight: int
+    kick_count: int | None
+
+
 class GetJournalEntryResponse(CustomBaseModel):
     id: int
     logged_on: date

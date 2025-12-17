@@ -20,7 +20,7 @@ export default function GuestHomeScreen() {
         Logged in as a {me?.role.toLowerCase()}
       </Text>
 
-      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/listOfDoctors" as any)}>
+      {/*<TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/listOfDoctors")}>
         <Text
           style={{
             color: "#6d2828",
@@ -31,7 +31,7 @@ export default function GuestHomeScreen() {
           {'Go to the "CONSULTATIONS" screen'}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/appointments" as any)}>
+      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/appointments")}>
         <Text
           style={{
             color: "#6d2828",
@@ -42,7 +42,7 @@ export default function GuestHomeScreen() {
           {'Go to the "APPOINTMENTS" screen'}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/chats/" as any)}>
+      <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/chats/")}>
         <Text
           style={{
             color: "#6d2828",
@@ -52,7 +52,7 @@ export default function GuestHomeScreen() {
         >
           {'Go to the "CHATS" screen'}
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity>*/}
     </SafeAreaView>
   );
 }

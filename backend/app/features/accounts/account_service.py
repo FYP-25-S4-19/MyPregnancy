@@ -6,12 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.db_schema import (
     AccountCreationRequestStatus,
     DoctorAccountCreationRequest,
-    DoctorQualification,
-    DoctorQualificationOption,
     Nutritionist,
     NutritionistAccountCreationRequest,
-    NutritionistQualification,
-    NutritionistQualificationOption,
     UserRole,
     VolunteerDoctor,
 )
@@ -30,7 +26,6 @@ class AccountService:
                 first_name=req.first_name,
                 middle_name=req.middle_name,
                 last_name=req.last_name,
-                qualification_option=str(req.qualification_option),
                 qualification_img_url="",
                 user_role=UserRole.VOLUNTEER_DOCTOR.value,
                 submitted_at=req.submitted_at,
@@ -42,7 +37,6 @@ class AccountService:
                 first_name=req.first_name,
                 middle_name=req.middle_name,
                 last_name=req.last_name,
-                qualification_option=req.qualification_option.name,
                 qualification_img_url="",
                 user_role=UserRole.NUTRITIONIST.value,
                 submitted_at=req.submitted_at,
@@ -61,20 +55,11 @@ class AccountService:
         middle_name: str | None,
         last_name: str,
         user_role: str,
-        qualification_option: str,
         qualification_img: UploadFile,
     ) -> None:
         if user_role != UserRole.VOLUNTEER_DOCTOR.value and user_role != UserRole.NUTRITIONIST.value:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user role")
 
-        valid_qualfication_options = (
-            DoctorQualificationOption.__members__
-            if user_role == UserRole.VOLUNTEER_DOCTOR.value
-            else NutritionistQualificationOption.__members__
-        )
-
-        if qualification_option not in valid_qualfication_options:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid qualification option")
         if qualification_img is not None and (not is_valid_image(qualification_img)):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid qualification image file"
@@ -103,7 +88,6 @@ class AccountService:
                 last_name=last_name,
                 email=email,
                 password=password,
-                qualification_option=DoctorQualificationOption[qualification_option],
                 qualification_img_key=img_key,
             )
             self.db.add(dr_acc_creation_req)
@@ -114,7 +98,6 @@ class AccountService:
                 last_name=last_name,
                 email=email,
                 password=password,
-                qualification_option=NutritionistQualificationOption[qualification_option],
                 qualification_img_key=img_key,
             )
             self.db.add(nutritionist_acc_creation_req)
@@ -133,24 +116,20 @@ class AccountService:
                 status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been rejected"
             )
 
-        dr_qualification = DoctorQualification(
-            qualification_img_key="", qualification_option=acc_creation_req.qualification_option
-        )
         new_doctor = VolunteerDoctor(
             first_name=acc_creation_req.first_name,
             middle_name=acc_creation_req.middle_name,
             last_name=acc_creation_req.last_name,
             email=acc_creation_req.email,
             hashed_password=password_hasher.hash(acc_creation_req.password),
-            qualification=dr_qualification,
         )
         self.db.add(new_doctor)
         await self.db.flush()  # To get the new doctor ID
 
-        dr_qualification.qualification_img_key = S3StorageInterface.promote_staging_qualification_img(
+        new_doctor.qualification_img_key = S3StorageInterface.promote_staging_qualification_img(
             user_id=new_doctor.id, staging_img_key=acc_creation_req.qualification_img_key
         )
-        if dr_qualification.qualification_img_key is None:
+        if new_doctor.qualification_img_key is None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to promote qualification image. Please try again.",
@@ -189,24 +168,20 @@ class AccountService:
                 status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been rejected"
             )
 
-        nutri_qualification = NutritionistQualification(
-            qualification_img_key="", qualification_option=acc_creation_req.qualification_option
-        )
         new_nutritionist = Nutritionist(
             first_name=acc_creation_req.first_name,
             middle_name=acc_creation_req.middle_name,
             last_name=acc_creation_req.last_name,
             email=acc_creation_req.email,
             hashed_password=password_hasher.hash(acc_creation_req.password),
-            qualification=nutri_qualification,
         )
         self.db.add(new_nutritionist)
         await self.db.flush()  # To get the new nutritionist ID
 
-        nutri_qualification.qualification_img_key = S3StorageInterface.promote_staging_qualification_img(
+        new_nutritionist.qualification_img_key = S3StorageInterface.promote_staging_qualification_img(
             user_id=new_nutritionist.id, staging_img_key=acc_creation_req.qualification_img_key
         )
-        if nutri_qualification.qualification_img_key is None:
+        if new_nutritionist.qualification_img_key is None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to promote qualification image. Please try again.",

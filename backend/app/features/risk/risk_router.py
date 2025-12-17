@@ -1,6 +1,6 @@
 """
 Risk prediction API endpoints.
-Provides model inference for pregnancy health risk assessment.
+
 """
 
 from fastapi import APIRouter, HTTPException, status
@@ -60,15 +60,7 @@ def load_model_artifacts():
     description="Predict high-risk pregnancy based on vital signs and health metrics"
 )
 async def predict_risk(request: RiskPredictionRequest) -> RiskPredictionResponse:
-    """
-    Predict pregnancy health risk based on vital signs.
     
-    Returns:
-        RiskPredictionResponse with risk assessment
-        
-    Raises:
-        HTTPException: If model is not available or inference fails
-    """
     # Load model on first call
     load_model_artifacts()
     

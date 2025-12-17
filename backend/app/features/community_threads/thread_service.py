@@ -4,13 +4,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
-from app.db.db_schema import CommunityThread, ThreadComment, User
+from app.db.db_schema import (
+    CommentLike,
+    CommunityThread,
+    CommunityThreadLike,
+    ThreadCategory,
+    ThreadCategoryAssociation,
+    ThreadComment,
+    User,
+)
 from app.features.community_threads.thread_models import (
+    CreateCommentData,
     CreateThreadData,
+    ThreadCategoryData,
     ThreadCommentData,
     ThreadData,
     ThreadPreviewData,
     ThreadUpdateData,
+    UpdateCommentData,
 )
 from app.shared.utils import format_user_fullname
 
@@ -19,27 +30,58 @@ class ThreadService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_thread_previews(self) -> list[ThreadPreviewData]:
-        stmt = select(CommunityThread).order_by(CommunityThread.posted_at.desc())
+    async def get_thread_categories(self) -> list[ThreadCategoryData]:
+        """Fetch all available thread categories."""
+        stmt = select(ThreadCategory).order_by(ThreadCategory.label)
+        categories = (await self.db.execute(stmt)).scalars().all()
+        return [ThreadCategoryData(id=cat.id, label=cat.label) for cat in categories]
+
+    async def get_thread_previews(self, current_user: User | None = None) -> list[ThreadPreviewData]:
+        # Get threads with relationships
+        stmt = (
+            select(CommunityThread)
+            .options(
+                selectinload(CommunityThread.creator),
+                selectinload(CommunityThread.thread_category_associations).selectinload(
+                    ThreadCategoryAssociation.category
+                ),
+                selectinload(CommunityThread.comments),
+                selectinload(CommunityThread.community_thread_likes),
+            )
+            .order_by(CommunityThread.posted_at.desc())
+        )
         query_results = (await self.db.execute(stmt)).scalars().all()
+
         return [
             ThreadPreviewData(
                 id=thread.id,
-                creator_name=format_user_fullname(thread.creator),
+                creator_name=thread.creator.first_name,
                 title=thread.title,
                 content=thread.content,
                 posted_at=thread.posted_at.isoformat(),
+                categories=[
+                    ThreadCategoryData(id=association.category.id, label=association.category.label)
+                    for association in thread.thread_category_associations
+                ],
+                like_count=len(thread.community_thread_likes),
+                comment_count=len(thread.comments),
+                is_liked_by_current_user=(
+                    any(like.liker_id == current_user.id for like in thread.community_thread_likes)
+                    if current_user
+                    else False
+                ),
             )
             for thread in query_results
         ]
 
-    async def get_thread_by_id(self, thread_id: int) -> ThreadData:
+    async def get_thread_by_id(self, thread_id: int, current_user: User | None = None) -> ThreadData:
         stmt = (
             select(CommunityThread)
             .where(CommunityThread.id == thread_id)
             .options(
                 joinedload(CommunityThread.creator),
                 selectinload(CommunityThread.comments).joinedload(ThreadComment.commenter),
+                selectinload(CommunityThread.comments).selectinload(ThreadComment.comment_likes),
             )
         )
         thread_result = (await self.db.execute(stmt)).scalar_one_or_none()
@@ -60,6 +102,12 @@ class ThreadService:
                     commenter_fullname=format_user_fullname(comment.commenter),
                     commented_at=comment.commented_at,
                     content=comment.content,
+                    like_count=len(comment.comment_likes),
+                    is_liked_by_current_user=(
+                        any(like.liker_id == current_user.id for like in comment.comment_likes)
+                        if current_user
+                        else False
+                    ),
                 )
                 for comment in thread_result.comments
             ],
@@ -88,9 +136,6 @@ class ThreadService:
         thread_result.title = thread_data.title
         thread_result.content = thread_data.content
 
-        await self.db.commit()
-        await self.db.refresh(thread_result)
-
     async def delete_thread(self, thread_id: int, current_user: User) -> None:
         stmt = select(CommunityThread).where(CommunityThread.id == thread_id)
         thread_result = (await self.db.execute(stmt)).scalar_one_or_none()
@@ -102,4 +147,98 @@ class ThreadService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this thread")
 
         await self.db.delete(thread_result)
-        await self.db.commit()
+
+    async def create_comment(self, thread_id: int, comment_data: CreateCommentData, commenter: User) -> ThreadComment:
+        stmt = select(CommunityThread).where(CommunityThread.id == thread_id)
+        thread_result = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not thread_result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found")
+
+        return ThreadComment(
+            thread_id=thread_id,
+            commenter_id=commenter.id,
+            content=comment_data.content,
+        )
+
+    async def update_comment(self, comment_id: int, comment_data: UpdateCommentData, current_user: User) -> None:
+        stmt = select(ThreadComment).where(ThreadComment.id == comment_id)
+        comment_result = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not comment_result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+
+        if comment_result.commenter_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this comment")
+
+        comment_result.content = comment_data.content
+
+    async def delete_comment(self, comment_id: int, current_user: User) -> None:
+        stmt = select(ThreadComment).where(ThreadComment.id == comment_id)
+        comment_result = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not comment_result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+
+        if comment_result.commenter_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this comment")
+
+        await self.db.delete(comment_result)
+
+    async def like_thread(self, thread_id: int, liker: User) -> CommunityThreadLike:
+        # Verify thread exists
+        stmt = select(CommunityThread).where(CommunityThread.id == thread_id)
+        thread_result = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not thread_result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found")
+
+        # Check if user already liked this thread
+        like_stmt = select(CommunityThreadLike).where(
+            CommunityThreadLike.thread_id == thread_id, CommunityThreadLike.liker_id == liker.id
+        )
+        existing_like = (await self.db.execute(like_stmt)).scalar_one_or_none()
+
+        if existing_like:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thread already liked")
+
+        return CommunityThreadLike(thread_id=thread_id, liker_id=liker.id)
+
+    async def unlike_thread(self, thread_id: int, liker: User) -> None:
+        # Find the existing like
+        stmt = select(CommunityThreadLike).where(
+            CommunityThreadLike.thread_id == thread_id, CommunityThreadLike.liker_id == liker.id
+        )
+        like_result = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not like_result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Like not found")
+
+        await self.db.delete(like_result)
+
+    async def like_comment(self, comment_id: int, liker: User) -> CommentLike:
+        # Verify comment exists
+        stmt = select(ThreadComment).where(ThreadComment.id == comment_id)
+        comment_result = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not comment_result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+
+        # Check if user already liked this comment
+        like_stmt = select(CommentLike).where(CommentLike.comment_id == comment_id, CommentLike.liker_id == liker.id)
+        existing_like = (await self.db.execute(like_stmt)).scalar_one_or_none()
+
+        if existing_like:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment already liked")
+
+        return CommentLike(comment_id=comment_id, liker_id=liker.id)
+
+    async def unlike_comment(self, comment_id: int, liker: User) -> None:
+        # Find the existing like
+        stmt = select(CommentLike).where(CommentLike.comment_id == comment_id, CommentLike.liker_id == liker.id)
+        like_result = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not like_result:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Like not found")
+
+        await self.db.delete(like_result)

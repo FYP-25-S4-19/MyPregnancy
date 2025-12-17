@@ -2,7 +2,7 @@ import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { colors, sizes, font } from "../../../../shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DoctorCard from "../../../../components/DoctorCard";
+import DoctorCard from "../../../../components/cards/DoctorCard";
 import SearchBar from "../../../../components/SearchBar";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
@@ -81,7 +81,7 @@ export default function ConsultationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   header: {
     flexDirection: "row",

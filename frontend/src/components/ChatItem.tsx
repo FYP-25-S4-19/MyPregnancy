@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: sizes.m,
     paddingHorizontal: sizes.l,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.lightGray,
   },

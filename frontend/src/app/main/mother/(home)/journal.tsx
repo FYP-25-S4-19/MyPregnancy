@@ -298,7 +298,7 @@ export default function App() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       {/* --- HEADER SECTION --- */}
       <View style={styles.headerContainer}>
         {/* Toggle Switch */}
@@ -468,12 +468,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   headerContainer: {
     alignItems: "center",
     paddingVertical: sizes.s + sizes.xs,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   // Toggle Switch Styles
   toggleContainer: {

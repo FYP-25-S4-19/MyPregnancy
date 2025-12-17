@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 
 export default function DoctorHomeScreen() {
   const router = useRouter();
+  const signOut = useAuthStore((state) => state.clearAuthState);
   const me = useAuthStore((state) => state.me);
 
   return (
@@ -20,6 +21,17 @@ export default function DoctorHomeScreen() {
         Logged in as a {me?.role.toLowerCase()}
       </Text>
 
+      <TouchableOpacity style={styles.touchable} onPress={() => signOut()}>
+        <Text
+          style={{
+            color: "#6d2828",
+            fontSize: font.m,
+            fontWeight: "500",
+          }}
+        >
+          {"Sign out"}
+        </Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.touchable} onPress={() => router.push("/main/doctor/articles")}>
         <Text
           style={{
