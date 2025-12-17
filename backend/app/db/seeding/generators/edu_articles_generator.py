@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from math import floor
 
 from sqlalchemy.orm import Session
-from starlette.types import ASGIApp
 
 from app.db.db_schema import (
     EduArticle,

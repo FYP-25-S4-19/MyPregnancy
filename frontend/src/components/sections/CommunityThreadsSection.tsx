@@ -61,7 +61,7 @@ export default function CommunityThreadsSection({ onViewAll, onThreadPress }: Co
         <Text style={styles.sectionTitle}>Threads</Text>
         {onViewAll && (
           <TouchableOpacity onPress={onViewAll}>
-            <Text style={styles.viewAllText}>View All</Text>
+            <Text style={styles.viewAllText}>View</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
     fontSize: font.s,
     color: colors.text,
     fontWeight: "500",
+    textDecorationLine: "underline",
   },
   scrollContent: {
     paddingLeft: sizes.m,
