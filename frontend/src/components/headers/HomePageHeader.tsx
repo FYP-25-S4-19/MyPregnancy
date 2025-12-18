@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { FC } from "react";
 
 interface HomePageHeaderProps {
+  greetingText?: string;
   headerText: string;
   profilePicURL?: string;
   profilePicStrFallback?: string;
@@ -15,7 +16,12 @@ interface HomePageHeaderProps {
  *
  * You'd probably want the 'profilePicStrFallback' to be initials or something similar
  */
-const HomePageHeader: FC<HomePageHeaderProps> = ({ headerText, profilePicURL = null, profilePicStrFallback }) => {
+const HomePageHeader: FC<HomePageHeaderProps> = ({
+  greetingText,
+  headerText,
+  profilePicURL = null,
+  profilePicStrFallback,
+}) => {
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
@@ -27,7 +33,7 @@ const HomePageHeader: FC<HomePageHeaderProps> = ({ headerText, profilePicURL = n
           )}
         </View>
         <View>
-          <Text style={styles.greetingText}>Hi, Welcome back,</Text>
+          <Text style={styles.greetingText}>{greetingText || "Hi, Welcome back,"}</Text>
           <Text style={styles.userName}>{headerText}</Text>
         </View>
       </View>

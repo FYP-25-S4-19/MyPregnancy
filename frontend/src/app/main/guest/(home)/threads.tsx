@@ -1,5 +1,6 @@
 import CommunityThreadsScreen from "@/src/screens/CommunityThreadsScreen";
+import React from "react";
 
-export default function DoctorCommunityThreadsScreen() {
+export default function GuestAllThreadsPage() {
   return <CommunityThreadsScreen />;
 }

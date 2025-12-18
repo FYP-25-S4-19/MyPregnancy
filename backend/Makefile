@@ -17,3 +17,8 @@ ruff_fix_all:
 
 nuke_db: # I think this goes without saying but BE.VERY.CAREFUL!
 	python -m app.db.nuke_db
+
+.PHONY: train_risk_model
+train_risk_model: # Run model training inside the backend service container
+	@echo "Running risk model training inside backend container..."
+	@docker-compose run --rm api python app/ml/train_risk_model.py app/ml/health_v1.csv
