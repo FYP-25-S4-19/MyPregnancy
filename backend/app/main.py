@@ -17,6 +17,7 @@ from app.features.educational_articles.edu_article_router import edu_articles_ro
 from app.features.getstream.stream_router import stream_router
 from app.features.journal.journal_router import journal_router
 from app.features.miscellaneous.misc_routes import misc_router
+from app.features.recipes.recipe_router import recipe_router
 from app.features.risk.risk_router import router as risk_router
 from app.schemas import UserCreate, UserRead, UserUpdate
 
