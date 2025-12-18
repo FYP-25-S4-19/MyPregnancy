@@ -14,7 +14,6 @@ from app.features.accounts.account_router import account_router
 from app.features.appointments.appointment_router import appointments_router
 from app.features.community_threads.thread_router import community_threads_router
 from app.features.educational_articles.edu_article_router import edu_articles_router
-from app.features.recipes.recipe_router import recipe_router
 from app.features.getstream.stream_router import stream_router
 from app.features.journal.journal_router import journal_router
 from app.features.miscellaneous.misc_routes import misc_router

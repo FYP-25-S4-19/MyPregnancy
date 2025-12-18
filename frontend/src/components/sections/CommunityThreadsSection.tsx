@@ -61,7 +61,7 @@ export default function CommunityThreadsSection({ onViewAll, onThreadPress }: Co
         <Text style={styles.sectionTitle}>Threads</Text>
         {onViewAll && (
           <TouchableOpacity onPress={onViewAll}>
-            <Text style={styles.viewAllText}>View All</Text>
+            <Text style={styles.viewAllText}>View</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -91,9 +91,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: sizes.m,
-    marginBottom: sizes.m,
+    marginBottom: sizes.s,
   },
   sectionTitle: {
+    marginHorizontal: sizes.xs,
     fontSize: font.l,
     fontWeight: "700",
     color: colors.text,
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
     fontSize: font.s,
     color: colors.text,
     fontWeight: "500",
+    textDecorationLine: "underline",
   },
   scrollContent: {
     paddingLeft: sizes.m,

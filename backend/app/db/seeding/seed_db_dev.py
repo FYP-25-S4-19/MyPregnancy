@@ -63,6 +63,7 @@ if __name__ == "__main__":
             "./seed_data/profiles/nutritionists",
             QUALIFICATION_FILEPATH,
         )
+        UsersGenerator.generate_admins(db_session, faker, password_hasher, "./seed_data/profiles/admins.json")
         all_users: list[User] = preg_women + doctors + nutritionists
         print("Finished seeding the database users!\n")
 

@@ -1,7 +1,7 @@
-import React from "react";
-import { View, Text, TextInput } from "react-native";
-import { colors } from "@/src/shared/designSystem";
 import { profileStyles } from "@/src/shared/globalStyles";
+import { ProfileCardInput } from "./ProfileCardBase";
+import { View, Text } from "react-native";
+import React from "react";
 
 interface PregnancyDetailsData {
   currentWeek: string;
@@ -19,28 +19,8 @@ export default function PregnancyDetailsCard({ data, onUpdateField }: PregnancyD
       <Text style={profileStyles.cardTitle}>Pregnancy Details</Text>
 
       <View style={profileStyles.formContainer}>
-        <View style={profileStyles.inputGroup}>
-          <Text style={profileStyles.inputLabel}>Current Week</Text>
-          <TextInput
-            style={profileStyles.input}
-            value={data.currentWeek}
-            onChangeText={(text) => onUpdateField?.("currentWeek", text)}
-            placeholder="Current Week"
-            placeholderTextColor={colors.lightGray}
-            keyboardType="numeric"
-          />
-        </View>
-
-        <View style={profileStyles.inputGroup}>
-          <Text style={profileStyles.inputLabel}>EDD (Due Date)</Text>
-          <TextInput
-            style={profileStyles.input}
-            value={data.dueDate}
-            onChangeText={(text) => onUpdateField?.("dueDate", text)}
-            placeholder="DD/MM/YYYY"
-            placeholderTextColor={colors.lightGray}
-          />
-        </View>
+        <ProfileCardInput inputLabel="Current week" fieldValue="" onUpdateField={() => {}} />
+        <ProfileCardInput inputLabel="EDD (Due Date)" fieldValue="" onUpdateField={() => {}} />
       </View>
     </View>
   );
