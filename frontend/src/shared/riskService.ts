@@ -14,10 +14,15 @@ export interface RiskPredictionInput {
 }
 
 export interface RiskPredictionResponse {
-  is_high_risk: boolean;
-  risk_probability: number;
+  // New multi-class response
+  risk_level: "low" | "mid" | "high";
+  probabilities: Record<string, number>;
   message: string;
   mean_bp: number;
+
+  // Backwards-compatible fields
+  is_high_risk?: boolean;
+  risk_probability?: number;
 }
 
 /**
@@ -34,7 +39,20 @@ export async function predictRisk(vitals: RiskPredictionInput): Promise<RiskPred
       bs: vitals.bs,
       heart_rate: vitals.heart_rate,
     });
-    return response.data;
+
+    // Normalize response to maintain backwards compatibility with older UI expectations
+    const data = response.data;
+    const normalized: RiskPredictionResponse = {
+      ...data,
+      is_high_risk: data.is_high_risk ?? (data.risk_level === "high"),
+      risk_probability:
+        data.risk_probability ??
+        (data.probabilities
+          ? data.probabilities[data.risk_level ?? "high"] ?? data.probabilities["high"]
+          : undefined),
+    };
+
+    return normalized;
   } catch (error) {
     console.error("Risk prediction API error:", error);
     throw error;
@@ -61,7 +79,11 @@ export async function checkRiskServiceHealth(): Promise<any> {
  * @returns User-friendly message
  */
 export function getRiskMessage(response: RiskPredictionResponse): string {
-  return response.message;
+  // Prefer server message; fall back to built message from risk level
+  if (response.message) return response.message;
+  const level = response.risk_level ?? (response.is_high_risk ? "high" : "low");
+  if (level === "high") return "go to nearby hospital for checkup";
+  return `${level.charAt(0).toUpperCase() + level.slice(1)} risk assessment.`;
 }
 
 /**
@@ -70,5 +92,8 @@ export function getRiskMessage(response: RiskPredictionResponse): string {
  * @returns Color code for UI badge
  */
 export function getRiskColor(response: RiskPredictionResponse): string {
-  return response.is_high_risk ? "#e74c3c" : "#2ecc71"; // red or green
+  const level = response.risk_level ?? (response.is_high_risk ? "high" : "low");
+  if (level === "high") return "#e74c3c"; // red
+  if (level === "mid") return "#f39c12"; // amber/orange for mid
+  return "#2ecc71"; // green for low
 }

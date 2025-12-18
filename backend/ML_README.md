@@ -5,8 +5,11 @@ This document explains how to train the risk prediction model and where artifact
 Files added:
 - `app/ml/train_risk_model.py` - Trainer script (uses `health_v1.csv` dataset).
 - `app/ml/health_v1.csv` - Training dataset (committed for convenience).
-- `app/ml/models/` - Directory where `risk_model.joblib` and `risk_scaler.joblib` will be saved.
+- `app/ml/models/` - Directory where `risk_model.joblib`, `risk_scaler.joblib` and `risk_label_map.joblib` will be saved.
 - `app/features/risk/risk_router.py` - FastAPI route for `/risk/predict` and `/risk/health`.
+
+Notes on behavior:
+- The trainer now produces a 3-class model ("low", "mid", "high") and saves a label map (`risk_label_map.joblib`). The router applies runtime safety overrides from clinician-defined rules (e.g. extreme BP, BS, HR thresholds) and returns `risk_level` and per-class `probabilities`. If the result is "high", the returned message will be: `go to nearby hospital for checkup`. 
 
 How to train (recommended: inside Docker):
 

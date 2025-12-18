@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, StatusBar, Alert } from "react-native";
 import React, { useState } from "react";
+import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { predictRisk, RiskPredictionResponse } from "@/src/shared/riskService";
 import useAuthStore from "@/src/shared/authStore";
+import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
+import { getRiskColor, getRiskMessage, predictRisk, RiskPredictionResponse } from "@/src/shared/riskService";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Icon = ({ name, size, color }: { name: string; size: number; color: string }) => {
   let symbol = "?";
@@ -268,15 +268,11 @@ export default function App() {
           bs: bsVal,
           heart_rate: hr,
         });
+      // Normalize checks: treat new `risk_level` as source of truth when `is_high_risk` is absent
       setRiskResult(result);
-      
-      // Show alert if high risk
-      if (result.is_high_risk) {
-        Alert.alert(
-          "⚠️ High Risk Alert",
-          result.message,
-          [{ text: "OK", onPress: () => {} }]
-        );
+      const isHigh = result.is_high_risk ?? (result.risk_level === "high");
+      if (isHigh) {
+        Alert.alert("⚠️ High Risk Alert", getRiskMessage(result), [{ text: "OK" }]);
       }
     } catch (error: any) {
       console.error("Risk assessment failed:", error);
@@ -400,43 +396,27 @@ export default function App() {
               <Text style={styles.saveButtonText}>{isLoadingRisk ? "Checking..." : "Check Risk"}</Text>
             </TouchableOpacity>
             {riskResult ? (
-              <View style={[styles.riskCard, { borderColor: riskResult.is_high_risk ? "#e74c3c" : "#2ecc71" }]}>
-                <Text style={styles.cardTitle}>Risk Assessment</Text>
-                <Text style={{ marginBottom: sizes.s }}>{riskResult.message}</Text>
-                <Text style={{ fontWeight: "600" }}>Probability: {(riskResult.risk_probability * 100).toFixed(1)}%</Text>
+              // Make 'mid' risk visually prominent
+              <View
+                style={[
+                  styles.riskCard,
+                  (riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid"
+                    ? styles.riskCardMid
+                    : { borderColor: getRiskColor(riskResult) },
+                ]}
+              >
+                <Text style={[styles.cardTitle, (riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid" ? styles.midTitle : {}]}>
+                  {(riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid" ? "⚠️ MID RISK" : "Risk Assessment"}
+                </Text>
+                <Text style={((riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid") ? styles.midMessage : { marginBottom: sizes.s }}>
+                  {riskResult.message}
+                </Text>
               </View>
             ) : null}
           </View>
         </View>
 
-        {/* Risk Assessment Button */}
-        <View style={styles.card}>
-          <TouchableOpacity
-            style={[styles.assessButton, isLoadingRisk && styles.assessButtonDisabled]}
-            onPress={handleAssessRisk}
-            disabled={isLoadingRisk}
-          >
-            <Text style={styles.assessButtonText}>
-              {isLoadingRisk ? "Assessing..." : "📊 Assess Risk"}
-            </Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Risk Result Card */}
-        {riskResult && (
-          <View style={[styles.card, riskResult.is_high_risk ? styles.riskCardHigh : styles.riskCardLow]}>
-            <Text style={styles.riskTitle}>
-              {riskResult.is_high_risk ? "⚠️ HIGH RISK" : "✓ LOW RISK"}
-            </Text>
-            <Text style={styles.riskMessage}>{riskResult.message}</Text>
-            <View style={styles.riskDetailsRow}>
-              <Text style={styles.riskDetail}>
-                Confidence: {(riskResult.risk_probability * 100).toFixed(1)}%
-              </Text>
-              <Text style={styles.riskDetail}>Mean BP: {riskResult.mean_bp.toFixed(1)} mmHg</Text>
-            </View>
-          </View>
-        )}
 
         {/* Spacer for bottom tab */}
         <View style={{ height: 80 }} />
@@ -659,6 +639,24 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: sizes.s + sizes.xs,
     lineHeight: 20,
+  },
+  // Mid risk prominent styling
+  riskCardMid: {
+    marginTop: sizes.s,
+    padding: sizes.s,
+    borderRadius: sizes.s,
+    borderWidth: 1.5,
+    backgroundColor: "#fff7e6",
+    borderColor: "#f39c12",
+  },
+  midTitle: {
+    color: "#f39c12",
+    fontWeight: "bold",
+  },
+  midMessage: {
+    marginBottom: sizes.s,
+    fontWeight: "700",
+    color: "#7a4f00",
   },
   riskDetailsRow: {
     flexDirection: "row",
