@@ -8,7 +8,7 @@ import "react-native-reanimated";
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  useProtectedRoute();
+  //useProtectedRoute();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
