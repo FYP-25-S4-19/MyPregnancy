@@ -91,9 +91,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: sizes.m,
-    marginBottom: sizes.m,
+    marginBottom: sizes.s,
   },
   sectionTitle: {
+    marginHorizontal: sizes.xs,
     fontSize: font.l,
     fontWeight: "700",
     color: colors.text,

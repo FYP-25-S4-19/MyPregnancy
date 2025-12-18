@@ -1,9 +1,9 @@
 import PregnancyDetailsCard from "@/src/components/cards/PregnancyDetailsCard";
 import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
-import MotherProfileCard from "@/src/components/cards/MotherProfileCard";
+import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView } from "react-native";
 import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
 import React, { useState } from "react";
@@ -55,16 +55,44 @@ export default function MotherProfileScreen() {
           <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>My Profile</Text>
         </View>
 
-        <MotherProfileCard
-          fullName={fullName}
-          dateOfBirth={dateOfBirth}
-          email={email}
-          memberSince={memberSince}
-          onChangePhoto={handleChangePhoto}
-          onFullnameUpdate={setFullName}
-          onDateOfBirthUpdate={setDateOfBirth}
-          onEmailUpdate={setEmail}
-        />
+        <View style={profileStyles.card}>
+          <View style={profileStyles.profileHeader}>
+            {/* --------------------------------------------------- */}
+            <View style={profileStyles.avatar}>
+              {/*<Text style={profileStyles.avatarText}>{getInitials()}</Text>*/}
+            </View>
+            <View style={profileStyles.profileInfo}>
+              <Text style={profileStyles.profileName}>{fullName}</Text>
+              <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
+              {
+                <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
+                  <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+                </TouchableOpacity>
+              }
+            </View>
+          </View>
+          {/* --------------------------------------------------- */}
+          <View style={profileStyles.formContainer}>
+            <ProfileCardInput
+              inputLabel="Full name"
+              fieldValue={fullName}
+              placeholder="Enter your full name"
+              onUpdateField={setFullName}
+            />
+            <ProfileCardInput
+              inputLabel="Date of Birth"
+              fieldValue={dateOfBirth}
+              placeholder="MM/DD/YYYY"
+              onUpdateField={setDateOfBirth}
+            />
+            <ProfileCardInput
+              inputLabel="Email"
+              fieldValue={email}
+              placeholder="your.email@example.com"
+              onUpdateField={setEmail}
+            />
+          </View>
+        </View>
         <PregnancyDetailsCard data={pregnancyData} onUpdateField={handlePregnancyUpdate} />
 
         <AccountActionsCard

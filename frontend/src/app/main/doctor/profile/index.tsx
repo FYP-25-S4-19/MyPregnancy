@@ -1,10 +1,11 @@
+import CertificateUploadCard from "@/src/components/cards/CertificateUploadCard";
 import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
-import DoctorProfileCard from "@/src/components/cards/DoctorProfileCard";
+import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView } from "react-native";
-import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
+import useAuthStore from "@/src/shared/authStore";
 import React, { useState } from "react";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
@@ -17,7 +18,6 @@ export default function DoctorProfileScreen() {
   const [email, setEmail] = useState(me?.email || "olivia.wilson@email.com");
   const [mcrNumber, setMcrNumber] = useState("?????");
   const [certificateUri] = useState<string | undefined>(undefined);
-  // TODO: Add setCertificateUri when implementing actual upload functionality
   const memberSince = "2025";
 
   const handleChangePhoto = () => {
@@ -26,7 +26,6 @@ export default function DoctorProfileScreen() {
 
   const handleCertificateUpload = () => {
     console.log("Certificate upload pressed");
-    // TODO: Implement image picker/document picker
   };
 
   const handleSendFeedback = () => {
@@ -49,18 +48,50 @@ export default function DoctorProfileScreen() {
           <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>My Profile</Text>
         </View>
 
-        <DoctorProfileCard
-          fullName={fullName}
-          email={email}
-          mcrNumber={mcrNumber}
-          memberSince={memberSince}
-          certificateUri={certificateUri}
-          onChangePhoto={handleChangePhoto}
-          onFullnameUpdate={setFullName}
-          onEmailUpdate={setEmail}
-          onMcrNumberUpdate={setMcrNumber}
-          onCertificateUpload={handleCertificateUpload}
-        />
+        <View style={profileStyles.card}>
+          <View style={profileStyles.profileHeader}>
+            {/* --------------------------------------------------- */}
+            <View style={profileStyles.avatar}>
+              {/*<Text style={profileStyles.avatarText}>{getInitials()}</Text>*/}
+            </View>
+            <View style={profileStyles.profileInfo}>
+              <Text style={profileStyles.profileName}>Dr. {fullName}</Text>
+              <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
+              {
+                <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
+                  <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+                </TouchableOpacity>
+              }
+            </View>
+          </View>
+          {/* --------------------------------------------------- */}
+          <View style={profileStyles.formContainer}>
+            <ProfileCardInput
+              inputLabel="Full Name"
+              fieldValue={fullName}
+              placeholder="Enter your full name"
+              onUpdateField={setFullName}
+            />
+            <ProfileCardInput
+              inputLabel="Email"
+              fieldValue={email}
+              placeholder="your.email@example.com"
+              onUpdateField={setEmail}
+            />
+            <ProfileCardInput
+              inputLabel="MCR #"
+              fieldValue={mcrNumber}
+              placeholder="?????"
+              onUpdateField={setMcrNumber}
+            />
+
+            {/* Telemedicine Certificate Upload */}
+            <CertificateUploadCard
+              label="Telemedicine Consultation"
+              handleCertificateUpload={handleCertificateUpload}
+            />
+          </View>
+        </View>
 
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
