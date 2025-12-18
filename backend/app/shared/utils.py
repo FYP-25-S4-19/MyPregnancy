@@ -16,7 +16,7 @@ def clear_db(db: Session):
 
     table_names = db.execute(text("SELECT tablename FROM pg_tables WHERE schemaname='public';")).scalars().all()
     for table in table_names:  # Truncate all tables
-        if table not in ["alembic_version"]:
+        if table not in ["alembic_version", "pages"]:
             db.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;"))
 
     db.execute(text("SET session_replication_role = 'origin';"))  # Re-enable foreign key constraints

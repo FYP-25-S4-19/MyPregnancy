@@ -144,7 +144,7 @@ export default function IntroPagerSinglePage() {
             <Text style={styles.btnOutlineText}>Register</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push("/main")}>
+          <TouchableOpacity onPress={() => router.push("/main/guest")}>
             <Text style={styles.guest}>Continue as Guest →</Text>
           </TouchableOpacity>
         </View>

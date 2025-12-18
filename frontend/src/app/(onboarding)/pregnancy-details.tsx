@@ -1,14 +1,7 @@
 import React, { useMemo, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-//import api from "../../../../shared/api"; 
+//import api from "../../../../shared/api";
 import { router } from "expo-router";
 
 type PregnancyStage = "planning" | "pregnant" | "postpartum";
@@ -126,9 +119,7 @@ export default function PregnancyDetailsScreen() {
           {step === 1 ? (
             <>
               {/* Stage selector */}
-              <Text style={{ marginTop: 16, fontWeight: "600", color: "#7A2E2E" }}>
-                Which stage are you in?
-              </Text>
+              <Text style={{ marginTop: 16, fontWeight: "600", color: "#7A2E2E" }}>Which stage are you in?</Text>
 
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 {STAGES.map((s) => (
@@ -169,9 +160,7 @@ export default function PregnancyDetailsScreen() {
                     }}
                   />
 
-                  <Text style={{ marginTop: 12, fontWeight: "600", color: "#7A2E2E" }}>
-                    Expected Due Date (EDD) *
-                  </Text>
+                  <Text style={{ marginTop: 12, fontWeight: "600", color: "#7A2E2E" }}>Expected Due Date (EDD) *</Text>
                   <TextInput
                     value={eddDate}
                     onChangeText={setEddDate}
@@ -186,9 +175,7 @@ export default function PregnancyDetailsScreen() {
                       backgroundColor: "white",
                     }}
                   />
-                  <Text style={{ marginTop: 6, color: "#7A2E2E", fontSize: 12 }}>
-                    Format: YYYY-MM-DD
-                  </Text>
+                  <Text style={{ marginTop: 6, color: "#7A2E2E", fontSize: 12 }}>Format: YYYY-MM-DD</Text>
                 </View>
               )}
 
@@ -209,9 +196,7 @@ export default function PregnancyDetailsScreen() {
                       backgroundColor: "white",
                     }}
                   />
-                  <Text style={{ marginTop: 6, color: "#7A2E2E", fontSize: 12 }}>
-                    Format: YYYY-MM-DD
-                  </Text>
+                  <Text style={{ marginTop: 6, color: "#7A2E2E", fontSize: 12 }}>Format: YYYY-MM-DD</Text>
                 </View>
               )}
 
@@ -349,9 +334,7 @@ export default function PregnancyDetailsScreen() {
                     backgroundColor: saving ? "#F3C6CB" : "#F0909A",
                   }}
                 >
-                  <Text style={{ color: "white", fontWeight: "700" }}>
-                    {saving ? "Saving..." : "Save"}
-                  </Text>
+                  <Text style={{ color: "white", fontWeight: "700" }}>{saving ? "Saving..." : "Save"}</Text>
                 </Pressable>
               </View>
 

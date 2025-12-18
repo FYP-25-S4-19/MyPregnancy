@@ -1,14 +1,5 @@
 import React, { useRef, useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  StatusBar,
-} from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar } from "react-native";
 import { useRouter } from "expo-router";
 
 const { width } = Dimensions.get("window");
@@ -122,10 +113,7 @@ export default function Onboarding() {
 
       {/* CTA ROW */}
       <View style={styles.cta}>
-        <TouchableOpacity
-          style={[styles.btn, styles.btnPrimary]}
-          onPress={() => router.push("/(intro)/login")}
-        >
+        <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => router.push("/(intro)/login")}>
           <Text style={styles.btnPrimaryText}>Login</Text>
         </TouchableOpacity>
 
@@ -136,7 +124,7 @@ export default function Onboarding() {
           <Text style={styles.btnSecondaryText}>Register</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/main")}>
+        <TouchableOpacity onPress={() => router.push("/main/guest")}>
           <Text style={styles.guest}>Continue as Guest →</Text>
         </TouchableOpacity>
       </View>

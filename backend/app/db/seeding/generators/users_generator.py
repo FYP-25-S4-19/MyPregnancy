@@ -1,3 +1,4 @@
+import json
 import os
 import pathlib
 import random
@@ -8,6 +9,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app.db.db_schema import (
+    Admin,
     MCRNumber,
     Nutritionist,
     PregnantWoman,
@@ -183,27 +185,28 @@ class UsersGenerator:
             all_nutritionists.append(nutritionist)
         return all_nutritionists
 
-    # @staticmethod
-    # def generate_admins(
-    #     db: Session, faker: Faker, password_hasher: PasswordHasher, count: int
-    # ) -> list[Admin]:
-    #     print("Generating users (Admins)....")
-    #
-    #     admin_role: Role | None = db.query(Role).filter(Role.label == "Admin").first()
-    #     if admin_role is None:
-    #         raise RoleNotFound("Admin")
-    #
-    #     all_admins: list[Admin] = []
-    #     fake_usernames: set[str] = UsersGenerator._create_unique_usernames(db, faker, count)
-    #     for username in fake_usernames:
-    #         admin = Admin(
-    #             username=username,
-    #             role=admin_role,
-    #             email=f'{username}@gmail.com',
-    #             hashed_password=password_hasher.hash(username),
-    #             created_at=faker.date_time_between(start_date="-3y", end_date="now"),
-    #         )
-    #         db.add(admin)
-    #         all_admins.append(admin)
-    #     db.commit()
-    #     return all_admins
+    @staticmethod
+    def generate_admins(db: Session, faker: Faker, password_hasher: PasswordHasher, admins_json: str) -> list[Admin]:
+        print("Generating users (Admins)....")
+
+        all_admins: list[Admin] = []
+        with open(admins_json, "r", encoding="utf-8") as f:
+            admin_fullnames = json.load(f)
+            for fullname_space_delim in admin_fullnames:
+                fullname_underscore_delim = fullname_space_delim.replace(" ", "_")
+                name_parts = fullname_underscore_delim.split("_")
+                assert len(name_parts) == 2, f"Full name must have ONLY first and last name: {fullname_space_delim}"
+
+                admin = Admin(
+                    first_name=name_parts[0],
+                    last_name=name_parts[1],
+                    role=UserRole.ADMIN,
+                    email=f"{fullname_underscore_delim}@gmail.com",
+                    hashed_password=password_hasher.hash(fullname_underscore_delim),
+                    created_at=faker.date_time_between(start_date="-3y", end_date="now"),
+                )
+                all_admins.append(admin)
+
+        db.add_all(all_admins)
+        db.flush()
+        return all_admins

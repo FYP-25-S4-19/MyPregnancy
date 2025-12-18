@@ -1,3 +1,6 @@
+//============================================================
+//====================== APPOINTMENTS ========================
+//============================================================
 export type AppointmentStatus = "ACCEPTED" | "REJECTED" | "PENDING_ACCEPT_REJECT";
 
 export interface AppointmentPreviewData {
@@ -7,31 +10,17 @@ export interface AppointmentPreviewData {
   status: AppointmentStatus;
 }
 
-export interface MeData {
-  id: string;
-  email: string;
-  first_name: string;
-  middle_name: string | null;
-  last_name: string;
-  role: RoleType;
-}
-
 export interface ArticlePreviewData {
   id: number;
   title: string;
 }
 
-export interface JwtData {
-  exp: number;
-  sub: string;
-}
-
-export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST";
-
 export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
 }
-
+//============================================================
+//=================== COMMUNITY THREADS ======================
+//============================================================
 export interface ThreadCategoryData {
   id: number;
   label: string;
@@ -82,3 +71,55 @@ export interface CreateThreadData {
 export interface CreateCommentData {
   content: string;
 }
+//==================================================
+//=================== RECIPE =======================
+//==================================================
+export interface RecipeCategory {
+  id: number;
+  label: string;
+}
+
+export interface RecipePaginatedResponse {
+  recipes: {
+    id: number;
+    name: string;
+    img_url: string;
+    description: string;
+    category: string;
+    is_saved: boolean;
+  }[];
+  next_cursor: number;
+  has_more: boolean;
+}
+//====================================================
+//==================== ARTICLE =======================
+//====================================================
+export interface ArticlePreviewData {
+  id: number;
+  title: string;
+}
+//=====================================================
+//================== AUTHENTICATION ===================
+//=====================================================
+export interface MeData {
+  id: string;
+  email: string;
+  age?: number | null;
+  first_name: string;
+  middle_name: string | null;
+  last_name: string;
+  role: RoleType;
+}
+
+export interface JwtData {
+  exp: number;
+  sub: string;
+}
+
+export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST";
+//====================================================
+//================== MISCELLANEOUS ===================
+//====================================================
+
+// Bla - put all your misc interfaces/types, etc.....here
+// Would the next person be so kind as to delete this message

@@ -1,10 +1,5 @@
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "react-native";
+import CommunityThreadsScreen from "@/src/screens/CommunityThreadsScreen";
 
 export default function DoctorCommunityThreadsScreen() {
-  return (
-    <SafeAreaView edges={["top"]}>
-      <Text>TODO: Doctor community threads screen</Text>
-    </SafeAreaView>
-  );
+  return <CommunityThreadsScreen />;
 }

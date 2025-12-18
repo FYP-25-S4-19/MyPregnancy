@@ -14,7 +14,8 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy.dialects.postgresql import UUID as PgUUID, JSONB
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -431,6 +432,7 @@ class Recipe(Base):
 
     img_key: Mapped[str | None]
     serving_count: Mapped[int]
+    ingredients: Mapped[str]
     instructions_markdown: Mapped[str]
 
     recipe_category_associations: Mapped[list["RecipeToCategoryAssociation"]] = relationship(back_populates="recipe")
@@ -597,6 +599,7 @@ class ExpoPushToken(Base):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     token: Mapped[str]
 
+
 # ===========================================
 # ============ Website Content ===============
 # ===========================================
@@ -608,4 +611,6 @@ class Page(Base):
     background_image: Mapped[str | None] = mapped_column(Text, nullable=True)  # Base64 image
     html: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
