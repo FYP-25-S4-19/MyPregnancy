@@ -42,7 +42,7 @@ export default function LoginScreen() {
       const meRes = await api.get("/users/me");
       const meData: MeData = meRes.data;
       setMe(meData);
-      router.replace("/main");
+      router.replace("/(onboarding)/pregnancy-details");
     } catch (err) {
       console.error(err);
       logout();

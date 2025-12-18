@@ -2,12 +2,14 @@
 Risk prediction API schemas.
 """
 
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class RiskPredictionRequest(BaseModel):
     """Request model for risk prediction."""
+
     age: float = Field(..., gt=0, le=150, description="Age in years")
     systolic_bp: float = Field(..., ge=0, le=300, description="Systolic blood pressure (mmHg)")
     diastolic_bp: float = Field(..., ge=0, le=300, description="Diastolic blood pressure (mmHg)")
@@ -33,6 +35,7 @@ class RiskPredictionResponse(BaseModel):
     - `probabilities`: per-class probabilities (keys: 'low','mid','high')
     - `is_high_risk` and `risk_probability` are included for backward compatibility
     """
+
     risk_level: str = Field(..., description="One of: low, mid, high")
     probabilities: dict = Field(..., description="Per-class probabilities, e.g. {'low':0.7,'mid':0.2,'high':0.1}")
     message: str = Field(..., description="Human-readable risk assessment message")

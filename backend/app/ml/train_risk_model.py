@@ -5,21 +5,20 @@ Exports model and scaler to joblib files.
 changes:
 blood pressure lower than 90/60 is considered mid risk. any thing below this is high risk.
 blood pressure above 140/90 is considered mid risk. anything above this is high risk.
-sugar level below 4 is hish risk 
+sugar level below 4 is hish risk
 for heart rate if above 40 is high risk.
 for heart rate if anything above 120 is high risk. anything between 100-120 is mid risk.
 for confidence replace it with (go to nearby hospital for checkup)
 """
 
-import os
+from pathlib import Path
+
 import joblib
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
-from pathlib import Path
-
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Paths
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -29,33 +28,32 @@ SCALER_PATH = MODEL_DIR / "risk_scaler.joblib"
 
 
 def train_and_export(csv_path: str = "health_v1.csv") -> dict:
-  
     # Ensure model directory exists
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     # Read dataset
     data = pd.read_csv(csv_path)
-    
+
     # Trim whitespace from column names
     data.columns = [c.strip() for c in data.columns]
-    
+
     # Check if required columns exist
     required = ["Age", "SystolicBP", "DiastolicBP", "BS", "HeartRate", "RiskLevel"]
     missing = [c for c in required if c not in data.columns]
     if missing:
         raise KeyError(f"Missing required columns in CSV: {missing}")
-    
+
     # Drop rows with missing values
     data = data.dropna(subset=required)
-    
+
     # Feature engineering: calculate mean blood pressure
     data["MeanBP"] = (data["SystolicBP"] + data["DiastolicBP"]) / 2.0
-    
+
     # Prepare features
     X = data[["Age", "MeanBP", "BS", "HeartRate"]]
-    
+
     # Prepare multi-class target (low=0, mid=1, high=2) with rule-based overrides
-    rl = data["RiskLevel"].astype(str).str.lower().str.strip()
+    data["RiskLevel"].astype(str).str.lower().str.strip()
 
     def derive_label(row):
         """Apply clinical heuristics (overrides) to derive a risk label for training.
@@ -121,10 +119,14 @@ def train_and_export(csv_path: str = "health_v1.csv") -> dict:
     # Train multi-class model (attempt multinomial solver; fallback to default if unsupported)
     # Use class_weight to help with imbalanced classes
     try:
-        model = LogisticRegression(max_iter=1000, random_state=42, multi_class="multinomial", solver="lbfgs", class_weight="balanced")
+        model = LogisticRegression(
+            max_iter=1000, random_state=42, multi_class="multinomial", solver="lbfgs", class_weight="balanced"
+        )
     except TypeError:
         # Older scikit-learn versions may not support some params; fall back but keep class_weight if available
-        print("Warning: installed scikit-learn does not support one or more parameters; falling back to a simpler LogisticRegression constructor with class_weight if available.")
+        print(
+            "Warning: installed scikit-learn does not support one or more parameters; falling back to a simpler LogisticRegression constructor with class_weight if available."
+        )
         try:
             model = LogisticRegression(max_iter=1000, random_state=42, class_weight="balanced")
         except TypeError:
@@ -135,7 +137,7 @@ def train_and_export(csv_path: str = "health_v1.csv") -> dict:
     # Evaluate
     predictions = model.predict(X_test_scaled)
     accuracy = accuracy_score(y_test, predictions)
-    report = classification_report(y_test, predictions, target_names=["low", "mid", "high"]) 
+    report = classification_report(y_test, predictions, target_names=["low", "mid", "high"])
 
     # Print model classes and some diagnostics to help debugging (e.g., missing 'mid')
     try:
@@ -146,7 +148,8 @@ def train_and_export(csv_path: str = "health_v1.csv") -> dict:
     # Show confusion matrix counts for further insight
     try:
         from sklearn.metrics import confusion_matrix
-        cm = confusion_matrix(y_test, predictions, labels=[0,1,2])
+
+        cm = confusion_matrix(y_test, predictions, labels=[0, 1, 2])
         print("Confusion matrix (rows=true, cols=pred) for [low,mid,high]:")
         print(cm)
     except Exception:
@@ -155,28 +158,29 @@ def train_and_export(csv_path: str = "health_v1.csv") -> dict:
     # Export label map as well for consistent runtime mapping
     LABEL_MAP_PATH = MODEL_DIR / "risk_label_map.joblib"
     joblib.dump(label_to_num, LABEL_MAP_PATH)
-    
+
     # Export model and scaler
     joblib.dump(model, MODEL_PATH)
     joblib.dump(scaler, SCALER_PATH)
-    
+
     print(f"✓ Model saved to {MODEL_PATH}")
     print(f"✓ Scaler saved to {SCALER_PATH}")
     print(f"✓ Label map saved to {LABEL_MAP_PATH}")
     print(f"\nAccuracy: {accuracy:.4f}")
     print(f"\n{report}")
-    
+
     return {
         "accuracy": float(accuracy),
         "classification_report": report,
         "model_path": str(MODEL_PATH),
         "scaler_path": str(SCALER_PATH),
-        "label_map_path": str(LABEL_MAP_PATH)
+        "label_map_path": str(LABEL_MAP_PATH),
     }
 
 
 if __name__ == "__main__":
     import sys
+
     csv_path = sys.argv[1] if len(sys.argv) > 1 else "health_v1.csv"
     try:
         train_and_export(csv_path)
