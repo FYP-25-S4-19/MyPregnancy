@@ -10,6 +10,11 @@ export interface AppointmentPreviewData {
   status: AppointmentStatus;
 }
 
+export interface ArticlePreviewData {
+  id: number;
+  title: string;
+}
+
 export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
 }
@@ -99,6 +104,7 @@ export interface ArticlePreviewData {
 export interface MeData {
   id: string;
   email: string;
+  age?: number | null;
   first_name: string;
   middle_name: string | null;
   last_name: string;
