@@ -1,5 +1,5 @@
-import { colors, sizes, font, shadows } from "../shared/designSystem";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { colors, sizes, font, shadows } from "../../shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 

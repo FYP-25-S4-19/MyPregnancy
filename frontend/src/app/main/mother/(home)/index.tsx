@@ -1,4 +1,5 @@
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
+import ConsultationSection from "@/src/components/sections/ConsultationSection";
 import BabySizeSection from "@/src/components/sections/BabySizeSection";
 import JournalSection from "@/src/components/sections/JournalSection";
 import ArticleSection from "@/src/components/sections/ArticleSection";
@@ -31,6 +32,8 @@ export default function MotherHomeScreen() {
             onViewAll={() => router.push("/main/mother/(home)/threads")}
             onThreadPress={(threadID) => router.push(`/main/(notab)/threads/${threadID}`)}
           />
+
+          <ConsultationSection onFindDoctorPressed={() => router.push("/main/mother/consultation")} />
           <View style={{ height: sizes.xl }} />
         </ScrollView>
       </SafeAreaView>

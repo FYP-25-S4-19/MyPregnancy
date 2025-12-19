@@ -413,3 +413,78 @@ export const threadStyles = StyleSheet.create({
     borderRadius: sizes.s,
   },
 });
+
+export const homeHorizontalScrollStyle = StyleSheet.create({
+  section: {
+    marginBottom: sizes.m,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: sizes.m,
+    marginBottom: sizes.s,
+  },
+  sectionTitle: {
+    marginHorizontal: sizes.xs,
+    fontSize: font.l,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  viewAllText: {
+    fontSize: font.s,
+    color: colors.text,
+    fontWeight: "500",
+    textDecorationLine: "underline",
+  },
+  scrollContent: {
+    paddingLeft: sizes.m,
+  },
+  loadingContainer: {
+    height: 180,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: sizes.m,
+  },
+  errorContainer: {
+    height: 180,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: sizes.m,
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.l,
+  },
+  errorText: {
+    fontSize: font.s,
+    color: colors.text,
+    textAlign: "center",
+    marginBottom: sizes.m,
+  },
+  retryButton: {
+    paddingVertical: sizes.s,
+    paddingHorizontal: sizes.l,
+    backgroundColor: colors.primary,
+    borderRadius: sizes.borderRadius,
+  },
+  retryText: {
+    fontSize: font.s,
+    color: colors.white,
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    height: 180,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: sizes.m,
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.l,
+  },
+  emptyText: {
+    fontSize: font.s,
+    color: colors.text,
+    textAlign: "center",
+    opacity: 0.6,
+  },
+});

@@ -3,7 +3,7 @@ import { RecipeCategory, RecipePaginatedResponse } from "../shared/typesAndInter
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, sizes } from "../shared/designSystem";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import RecipeCard from "../components/RecipeCard";
+import RecipeCard from "../components/cards/RecipeCard";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";

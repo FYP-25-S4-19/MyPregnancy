@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { homeHorizontalScrollStyle } from "@/src/shared/globalStyles";
 import { useThreadsPreviews } from "@/src/shared/hooks/useThreads";
-import { colors, font, sizes } from "@/src/shared/designSystem";
 import CommunityThreadCard from "../cards/CommunityThreadCard";
+import { colors } from "@/src/shared/designSystem";
 import React from "react";
 
 interface CommunityThreadsSectionProps {
@@ -10,15 +11,15 @@ interface CommunityThreadsSectionProps {
 }
 
 export default function CommunityThreadsSection({ onViewAll, onThreadPress }: CommunityThreadsSectionProps) {
-  const { data: threads, isLoading, isError, error, refetch } = useThreadsPreviews(5);
+  const { data: threads, isLoading, isError, error, refetch } = useThreadsPreviews(6);
 
   if (isLoading) {
     return (
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Threads</Text>
+      <View style={homeHorizontalScrollStyle.section}>
+        <View style={homeHorizontalScrollStyle.sectionHeader}>
+          <Text style={homeHorizontalScrollStyle.sectionTitle}>Threads</Text>
         </View>
-        <View style={styles.loadingContainer}>
+        <View style={homeHorizontalScrollStyle.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
@@ -27,14 +28,16 @@ export default function CommunityThreadsSection({ onViewAll, onThreadPress }: Co
 
   if (isError) {
     return (
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Community Threads</Text>
+      <View style={homeHorizontalScrollStyle.section}>
+        <View style={homeHorizontalScrollStyle.sectionHeader}>
+          <Text style={homeHorizontalScrollStyle.sectionTitle}>Community Threads</Text>
         </View>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error instanceof Error ? error.message : "Failed to load threads"}</Text>
-          <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
-            <Text style={styles.retryText}>Retry</Text>
+        <View style={homeHorizontalScrollStyle.errorContainer}>
+          <Text style={homeHorizontalScrollStyle.errorText}>
+            {error instanceof Error ? error.message : "Failed to load threads"}
+          </Text>
+          <TouchableOpacity onPress={() => refetch()} style={homeHorizontalScrollStyle.retryButton}>
+            <Text style={homeHorizontalScrollStyle.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -43,31 +46,35 @@ export default function CommunityThreadsSection({ onViewAll, onThreadPress }: Co
 
   if (!threads || threads.length === 0) {
     return (
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Threads</Text>
+      <View style={homeHorizontalScrollStyle.section}>
+        <View style={homeHorizontalScrollStyle.sectionHeader}>
+          <Text style={homeHorizontalScrollStyle.sectionTitle}>Threads</Text>
         </View>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No threads yet. Be the first to start a conversation!</Text>
+        <View style={homeHorizontalScrollStyle.emptyContainer}>
+          <Text style={homeHorizontalScrollStyle.emptyText}>No threads yet. Be the first to start a conversation!</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.section}>
+    <View style={homeHorizontalScrollStyle.section}>
       {/* Header outside the cards */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Threads</Text>
+      <View style={homeHorizontalScrollStyle.sectionHeader}>
+        <Text style={homeHorizontalScrollStyle.sectionTitle}>Threads</Text>
         {onViewAll && (
           <TouchableOpacity onPress={onViewAll}>
-            <Text style={styles.viewAllText}>View</Text>
+            <Text style={homeHorizontalScrollStyle.viewAllText}>View</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Horizontal scrolling cards */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={homeHorizontalScrollStyle.scrollContent}
+      >
         {threads.map((thread, index) => (
           <CommunityThreadCard
             key={thread.id}
@@ -81,78 +88,3 @@ export default function CommunityThreadsSection({ onViewAll, onThreadPress }: Co
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  section: {
-    marginBottom: sizes.m,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: sizes.m,
-    marginBottom: sizes.s,
-  },
-  sectionTitle: {
-    marginHorizontal: sizes.xs,
-    fontSize: font.l,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  viewAllText: {
-    fontSize: font.s,
-    color: colors.text,
-    fontWeight: "500",
-    textDecorationLine: "underline",
-  },
-  scrollContent: {
-    paddingLeft: sizes.m,
-  },
-  loadingContainer: {
-    height: 180,
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: sizes.m,
-  },
-  errorContainer: {
-    height: 180,
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: sizes.m,
-    backgroundColor: colors.white,
-    borderRadius: sizes.m,
-    padding: sizes.l,
-  },
-  errorText: {
-    fontSize: font.s,
-    color: colors.text,
-    textAlign: "center",
-    marginBottom: sizes.m,
-  },
-  retryButton: {
-    paddingVertical: sizes.s,
-    paddingHorizontal: sizes.l,
-    backgroundColor: colors.primary,
-    borderRadius: sizes.borderRadius,
-  },
-  retryText: {
-    fontSize: font.s,
-    color: colors.white,
-    fontWeight: "600",
-  },
-  emptyContainer: {
-    height: 180,
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: sizes.m,
-    backgroundColor: colors.white,
-    borderRadius: sizes.m,
-    padding: sizes.l,
-  },
-  emptyText: {
-    fontSize: font.s,
-    color: colors.text,
-    textAlign: "center",
-    opacity: 0.6,
-  },
-});
