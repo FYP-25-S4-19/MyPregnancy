@@ -61,8 +61,6 @@ from fastapi.responses import JSONResponse
     description="Predict high-risk pregnancy based on vital signs and health metrics"
 )
 async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
-    print("Received risk prediction request:", request)
-    
     # Load model on first call
     load_model_artifacts()
     

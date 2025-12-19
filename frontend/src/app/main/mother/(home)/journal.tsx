@@ -112,6 +112,60 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<"Journal" | "Kicks">("Journal");
   const [isLoadingRisk, setIsLoadingRisk] = useState(false);
   const [riskResult, setRiskResult] = useState<RiskPredictionResponse | null>(null);
+
+  // Kicks counter state
+  const [isKicksRunning, setIsKicksRunning] = useState(false);
+  const [kickStartTime, setKickStartTime] = useState<Date | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [kickCount, setKickCount] = useState(0);
+  const timerRef = React.useRef<number | null>(null);
+
+  // Format elapsed seconds into mm:ss
+  const formatElapsed = (s: number) => {
+    const mm = Math.floor(s / 60)
+      .toString()
+      .padStart(2, "0");
+    const ss = Math.floor(s % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${mm}:${ss}`;
+  };
+
+  const startKicks = () => {
+    if (isKicksRunning) return;
+    setIsKicksRunning(true);
+    setKickStartTime(new Date());
+    timerRef.current = setInterval(() => {
+      setElapsedSec((prev) => prev + 1);
+    }, 1000) as unknown as number;
+  };
+
+  const stopKicks = () => {
+    setIsKicksRunning(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current as unknown as number);
+      timerRef.current = null;
+    }
+  };
+
+  const resetKicks = () => {
+    stopKicks();
+    setElapsedSec(0);
+    setKickCount(0);
+    setKickStartTime(null);
+  };
+
+  const recordKick = () => {
+    // Provide simple visual feedback via count increment
+    setKickCount((c) => c + 1);
+  };
+
+  // ensure timer cleared on unmount
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current as unknown as number);
+    };
+  }, []);
   // get the authenticated user object (store exposes `me`)
   const user = useAuthStore((s) => s.me);
 
@@ -296,7 +350,7 @@ export default function App() {
     <SafeAreaView edges={["top"]} style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.white} />
       {/* --- HEADER SECTION --- */}
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer, activeTab === "Kicks" && styles.headerContainerKicks]}>
         {/* Toggle Switch */}
         <View style={styles.toggleContainer}>
           <TouchableOpacity
@@ -312,19 +366,23 @@ export default function App() {
             <Text style={[styles.toggleText, activeTab === "Kicks" && styles.toggleTextActive]}>Kicks Counter</Text>
           </TouchableOpacity>
         </View>
-        {/* Date Navigator */}
-        <View style={styles.dateRow}>
-          <TouchableOpacity onPress={() => handleDateChange("prev")}>
-            <Icon name="chevron-left" size={30} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
-          <TouchableOpacity onPress={() => handleDateChange("next")}>
-            <Icon name="chevron-right" size={30} color={colors.text} />
-          </TouchableOpacity>
-        </View>
+        {/* Date Navigator (Journal only) */}
+        {activeTab === "Journal" ? (
+          <View style={styles.dateRow}>
+            <TouchableOpacity onPress={() => handleDateChange("prev")}>
+              <Icon name="chevron-left" size={30} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.dateText}>{formatDate(currentDate)}</Text>
+            <TouchableOpacity onPress={() => handleDateChange("next")}>
+              <Icon name="chevron-right" size={30} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* --- CARD 1: FEELING --- */}
+        {activeTab === "Journal" ? (
+          <>
+            {/* --- CARD 1: FEELING --- */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>How are you feeling?</Text>
           <TextInput
@@ -418,6 +476,44 @@ export default function App() {
 
 
 
+          </>
+        ) : null}
+
+        {/* --- Kicks Counter Tab --- */}
+        {activeTab === "Kicks" ? (
+          <View style={styles.kicksContainer}>
+            <Text style={styles.kicksInstruction}>Tap the icon when your baby kicks!</Text>
+            <Text style={styles.kicksLabel}>Start Time</Text>
+            <Text style={styles.kicksTimer}>{formatElapsed(elapsedSec)}</Text>
+
+            <TouchableOpacity style={styles.kicksCircle} onPress={recordKick} activeOpacity={0.8}>
+              <Text style={styles.kicksIcon}>👣</Text>
+            </TouchableOpacity>
+
+            <View style={styles.kickControls}>
+              <TouchableOpacity style={[styles.kickBtn, isKicksRunning && styles.kickBtnActive]} onPress={isKicksRunning ? stopKicks : startKicks}>
+                <Text style={styles.kickBtnText}>{isKicksRunning ? "Stop" : "Start"}</Text>
+              </TouchableOpacity>
+
+              <View style={styles.kickCountBox}>
+                <Text style={styles.kickCountText}>{kickCount}</Text>
+                <Text style={styles.kickCountLabel}>kicks</Text>
+              </View>
+
+              <TouchableOpacity style={styles.kickBtn} onPress={resetKicks}>
+                <Text style={styles.kickBtnText}>Reset</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity onPress={() => Alert.alert("Past kick counts", "Feature not implemented yet.") }>
+              <Text style={styles.viewPast}>view past kick counts</Text>
+            </TouchableOpacity>
+
+          </View>
+        ) : (
+          <View style={{ height: 80 }} />
+        )}
+
         {/* Spacer for bottom tab */}
         <View style={{ height: 80 }} />
       </ScrollView>
@@ -454,6 +550,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: sizes.s + sizes.xs,
     backgroundColor: colors.white,
+  },
+  headerContainerKicks: {
+    paddingVertical: sizes.s,
   },
   // Toggle Switch Styles
   toggleContainer: {
@@ -707,4 +806,143 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     backgroundColor: colors.white,
   },
+  // Kicks counter styles
+  kicksContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: sizes.m,
+  },
+  kicksInstruction: {
+    color: colors.text,
+    marginBottom: sizes.xs,
+    fontSize: font.m - 2,
+    fontWeight: "600",
+  },
+  kicksLabel: {
+    color: colors.text,
+    marginTop: sizes.s,
+    fontSize: font.m - 2,
+    fontWeight: "600",
+  },
+  kicksTimer: {
+    fontSize: font.l,
+    fontWeight: "700",
+    color: colors.primary,
+    marginVertical: sizes.s,
+  },
+  kicksTimerLarge: {
+    fontSize: 32,
+    fontWeight: "800",
+    color: colors.primary,
+    marginVertical: sizes.s,
+  },
+  kicksCircle: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 8,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: sizes.m,
+  },
+  kicksCircleLarge: {
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    borderWidth: 10,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: sizes.m,
+    backgroundColor: colors.white,
+  },
+  kicksIcon: {
+    fontSize: 100,
+  },
+  kicksIconLarge: {
+    fontSize: 64,
+    color: colors.primary,
+  },
+  kickControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    width: "80%",
+    marginTop: sizes.s,
+  },
+  kickControlsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    width: "70%",
+    marginTop: sizes.s,
+  },
+  // Kicks buttons (was missing; added to fix runtime error)
+  kickBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: sizes.s,
+    paddingHorizontal: sizes.m,
+    borderRadius: sizes.s,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  kickBtnActive: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  kickBtnText: {
+    color: colors.white,
+    fontWeight: "700",
+  },
+  controlCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  controlCircleIdle: {
+    backgroundColor: "#ffdfe0",
+  },
+  controlCircleActive: {
+    backgroundColor: colors.primary,
+  },
+  controlIcon: {
+    fontSize: 20,
+    color: colors.white,
+    fontWeight: "700",
+  },
+  centerCountCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  centerCountText: {
+    color: colors.white,
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  kickCountBox: {
+    alignItems: "center",
+  },
+  kickCountText: {
+    fontSize: font.xl,
+    fontWeight: "800",
+    color: colors.primary,
+  },
+  kickCountLabel: {
+    fontSize: font.xs,
+    color: colors.tabIcon,
+  },
+  viewPast: {
+    color: colors.text,
+    marginTop: sizes.s,
+    fontSize: font.m - 2,
+    fontWeight: "600",
+  }
 });
