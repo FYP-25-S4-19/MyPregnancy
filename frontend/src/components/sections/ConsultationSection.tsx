@@ -1,6 +1,6 @@
 import { useAppointmentsForMonthQuery } from "@/src/shared/hooks/useAppointments";
-import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { homeHorizontalScrollStyle } from "@/src/shared/globalStyles";
+import { Text, TouchableOpacity, View } from "react-native";
 import AppointmentCard from "../cards/AppointmentCard";
 import { sizes } from "@/src/shared/designSystem";
 import { FC } from "react";

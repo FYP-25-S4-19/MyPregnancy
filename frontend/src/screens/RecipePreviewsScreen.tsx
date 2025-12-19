@@ -1,24 +1,24 @@
-import {
-  FlatList,
-  Image,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-  StyleSheet,
-  Dimensions,
-  ActivityIndicator,
-} from "react-native";
 import { RecipeCategory, RecipeData, RecipePaginatedResponse } from "../shared/typesAndInterfaces";
+import { useSaveRecipe, useUnsaveRecipe } from "../shared/hooks/useRecipes";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, sizes } from "../shared/designSystem";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import RecipeCard from "../components/cards/RecipeCard";
-import { useSaveRecipe, useUnsaveRecipe } from "../shared/hooks/useRecipes";
 import { router } from "expo-router";
 import { useState } from "react";
 import api from "../shared/api";
+import {
+  ActivityIndicator,
+  TouchableOpacity,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  FlatList,
+  Image,
+  Text,
+  View,
+} from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -83,17 +83,12 @@ export default function RecipePreviewsScreen() {
 
   const toggleCategory = (categoryLabel: string): void => {
     if (categoryLabel === "All") {
-      // If "All" is clicked, clear other selections and select only "All"
       setSelectedCategories(["All"]);
     } else {
       setSelectedCategories((prev) => {
-        // Remove "All" if it's currently selected
         const withoutAll = prev.filter((cat) => cat !== "All");
-
-        // Toggle the clicked category
         if (withoutAll.includes(categoryLabel)) {
           const updated = withoutAll.filter((cat) => cat !== categoryLabel);
-          // If no categories left, default to "All"
           return updated.length === 0 ? ["All"] : updated;
         } else {
           return [...withoutAll, categoryLabel];

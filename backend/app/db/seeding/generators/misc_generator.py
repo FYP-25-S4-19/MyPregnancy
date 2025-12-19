@@ -51,7 +51,12 @@ class MiscGenerator:
                 # Generate appointments within the current month
                 now = datetime.now()
                 start_of_month = datetime(now.year, now.month, 1)
-                end_of_month = datetime(now.year, now.month, 1) - timedelta(seconds=1)
+                # Calculate last day of current month
+                if now.month == 12:
+                    end_of_month = datetime(now.year + 1, 1, 1) - timedelta(seconds=1)
+                else:
+                    end_of_month = datetime(now.year, now.month + 1, 1) - timedelta(seconds=1)
+
                 rand_time: datetime = faker.date_time_between(
                     start_date=start_of_month,
                     end_date=end_of_month,

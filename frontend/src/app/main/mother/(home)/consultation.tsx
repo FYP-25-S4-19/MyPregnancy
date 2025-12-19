@@ -42,8 +42,8 @@ export default function ConsultationsScreen() {
   const onChatPress = async (doctorID: string): Promise<void> => {
     try {
       const res = await api.post<UpsertChannelResponse>("/stream/chat/channel", { doctor_id: doctorID });
-      router.replace(`/main/mother/chats/`);
-      router.push(`/main/mother/chats/${res.data.channel_id}`);
+      router.replace(`/main/mother/chats`);
+      router.push(`/main/chat/${res.data.channel_id}`);
     } catch (err) {
       console.error("Channel error:", err);
     }

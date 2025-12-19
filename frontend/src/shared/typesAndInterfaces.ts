@@ -14,6 +14,10 @@ export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
 }
 
+export interface CreateAppointmentResponse {
+  appointment_id: string;
+}
+
 export interface UpsertChannelResponse {
   channel_id: string;
 }

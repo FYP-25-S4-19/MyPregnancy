@@ -20,7 +20,6 @@ export default function MotherChatListScreen() {
         <ChannelList
           filters={memoizedFilters}
           onSelect={(channel) => {
-            // router.push(`/main/mother/(home)/chats/${channel.cid}`);
             router.push(`/main/chat/${channel.cid}`);
           }}
           options={{ state: true, watch: true }}
