@@ -1,6 +1,4 @@
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
-import BabySizeSection from "@/src/components/sections/BabySizeSection";
-import JournalSection from "@/src/components/sections/JournalSection";
 import ArticleSection from "@/src/components/sections/ArticleSection";
 import HomePageHeader from "@/src/components/headers/HomePageHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +20,7 @@ export default function MotherHomeScreen() {
             headerText={me ? utils.formatFullname(me) : ""}
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
           />
-          <ArticleSection onViewAll={() => router.push("/main/mother/(home)/journal")} />
+          <ArticleSection onViewAll={() => router.push("/main/nutritionist/(home)/articles")} />
           <View style={{ height: 20 }} />
 
           <CommunityThreadsSection

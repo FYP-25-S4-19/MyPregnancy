@@ -1,9 +1,9 @@
-import { FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useAppointmentsForMonthQuery } from "@/src/shared/hooks/useAppointments";
+import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { homeHorizontalScrollStyle } from "@/src/shared/globalStyles";
-import { FC } from "react";
 import AppointmentCard from "../cards/AppointmentCard";
 import { sizes } from "@/src/shared/designSystem";
+import { FC } from "react";
 
 interface ConsultationSectionProps {
   onFindDoctorPressed?: () => void;
@@ -29,23 +29,18 @@ const ConsultationSection: FC<ConsultationSectionProps> = ({ onFindDoctorPressed
           <Text style={homeHorizontalScrollStyle.emptyText}>No appointments scheduled.</Text>
         </View>
       ) : (
-        <FlatList
-          data={appointments}
-          keyExtractor={(item) => item.appointment_id}
-          renderItem={({ item }) => {
-            return (
-              <AppointmentCard
-                data={{
-                  appointment_id: item.appointment_id,
-                  date_time: item.date_time,
-                  doctor_fname: item.doctor_fname,
-                  status: item.status,
-                }}
-                viewStyle={{ marginHorizontal: sizes.m }}
-              />
-            );
-          }}
-        />
+        appointments.map((item) => (
+          <AppointmentCard
+            key={item.appointment_id}
+            data={{
+              appointment_id: item.appointment_id,
+              date_time: item.date_time,
+              doctor_fname: item.doctor_fname,
+              status: item.status,
+            }}
+            viewStyle={{ marginHorizontal: sizes.m }}
+          />
+        ))
       )}
     </View>
   );

@@ -1,10 +1,20 @@
-import { FlatList, Image, ScrollView, Text, TouchableOpacity, View, StyleSheet, Dimensions } from "react-native";
+import {
+  FlatList,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import { RecipeCategory, RecipePaginatedResponse } from "../shared/typesAndInterfaces";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, sizes } from "../shared/designSystem";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import RecipeCard from "../components/cards/RecipeCard";
-import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useState } from "react";
 import api from "../shared/api";
@@ -21,7 +31,7 @@ export default function RecipeScreen() {
     "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
   ];
 
-  const handleScroll = (event: any) => {
+  const handleScroll = (event: any): void => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const index = Math.round(scrollPosition / SCREEN_WIDTH);
     setCurrentImageIndex(index);
@@ -35,89 +45,118 @@ export default function RecipeScreen() {
     },
   });
 
-  const { data: recipesResponse, isLoading } = useQuery({
+  const {
+    data: recipesData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["Paginated recipe previews"],
-    queryFn: async () => {
-      const res = await api.get<RecipePaginatedResponse>(`/recipes/previews?limit=${7}`);
+    queryFn: async ({ pageParam }) => {
+      const cursorParam = pageParam ? `&cursor=${pageParam}` : "";
+      const res = await api.get<RecipePaginatedResponse>(`/recipes/previews?limit=${8}${cursorParam}`);
       return res.data;
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage.has_more ? lastPage.next_cursor : undefined;
     },
   });
 
+  const allRecipes = recipesData?.pages.flatMap((page) => page.recipes) || [];
+  const handleLoadMore = (): void => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  const renderHeader = () => (
+    <>
+      {/* ================= HEADER ================= */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>RECIPES</Text>
+      </View>
+
+      {/* ================= BANNER ================= */}
+      <View style={styles.bannerContainer}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+        >
+          {bannerImages.map((imageUri, index) => (
+            <Image key={index} source={{ uri: imageUri }} style={styles.bannerImage} />
+          ))}
+        </ScrollView>
+
+        <View style={styles.paginationContainer}>
+          {bannerImages.map((_, index) => (
+            <View key={index} style={[index === currentImageIndex ? styles.dotActive : styles.dotInactive]} />
+          ))}
+        </View>
+      </View>
+
+      {/* ================= CATEGORY ================= */}
+      <View style={styles.categoryContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Category</Text>
+          <MaterialCommunityIcons name="heart-multiple-outline" size={24} color={colors.primary} />
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
+          {recipeCategories?.map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              style={[styles.categoryChip, selectedCategory === cat.label && styles.categoryChipActive]}
+              onPress={() => setSelectedCategory(cat.label)}
+            >
+              <Text style={[styles.categoryText, selectedCategory === cat.label && styles.categoryTextActive]}>
+                {cat.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    </>
+  );
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    return <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />;
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ================= HEADER ================= */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>RECIPES</Text>
-        </View>
-
-        {/* ================= BANNER ================= */}
-        <View style={styles.bannerContainer}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-          >
-            {bannerImages.map((imageUri, index) => (
-              <Image key={index} source={{ uri: imageUri }} style={styles.bannerImage} />
-            ))}
-          </ScrollView>
-
-          <View style={styles.paginationContainer}>
-            {bannerImages.map((_, index) => (
-              <View key={index} style={[index === currentImageIndex ? styles.dotActive : styles.dotInactive]} />
-            ))}
-          </View>
-        </View>
-
-        {/* ================= CATEGORY ================= */}
-        <View style={styles.categoryContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Category</Text>
-            <MaterialCommunityIcons name="heart-multiple-outline" size={24} color={colors.primary} />
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
-            {recipeCategories?.map((cat) => (
-              <TouchableOpacity
-                key={cat.id}
-                style={[styles.categoryChip, selectedCategory === cat.label && styles.categoryChipActive]}
-                onPress={() => setSelectedCategory(cat.label)}
-              >
-                <Text style={[styles.categoryText, selectedCategory === cat.label && styles.categoryTextActive]}>
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* ================= RECIPE LIST ================= */}
-        <View style={styles.listContainer}>
-          {isLoading ? (
-            <Text style={{ textAlign: "center", marginTop: 20 }}>Loading recipes...</Text>
+      <FlatList
+        data={allRecipes}
+        keyExtractor={(item) => item.id.toString()}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={styles.listContainer}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        renderItem={({ item }) => (
+          <RecipeCard
+            id={item.id}
+            name={item.name}
+            description={item.description}
+            imgUrl={item.img_url}
+            isSaved={item.is_saved}
+            onViewPress={() => router.push(`/main/mother/recipe/${item.id}`)}
+            onSavePress={() => console.log("TODO Save recipe:", item.id)}
+          />
+        )}
+        ListEmptyComponent={
+          isLoading ? (
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
           ) : (
-            <FlatList
-              data={recipesResponse?.recipes || []}
-              keyExtractor={(item) => item.id.toString()}
-              scrollEnabled={false}
-              renderItem={({ item }) => (
-                <RecipeCard
-                  id={item.id}
-                  name={item.name}
-                  description={item.description}
-                  imgUrl={item.img_url}
-                  isSaved={false}
-                  onViewPress={() => router.push(`/main/mother/recipe/${item.id}`)}
-                  onSavePress={() => console.log("TODO Save recipe:", item.id)}
-                />
-              )}
-            />
-          )}
-        </View>
-      </ScrollView>
+            <Text style={{ textAlign: "center", marginTop: 20, color: "#6D2121" }}>No recipes found</Text>
+          )
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -221,6 +260,5 @@ const styles = StyleSheet.create({
 
   listContainer: {
     backgroundColor: "#FFDCDC",
-    paddingBottom: sizes.l,
   },
 });

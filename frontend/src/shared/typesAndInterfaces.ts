@@ -13,6 +13,10 @@ export interface AppointmentPreviewData {
 export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
 }
+
+export interface UpsertChannelResponse {
+  channel_id: string;
+}
 //============================================================
 //=================== COMMUNITY THREADS ======================
 //============================================================
