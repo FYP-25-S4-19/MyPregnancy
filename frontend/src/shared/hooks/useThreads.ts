@@ -62,8 +62,82 @@ export const useLikeThread = () => {
       const response = await api.post(`/threads/${threadId}/like`);
       return response.data;
     },
-    onSuccess: (_, threadId) => {
-      // Invalidate queries to refetch with updated like status
+    onMutate: async (threadId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["threads"] });
+
+      // Snapshot previous values
+      const previousThread = queryClient.getQueryData<ThreadData>(["threads", threadId]);
+      const previousThreadsList = queryClient.getQueryData<ThreadPreviewData[]>(["threads"]);
+      const previousThreadsPreviewQueries: { key: readonly unknown[]; data: ThreadPreviewData[] }[] = [];
+
+      // Get all thread preview queries
+      queryClient.getQueriesData<ThreadPreviewData[]>({ queryKey: ["threads", "preview"] }).forEach(([key, data]) => {
+        if (data) {
+          previousThreadsPreviewQueries.push({ key, data });
+        }
+      });
+
+      // Optimistically update individual thread
+      if (previousThread) {
+        queryClient.setQueryData<ThreadData>(["threads", threadId], {
+          ...previousThread,
+          is_liked_by_current_user: true,
+          like_count: previousThread.like_count + 1,
+        });
+      }
+
+      // Optimistically update threads list
+      if (previousThreadsList) {
+        queryClient.setQueryData<ThreadPreviewData[]>(
+          ["threads"],
+          previousThreadsList.map((thread) =>
+            thread.id === threadId
+              ? {
+                  ...thread,
+                  is_liked_by_current_user: true,
+                  like_count: thread.like_count + 1,
+                }
+              : thread,
+          ),
+        );
+      }
+
+      // Optimistically update all thread preview queries
+      previousThreadsPreviewQueries.forEach(({ key }) => {
+        const data = queryClient.getQueryData<ThreadPreviewData[]>(key);
+        if (data) {
+          queryClient.setQueryData<ThreadPreviewData[]>(
+            key,
+            data.map((thread) =>
+              thread.id === threadId
+                ? {
+                    ...thread,
+                    is_liked_by_current_user: true,
+                    like_count: thread.like_count + 1,
+                  }
+                : thread,
+            ),
+          );
+        }
+      });
+
+      return { previousThread, previousThreadsList, previousThreadsPreviewQueries };
+    },
+    onError: (err, threadId, context) => {
+      // Rollback on error
+      if (context?.previousThread) {
+        queryClient.setQueryData(["threads", threadId], context.previousThread);
+      }
+      if (context?.previousThreadsList) {
+        queryClient.setQueryData(["threads"], context.previousThreadsList);
+      }
+      context?.previousThreadsPreviewQueries.forEach(({ key, data }) => {
+        queryClient.setQueryData(key, data);
+      });
+    },
+    onSettled: (_, __, threadId) => {
+      // Always refetch to ensure data is in sync
       queryClient.invalidateQueries({ queryKey: ["threads", threadId] });
       queryClient.invalidateQueries({ queryKey: ["threads"] });
     },
@@ -78,8 +152,81 @@ export const useUnlikeThread = () => {
       const response = await api.delete(`/threads/${threadId}/unlike`);
       return response.data;
     },
-    onSuccess: (_, threadId) => {
-      // Invalidate queries to refetch with updated like status
+    onMutate: async (threadId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["threads"] });
+
+      // Snapshot previous values
+      const previousThread = queryClient.getQueryData<ThreadData>(["threads", threadId]);
+      const previousThreadsList = queryClient.getQueryData<ThreadPreviewData[]>(["threads"]);
+      const previousThreadsPreviewQueries: { key: readonly unknown[]; data: ThreadPreviewData[] }[] = [];
+
+      // Get all thread preview queries
+      queryClient.getQueriesData<ThreadPreviewData[]>({ queryKey: ["threads", "preview"] }).forEach(([key, data]) => {
+        if (data) {
+          previousThreadsPreviewQueries.push({ key, data });
+        }
+      });
+
+      // Optimistically update individual thread
+      if (previousThread) {
+        queryClient.setQueryData<ThreadData>(["threads", threadId], {
+          ...previousThread,
+          is_liked_by_current_user: false,
+          like_count: Math.max(0, previousThread.like_count - 1),
+        });
+      }
+
+      // Optimistically update threads list
+      if (previousThreadsList) {
+        queryClient.setQueryData<ThreadPreviewData[]>(
+          ["threads"],
+          previousThreadsList.map((thread) =>
+            thread.id === threadId
+              ? {
+                  ...thread,
+                  is_liked_by_current_user: false,
+                  like_count: Math.max(0, thread.like_count - 1),
+                }
+              : thread,
+          ),
+        );
+      }
+
+      // Optimistically update all thread preview queries
+      previousThreadsPreviewQueries.forEach(({ key }) => {
+        const data = queryClient.getQueryData<ThreadPreviewData[]>(key);
+        if (data) {
+          queryClient.setQueryData<ThreadPreviewData[]>(
+            key,
+            data.map((thread) =>
+              thread.id === threadId
+                ? {
+                    ...thread,
+                    is_liked_by_current_user: false,
+                    like_count: Math.max(0, thread.like_count - 1),
+                  }
+                : thread,
+            ),
+          );
+        }
+      });
+
+      return { previousThread, previousThreadsList, previousThreadsPreviewQueries };
+    },
+    onError: (err, threadId, context) => {
+      // Rollback on error
+      if (context?.previousThread) {
+        queryClient.setQueryData(["threads", threadId], context.previousThread);
+      }
+      if (context?.previousThreadsList) {
+        queryClient.setQueryData(["threads"], context.previousThreadsList);
+      }
+      context?.previousThreadsPreviewQueries.forEach(({ key, data }) => {
+        queryClient.setQueryData(key, data);
+      });
+    },
+    onSettled: (_, __, threadId) => {
       queryClient.invalidateQueries({ queryKey: ["threads", threadId] });
       queryClient.invalidateQueries({ queryKey: ["threads"] });
     },
@@ -95,8 +242,36 @@ export const useLikeComment = (threadId: number) => {
       const response = await api.post(`/threads/${threadId}/comments/${commentId}/like`);
       return response.data;
     },
-    onSuccess: () => {
-      // Invalidate thread query to refetch with updated comment likes
+    onMutate: async (commentId) => {
+      await queryClient.cancelQueries({ queryKey: ["threads", threadId] });
+
+      const previousThread = queryClient.getQueryData<ThreadData>(["threads", threadId]);
+
+      if (previousThread) {
+        const updatedComments = previousThread.comments.map((comment) =>
+          comment.id === commentId
+            ? {
+                ...comment,
+                is_liked_by_current_user: true,
+                like_count: comment.like_count + 1,
+              }
+            : comment,
+        );
+
+        queryClient.setQueryData<ThreadData>(["threads", threadId], {
+          ...previousThread,
+          comments: updatedComments,
+        });
+      }
+
+      return { previousThread };
+    },
+    onError: (err, commentId, context) => {
+      if (context?.previousThread) {
+        queryClient.setQueryData(["threads", threadId], context.previousThread);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["threads", threadId] });
     },
   });
@@ -110,7 +285,36 @@ export const useUnlikeComment = (threadId: number) => {
       const response = await api.delete(`/threads/${threadId}/comments/${commentId}/unlike`);
       return response.data;
     },
-    onSuccess: () => {
+    onMutate: async (commentId) => {
+      await queryClient.cancelQueries({ queryKey: ["threads", threadId] });
+
+      const previousThread = queryClient.getQueryData<ThreadData>(["threads", threadId]);
+
+      if (previousThread) {
+        const updatedComments = previousThread.comments.map((comment) =>
+          comment.id === commentId
+            ? {
+                ...comment,
+                is_liked_by_current_user: false,
+                like_count: Math.max(0, comment.like_count - 1),
+              }
+            : comment,
+        );
+
+        queryClient.setQueryData<ThreadData>(["threads", threadId], {
+          ...previousThread,
+          comments: updatedComments,
+        });
+      }
+
+      return { previousThread };
+    },
+    onError: (err, commentId, context) => {
+      if (context?.previousThread) {
+        queryClient.setQueryData(["threads", threadId], context.previousThread);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["threads", threadId] });
     },
   });

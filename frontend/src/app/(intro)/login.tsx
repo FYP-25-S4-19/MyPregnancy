@@ -136,6 +136,8 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.white },
+  kav: { flex: 1 },
   container: {
     flex: 1,
     backgroundColor: colors.white,
@@ -182,6 +184,7 @@ const styles = StyleSheet.create({
     marginTop: sizes.m,
     marginLeft: sizes.xs,
   },
+
   input: {
     height: 42,
     borderColor: colors.lightGray,
