@@ -1,12 +1,13 @@
 import { AppointmentPreviewData, AppointmentStatus } from "../../shared/typesAndInterfaces";
 import { colors, font, shadows, sizes } from "../../shared/designSystem";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, ViewStyle } from "react-native";
 
 export interface AppointmentCardProps {
   data: AppointmentPreviewData;
+  viewStyle?: ViewStyle;
 }
 
-const AppointmentCard: React.FC<AppointmentCardProps> = ({ data }) => {
+const AppointmentCard: React.FC<AppointmentCardProps> = ({ data, viewStyle }) => {
   const getStatusColor = (status: AppointmentStatus): string => {
     switch (status) {
       case "ACCEPTED":
@@ -20,15 +21,25 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({ data }) => {
     }
   };
 
-  const formattedDate = new Date(data.date_time).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-  });
+  const parseDate = () => {
+    const date = new Date(data.date_time);
+    const day = date.getDate();
+    const month = date.toLocaleString("en-GB", { month: "long" });
+
+    const hours24 = date.getHours();
+    const hours12 = hours24 % 12 || 12;
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const period = hours24 >= 12 ? "pm" : "am";
+
+    return { formattedDate: `${day} ${month}`, time: `${hours12}:${minutes}${period}` };
+  };
+
+  const { formattedDate, time } = parseDate();
 
   return (
-    <View style={styles.cardContainer}>
+    <View style={[styles.cardContainer, viewStyle]}>
       <Text style={styles.cardTitle}>
-        {formattedDate} {data.date_time.slice(11, 16)}
+        {formattedDate} {time}
       </Text>
 
       <View style={styles.cardRow}>

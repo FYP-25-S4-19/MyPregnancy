@@ -1,6 +1,8 @@
-import { FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useAppointmentsForMonthQuery } from "@/src/shared/hooks/useAppointments";
 import { homeHorizontalScrollStyle } from "@/src/shared/globalStyles";
+import { Text, TouchableOpacity, View } from "react-native";
+import AppointmentCard from "../cards/AppointmentCard";
+import { sizes } from "@/src/shared/designSystem";
 import { FC } from "react";
 
 interface ConsultationSectionProps {
@@ -22,31 +24,24 @@ const ConsultationSection: FC<ConsultationSectionProps> = ({ onFindDoctorPressed
         )}
       </View>
 
-      {/* Horizontal scrolling cards */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={homeHorizontalScrollStyle.scrollContent}
-      >
-        {!appointments || appointments.length === 0 ? (
-          <View>
-            <Text style={homeHorizontalScrollStyle.emptyText}>No appointments scheduled.</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={appointments}
-            keyExtractor={(item) => item.appointment_id}
-            renderItem={({ item }) => {
-              return (
-                <TouchableOpacity>
-                  <View>Appointment ID: {item.appointment_id}</View>
-                  <View>Doctor FName: {item.doctor_fname}</View>
-                </TouchableOpacity>
-              );
+      {!appointments || appointments.length === 0 ? (
+        <View>
+          <Text style={homeHorizontalScrollStyle.emptyText}>No appointments scheduled.</Text>
+        </View>
+      ) : (
+        appointments.map((item) => (
+          <AppointmentCard
+            key={item.appointment_id}
+            data={{
+              appointment_id: item.appointment_id,
+              date_time: item.date_time,
+              doctor_fname: item.doctor_fname,
+              status: item.status,
             }}
+            viewStyle={{ marginHorizontal: sizes.m }}
           />
-        )}
-      </ScrollView>
+        ))
+      )}
     </View>
   );
 };

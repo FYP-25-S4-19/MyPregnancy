@@ -1,89 +1,119 @@
-import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
+import { UpsertChannelResponse, DoctorsPaginatedResponse } from "@/src/shared/typesAndInterfaces";
 import { colors, sizes, font } from "../../../../shared/designSystem";
+import DoctorCard from "../../../../components/cards/DoctorCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import DoctorCard from "../../../../components/cards/DoctorCard";
 import SearchBar from "../../../../components/SearchBar";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { router } from "expo-router";
 import api from "@/src/shared/api";
 
-interface DoctorPreviewData {
-  doctor_id: string;
-  profile_img_url: string | null;
-  first_name: string;
-  is_liked: boolean;
-}
-
-interface ChannelCreationResponse {
-  channel_id: string;
-}
-
 export default function ConsultationsScreen() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const { data } = useQuery({
-    queryKey: ["list of doctors"],
-    queryFn: async (): Promise<DoctorPreviewData[]> => {
-      try {
-        const res = await api.get("/doctors");
-        return res.data as DoctorPreviewData[];
-      } catch {}
-      return [];
+  const {
+    data: doctorsData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["List of doctors"],
+    queryFn: async ({ pageParam }) => {
+      const cursorParam = pageParam ? `&cursor=${pageParam}` : "";
+      const res = await api.get<DoctorsPaginatedResponse>(`/doctors?limit=5${cursorParam}`);
+      return res.data;
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage.has_more ? lastPage.next_cursor : undefined;
     },
   });
 
+  const allDoctors = doctorsData?.pages.flatMap((page) => page.doctors) || [];
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
   const onChatPress = async (doctorID: string): Promise<void> => {
     try {
-      const res = await api.post("/stream/chat/channel", { doctor_id: doctorID });
-      const { channel_id }: ChannelCreationResponse = res.data;
-      router.push(`/main/mother/chats/${channel_id}`);
+      const res = await api.post<UpsertChannelResponse>("/stream/chat/channel", { doctor_id: doctorID });
+      router.replace(`/main/mother/chats`);
+      router.push(`/main/chat/${res.data.channel_id}`);
     } catch (err) {
       console.error("Channel error:", err);
     }
   };
 
+  const renderHeader = () => (
+    <>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>CONSULTATION</Text>
+        <MaterialCommunityIcons name="message-text-outline" size={sizes.xl} color={colors.primary} />
+      </View>
+
+      {/* Subtitle */}
+      <Text style={styles.subtitle}>Find the right specialist{"\n"}for your pregnancy journey! 🤰</Text>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+      </View>
+
+      {/* Specialist Section Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Specialist</Text>
+        <TouchableOpacity>
+          <Text style={styles.seeAllText}>See All</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>CONSULTATION</Text>
-          <MaterialCommunityIcons name="message-text-outline" size={sizes.xl} color={colors.primary} />
-        </View>
-
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>Find the right specialist{"\n"}for your pregnancy journey! 🤰</Text>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
-        </View>
-
-        {/* Specialist Section Header */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Specialist</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Doctor List */}
-        <View style={styles.doctorList}>
-          {data &&
-            data.map((doctorPreview) => (
-              <DoctorCard
-                key={doctorPreview.doctor_id}
-                id={doctorPreview.doctor_id}
-                name={"Dr. " + doctorPreview.first_name}
-                image={doctorPreview.profile_img_url}
-                isFavorite={doctorPreview.is_liked}
-                onChatPress={() => onChatPress(doctorPreview.doctor_id)}
-              />
-            ))}
-        </View>
-      </ScrollView>
+      <FlatList
+        data={allDoctors}
+        keyExtractor={(item) => item.doctor_id}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        renderItem={({ item }) => (
+          <DoctorCard
+            id={item.doctor_id}
+            name={"Dr. " + item.first_name}
+            image={item.profile_img_url}
+            isFavorite={item.is_liked}
+            onChatPress={() => onChatPress(item.doctor_id)}
+          />
+        )}
+        ListEmptyComponent={
+          isLoading ? (
+            <View style={styles.emptyLoader}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Loading doctors...</Text>
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>No doctors found</Text>
+          )
+        }
+        contentContainerStyle={styles.listContent}
+      />
     </SafeAreaView>
   );
 }
@@ -135,7 +165,28 @@ const styles = StyleSheet.create({
     color: colors.tabIcon,
     fontWeight: "500",
   },
-  doctorList: {
-    paddingBottom: sizes.xl,
+  listContent: {
+    flexGrow: 1,
+  },
+  footerLoader: {
+    paddingVertical: sizes.l,
+    alignItems: "center",
+  },
+  emptyLoader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: sizes.xxl,
+  },
+  loadingText: {
+    marginTop: sizes.m,
+    fontSize: font.m,
+    color: colors.primary,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: sizes.xl,
+    fontSize: font.m,
+    color: colors.tabIcon,
   },
 });

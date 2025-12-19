@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import require_role
-from app.core.users_manager import optional_current_active_user
+from app.core.users_manager import current_active_user, optional_current_active_user
 from app.db.db_config import get_db
 from app.db.db_schema import Nutritionist, User
 from app.features.recipes.recipe_models import (
@@ -86,6 +86,36 @@ async def delete_recipe(
 ):
     try:
         await service.delete_recipe(recipe_id, nutritionist.id)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.post("/{recipe_id}/save", status_code=status.HTTP_204_NO_CONTENT)
+async def save_recipe(
+    recipe_id: int,
+    user: User = Depends(current_active_user),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.save_recipe(recipe_id, user.id)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.delete("/{recipe_id}/save", status_code=status.HTTP_204_NO_CONTENT)
+async def unsave_recipe(
+    recipe_id: int,
+    user: User = Depends(current_active_user),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.unsave_recipe(recipe_id, user.id)
         await db.commit()
     except:
         await db.rollback()

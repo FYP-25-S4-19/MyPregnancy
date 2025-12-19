@@ -8,3 +8,9 @@ class DoctorPreviewData(CustomBaseModel):
     profile_img_url: str | None
     first_name: str
     is_liked: bool
+
+
+class DoctorsPaginatedResponse(CustomBaseModel):
+    doctors: list[DoctorPreviewData]
+    next_cursor: str | None
+    has_more: bool

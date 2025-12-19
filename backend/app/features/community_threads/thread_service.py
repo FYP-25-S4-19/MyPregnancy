@@ -82,6 +82,7 @@ class ThreadService:
                 joinedload(CommunityThread.creator),
                 selectinload(CommunityThread.comments).joinedload(ThreadComment.commenter),
                 selectinload(CommunityThread.comments).selectinload(ThreadComment.comment_likes),
+                selectinload(CommunityThread.community_thread_likes),
             )
         )
         thread_result = (await self.db.execute(stmt)).scalar_one_or_none()
@@ -94,6 +95,12 @@ class ThreadService:
             title=thread_result.title,
             content=thread_result.content,
             posted_at=thread_result.posted_at,
+            like_count=len(thread_result.community_thread_likes),
+            is_liked_by_current_user=(
+                any(like.liker_id == current_user.id for like in thread_result.community_thread_likes)
+                if current_user
+                else False
+            ),
             comments=[
                 ThreadCommentData(
                     id=comment.id,

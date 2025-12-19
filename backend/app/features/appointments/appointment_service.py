@@ -58,6 +58,7 @@ class AppointmentService:
                     status=appointment.status.value,
                 )
             )
+
         return response
 
     async def get_all_appointments(self, user: User) -> list[AppointmentResponse]:

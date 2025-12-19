@@ -24,8 +24,8 @@ class CommunityThreadGenerator:
             "Nutrition",
             "Exercise",
             "Mental Health",
-            "Labor and Delivery",
-            "Postpartum Care",
+            "Labor",
+            "Postpartum",
             "Sleep",
             "Lifestyle",
             "Parenting",
@@ -78,12 +78,11 @@ class CommunityThreadGenerator:
 
         all_thread_comments: list[ThreadComment] = []
         for community_thread in all_community_threads:
-            random_user: User = random.choice(all_users)
             num_comments = random.randint(0, max_comments_per_thread)
             for _ in range(num_comments):
                 comment = ThreadComment(
                     thread=community_thread,
-                    commenter=random_user,
+                    commenter=random.choice(all_users),
                     commented_at=faker.date_time_between(start_date="-2y", end_date=datetime.now()),
                     content=faker.paragraph(nb_sentences=random.randint(2, 12)),
                 )

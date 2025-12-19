@@ -1,29 +1,29 @@
+import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, sizes } from "@/src/shared/designSystem";
+import { threadStyles } from "@/src/shared/globalStyles";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
+  useUnlikeComment,
+  useCreateComment,
+  useUnlikeThread,
+  useLikeComment,
+  useLikeThread,
+  useThread,
+} from "@/src/shared/hooks/useThreads";
+import { router } from "expo-router";
+import {
+  KeyboardAvoidingView,
+  ActivityIndicator,
+  TouchableOpacity,
   StyleSheet,
   ScrollView,
   TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Alert,
+  Text,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { colors, sizes } from "@/src/shared/designSystem";
-import { threadStyles } from "@/src/shared/globalStyles";
-import {
-  useThread,
-  useCreateComment,
-  useLikeThread,
-  useUnlikeThread,
-  useLikeComment,
-  useUnlikeComment,
-} from "@/src/shared/hooks/useThreads";
-import { Ionicons } from "@expo/vector-icons";
 
 interface ThreadScreenProps {
   threadId: number;
@@ -39,7 +39,7 @@ export default function ThreadScreen({
   backgroundColor = "#FFE8E8",
 }: ThreadScreenProps) {
   const { data: thread, isLoading, isError, error } = useThread(threadId);
-  const [commentText, setCommentText] = useState("");
+  const [commentText, setCommentText] = useState<string>("");
 
   // Mutations
   const createCommentMutation = useCreateComment(threadId);
@@ -67,7 +67,7 @@ export default function ThreadScreen({
     }
   };
 
-  const handleBack = () => {
+  const handleBack = (): void => {
     if (onBack) {
       onBack();
     } else {
@@ -75,7 +75,7 @@ export default function ThreadScreen({
     }
   };
 
-  const handleSendComment = () => {
+  const handleSendComment = (): void => {
     if (commentText.trim()) {
       createCommentMutation.mutate(
         { content: commentText.trim() },
@@ -92,7 +92,7 @@ export default function ThreadScreen({
     }
   };
 
-  const handleToggleThreadLike = () => {
+  const handleToggleThreadLike = (): void => {
     if (!thread) return;
 
     if (thread.is_liked_by_current_user) {
@@ -112,7 +112,7 @@ export default function ThreadScreen({
     }
   };
 
-  const handleToggleCommentLike = (commentId: number, isLiked: boolean) => {
+  const handleToggleCommentLike = (commentId: number, isLiked: boolean): void => {
     if (isLiked) {
       unlikeCommentMutation.mutate(commentId, {
         onError: (error) => {

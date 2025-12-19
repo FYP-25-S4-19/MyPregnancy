@@ -2,6 +2,7 @@ import { ActivityIndicator, Text, View, KeyboardAvoidingView, Platform, StyleShe
 import { Channel as ChannelElement, MessageInput, MessageList, useChatContext } from "stream-chat-expo";
 import ConsultationMessageFooter from "@/src/components/ConsultationMessageFooter";
 import { useStreamVideoClient } from "@stream-io/video-react-native-sdk";
+import ConsultRequestChip from "@/src/components/ConsultRequestChip";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ChatHeader from "@/src/components/headers/ChatHeader";
 import { colors, sizes } from "@/src/shared/designSystem";
@@ -19,8 +20,8 @@ export default function IndividualChatScreen() {
 
   if (!me || !client || !channelType || !channelID || !client.user?.id) {
     return (
-      <View>
-        {!me && <Text>{"'Me' is null"} is null</Text>}
+      <View style={styles.loadingContainer}>
+        {!me && <Text>{"'Me' is null"}</Text>}
         {!client && <Text>Client is invalid</Text>}
         {!channelType && <Text>ChannelType is invalid</Text>}
         {!channelID && <Text>ChannelID is invalid</Text>}
@@ -37,50 +38,51 @@ export default function IndividualChatScreen() {
   }
   const otherFirstname = otherMember.name?.split(" ")[0] || "Missing name wthelly";
 
-  const callPressHandler = async (isVideo: boolean): Promise<void> => {
-    if (!streamVideoClient?.state.connectedUser?.id || !otherMember.id) {
-      return;
-    }
+  const isDoctor = me.role === "VOLUNTEER_DOCTOR";
 
-    const call = streamVideoClient.call("default", uuid.v4(), { reuseInstance: false });
-    await call.getOrCreate({
-      ring: true,
-      video: isVideo,
-      data: {
-        members: [{ user_id: streamVideoClient.state.connectedUser.id }, { user_id: otherMember.id }],
-      },
-    });
-  };
+  // Only doctors can initiate calls (duh)
+  const callPressHandler = isDoctor
+    ? async (isVideo: boolean): Promise<void> => {
+        if (!streamVideoClient?.state.connectedUser?.id || !otherMember.id) {
+          return;
+        }
+
+        const call = streamVideoClient.call("default", uuid.v4(), { reuseInstance: false });
+        await call.getOrCreate({
+          ring: true,
+          video: isVideo,
+          data: {
+            members: [{ user_id: streamVideoClient.state.connectedUser.id }, { user_id: otherMember.id }],
+          },
+        });
+      }
+    : undefined;
 
   const headerHeight = 50;
+  const titlePrefix = isDoctor ? "" : "Dr. ";
+
   return (
     <SafeAreaView edges={["top", "left", "right"]}>
-      {me.role === "VOLUNTEER_DOCTOR" ? (
-        <ChatHeader
-          title={`${otherFirstname}`}
-          showCallingIcons
-          onCallPress={callPressHandler}
-          headerHeight={headerHeight}
-        />
-      ) : (
-        <ChatHeader title={`${otherFirstname}`} headerHeight={headerHeight} />
-      )}
+      <ChatHeader
+        title={`${titlePrefix}${otherFirstname}`}
+        showCallingIcons={isDoctor}
+        onCallPress={callPressHandler}
+        headerHeight={headerHeight}
+      />
 
-      <ChannelElement
-        channel={channel}
-        MessageFooter={me.role === "VOLUNTEER_DOCTOR" ? ConsultationMessageFooter : undefined}
-      >
+      <ChannelElement channel={channel} MessageFooter={isDoctor ? ConsultationMessageFooter : undefined}>
         <MessageList />
 
         <KeyboardAvoidingView keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}>
-          <View style={[styles.inputWrapper, { marginBottom: headerHeight * 2 }]}>
+          <View style={[styles.inputWrapper, { marginBottom: headerHeight * 1.2 }]}>
+            {/* Only mothers can request consultations */}
+            {!isDoctor && <ConsultRequestChip channel={channel} />}
             <MessageInput
               additionalTextInputProps={{
                 style: {
                   borderWidth: 0,
                   outlineWidth: 0,
                 },
-                placeholder: "Le custom placeholder",
               }}
             />
           </View>
@@ -91,10 +93,14 @@ export default function IndividualChatScreen() {
 }
 
 export const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.white,
+  },
   inputWrapper: {
-    // paddingHorizontal: sizes.m,
     paddingBottom: sizes.xxl,
     backgroundColor: colors.white,
-    // backgroundColor: "#FF0000",
   },
 });

@@ -44,6 +44,9 @@ class ThreadData(CustomBaseModel):
     content: str
     posted_at: datetime
 
+    like_count: int = 0
+    is_liked_by_current_user: bool = False
+
     comments: list[ThreadCommentData]
 
 

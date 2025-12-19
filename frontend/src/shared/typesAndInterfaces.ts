@@ -10,13 +10,16 @@ export interface AppointmentPreviewData {
   status: AppointmentStatus;
 }
 
-export interface ArticlePreviewData {
-  id: number;
-  title: string;
-}
-
 export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
+}
+
+export interface CreateAppointmentResponse {
+  appointment_id: string;
+}
+
+export interface UpsertChannelResponse {
+  channel_id: string;
 }
 //============================================================
 //=================== COMMUNITY THREADS ======================
@@ -79,15 +82,17 @@ export interface RecipeCategory {
   label: string;
 }
 
+export interface RecipeData {
+  id: number;
+  name: string;
+  img_url: string;
+  description: string;
+  category: string;
+  is_saved: boolean;
+}
+
 export interface RecipePaginatedResponse {
-  recipes: {
-    id: number;
-    name: string;
-    img_url: string;
-    description: string;
-    category: string;
-    is_saved: boolean;
-  }[];
+  recipes: RecipeData[];
   next_cursor: number;
   has_more: boolean;
 }
@@ -121,5 +126,15 @@ export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST";
 //================== MISCELLANEOUS ===================
 //====================================================
 
-// Bla - put all your misc interfaces/types, etc.....here
-// Would the next person be so kind as to delete this message
+export interface DoctorPreviewData {
+  doctor_id: string;
+  profile_img_url: string | null;
+  first_name: string;
+  is_liked: boolean;
+}
+
+export interface DoctorsPaginatedResponse {
+  doctors: DoctorPreviewData[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
