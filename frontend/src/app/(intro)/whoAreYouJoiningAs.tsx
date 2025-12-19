@@ -1,40 +1,57 @@
 import React from "react";
-import { ImageBackground, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ImageBackground,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
 
-const image = require("../../../assets/images/wallpaper.jpg");
+const wallpaper = require("../../../assets/images/wallpaper.jpg");
 
 export default function WhoAreYouJoiningAsScreen() {
+  const router = useRouter();
+
   return (
-    <ImageBackground source={image} style={styles.background} resizeMode="cover">
+    <ImageBackground source={wallpaper} style={styles.bg} resizeMode="cover">
       <StatusBar barStyle="dark-content" />
-      <View style={styles.container}>
-        {/* App Title */}
-        <View style={styles.titleContainer}>
+      <View style={styles.screen}>
+        {/* Title */}
+        <View style={styles.titleBlock}>
           <Text style={styles.titleSmall}>my</Text>
           <Text style={styles.titleLarge}>Pregnancy</Text>
         </View>
 
-        {/* Role Selection Question */}
-        <Text style={styles.questionText}>Who are you joining as?</Text>
+        {/* Question */}
+        <Text style={styles.question}>Who are you joining as?</Text>
 
         {/* Buttons */}
         <TouchableOpacity
-          style={[styles.button, styles.primaryButton]}
-          onPress={() => console.log("Mom-to-be selected")}
+          style={[styles.btn, styles.btnFilled]}
+          onPress={() => router.push("/(intro)/register?role=mom")}
+          activeOpacity={0.85}
         >
-          <Text style={styles.primaryButtonText}>{"I'm a Mom-to-be"}</Text>
+          <Text style={styles.btnFilledText}>I'm a Mom-to-be</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.secondaryButton]}
-          onPress={() => console.log("Specialist selected")}
+          style={[styles.btn, styles.btnOutline]}
+          onPress={() => router.push("/(intro)/register?role=specialist")}
+          activeOpacity={0.85}
         >
-          <Text style={styles.secondaryButtonText}>{"I'm a Specialist"}</Text>
+          <Text style={styles.btnOutlineText}>I'm a Specialist</Text>
         </TouchableOpacity>
 
-        {/* Admin Login Link */}
-        <TouchableOpacity style={styles.adminLogin} onPress={() => console.log("Admin Login pressed")}>
-          <Text style={styles.adminLoginText}>Admin Login →</Text>
+        {/* Admin Login (leave as placeholder unless you have a real route) */}
+        <TouchableOpacity
+          style={styles.adminLinkWrap}
+          onPress={() => console.log("Admin Login pressed")}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.adminLink}>Admin Login →</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
@@ -42,68 +59,73 @@ export default function WhoAreYouJoiningAsScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: {
+  bg: { flex: 1 },
+
+  screen: {
     flex: 1,
-  },
-  container: {
-    flex: 1,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: sizes.xl,
   },
-  titleContainer: {
+
+  titleBlock: {
     alignItems: "center",
-    marginBottom: 80, 
+    marginBottom: sizes.xl,
   },
   titleSmall: {
-    fontSize: 24,
-    color: "#6d2828",
-    
-    lineHeight: 26,
+    color: colors.text,
+    fontSize: font.m,
+    fontWeight: "500",
+    textTransform: "lowercase",
   },
   titleLarge: {
-    fontSize: 40,
-    fontWeight: "bold",
-    color: "#6d2828",
-    
+    color: colors.text,
+    fontSize: font.xxl,
+    fontWeight: "800",
+    marginTop: sizes.xs,
   },
-  questionText: {
-    fontSize: 18,
-    color: "#6d2828",
-    marginBottom: 30, 
+
+  question: {
+    color: colors.text,
+    fontSize: font.s,
+    fontWeight: "600",
+    marginBottom: sizes.l,
   },
-  button: {
-    width: "90%",
-    paddingVertical: 16,
-    borderRadius: 50, 
+
+  // Match button shape from index.tsx
+  btn: {
+    width: "88%",
+    paddingVertical: sizes.m,
+    borderRadius: sizes.xl - sizes.s,
     alignItems: "center",
-    marginVertical: 8,
+    justifyContent: "center",
+    marginBottom: sizes.m,
   },
-  primaryButton: {
-    backgroundColor: "#FADADD",
+  btnFilled: {
+    backgroundColor: colors.secondary,
+    ...shadows.small,
   },
-  primaryButtonText: {
-    color: "#6d2828",
-    fontSize: 16,
-    fontWeight: "500",
+  btnFilledText: {
+    color: colors.text,
+    fontSize: font.s,
+    fontWeight: "700",
   },
-  secondaryButton: {
-    backgroundColor: "#FFF8F8", 
+  btnOutline: {
+    backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: "#FADADD",
+    borderColor: colors.secondary,
   },
-  secondaryButtonText: {
-    color: "#6d2828",
-    fontSize: 16,
-    fontWeight: "500",
+  btnOutlineText: {
+    color: colors.text,
+    fontSize: font.s,
+    fontWeight: "700",
   },
-  adminLogin: {
-    marginTop: 20,
+
+  adminLinkWrap: {
+    marginTop: sizes.m,
   },
-  adminLoginText: {
-    fontSize: 14,
-    color: "#6d2828",
+  adminLink: {
+    color: colors.text,
+    fontSize: font.xs,
   },
 });
-
-

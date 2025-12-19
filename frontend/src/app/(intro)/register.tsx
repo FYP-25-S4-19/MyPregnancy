@@ -10,22 +10,36 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
 import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
 
-export default function LoginScreen() {
-  const router = useRouter();
+type RoleParam = "mom" | "specialist" | undefined;
 
+export default function RegisterScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ role?: RoleParam }>();
+  const role = params.role;
+
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const canLogin = useMemo(() => {
-    return email.trim().length > 0 && password.trim().length > 0;
-  }, [email, password]);
+  const passwordsMatch = password.length === 0 || confirmPassword.length === 0 || password === confirmPassword;
 
-  const onLogin = () => {
-    // TODO: connect to real auth API
+  const canRegister = useMemo(() => {
+    if (!name.trim() || !dob.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) return false;
+    if (password !== confirmPassword) return false;
+    return true;
+  }, [name, dob, email, password, confirmPassword]);
+
+  const onRegister = () => {
+    // TODO: connect to real register API
+    // role is available if you need it:
+    // console.log("Register role:", role);
+
     router.push("/main");
   };
 
@@ -43,15 +57,42 @@ export default function LoginScreen() {
 
           {/* Title */}
           <Text style={styles.title}>
-            welcome{"\n"}back!
+            hello!{"\n"}register now
           </Text>
 
+          {/* Optional role indicator (subtle) */}
+          {role ? (
+            <Text style={styles.roleHint}>
+              Registering as: <Text style={styles.roleHintStrong}>{role === "mom" ? "Mom-to-be" : "Specialist"}</Text>
+            </Text>
+          ) : null}
+
+          {/* Name */}
+          <Text style={styles.label}>Name</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder=""
+            placeholderTextColor={colors.tabIcon}
+            style={styles.input}
+          />
+
+          {/* DOB */}
+          <Text style={[styles.label, { marginTop: sizes.m }]}>Date of Birth</Text>
+          <TextInput
+            value={dob}
+            onChangeText={setDob}
+            placeholder=""
+            placeholderTextColor={colors.tabIcon}
+            style={styles.input}
+          />
+
           {/* Email */}
-          <Text style={styles.label}>Email</Text>
+          <Text style={[styles.label, { marginTop: sizes.m }]}>Email</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
-            placeholder="Enter email"
+            placeholder=""
             placeholderTextColor={colors.tabIcon}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -63,39 +104,40 @@ export default function LoginScreen() {
           <TextInput
             value={password}
             onChangeText={setPassword}
-            placeholder="Enter password"
+            placeholder=""
             placeholderTextColor={colors.tabIcon}
             secureTextEntry
             style={styles.input}
           />
 
-          {/* Forgot */}
-          <TouchableOpacity
-            style={styles.forgotWrap}
-            onPress={() => {
-              // TODO: create forgot password route if required
-              // router.push("/(intro)/forgotPassword");
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.forgot}>Forgot Password?</Text>
-          </TouchableOpacity>
+          {/* Confirm */}
+          <Text style={[styles.label, { marginTop: sizes.m }]}>Confirm Password</Text>
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder=""
+            placeholderTextColor={colors.tabIcon}
+            secureTextEntry
+            style={styles.input}
+          />
 
-          {/* Login button */}
+          {!passwordsMatch ? <Text style={styles.error}>Passwords do not match.</Text> : null}
+
+          {/* Register button */}
           <TouchableOpacity
-            style={[styles.primaryBtn, !canLogin && styles.disabledBtn]}
-            onPress={onLogin}
-            disabled={!canLogin}
+            style={[styles.primaryBtn, !canRegister && styles.disabledBtn]}
+            onPress={onRegister}
+            disabled={!canRegister}
             activeOpacity={0.9}
           >
-            <Text style={styles.primaryBtnText}>Login</Text>
+            <Text style={styles.primaryBtnText}>Register</Text>
           </TouchableOpacity>
 
-          {/* Register link */}
+          {/* Login link */}
           <View style={styles.inlineRow}>
-            <Text style={styles.inlineText}>Don’t have account? </Text>
-            <TouchableOpacity onPress={() => router.push("/(intro)/register")} activeOpacity={0.8}>
-              <Text style={styles.inlineLink}>Register Now</Text>
+            <Text style={styles.inlineText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.push("/(intro)/login")} activeOpacity={0.8}>
+              <Text style={styles.inlineLink}>Login Now</Text>
             </TouchableOpacity>
           </View>
 
@@ -147,8 +189,19 @@ const styles = StyleSheet.create({
     fontSize: font.xxl,
     fontWeight: "700",
     lineHeight: font.xxl + 6,
-    marginBottom: sizes.xl,
+    marginBottom: sizes.m,
     textTransform: "uppercase",
+  },
+
+  roleHint: {
+    textAlign: "center",
+    color: colors.tabIcon,
+    fontSize: font.xs,
+    marginBottom: sizes.l,
+  },
+  roleHintStrong: {
+    color: colors.text,
+    fontWeight: "700",
   },
 
   label: {
@@ -169,18 +222,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
 
-  forgotWrap: {
-    alignSelf: "flex-end",
+  error: {
     marginTop: sizes.s,
-  },
-  forgot: {
-    color: colors.primary, // link color (using DS)
+    color: colors.fail,
     fontSize: font.xs,
     fontWeight: "600",
   },
 
   primaryBtn: {
-    marginTop: sizes.l,
+    marginTop: sizes.xl,
     backgroundColor: colors.secondary,
     borderRadius: 999,
     paddingVertical: sizes.m,
