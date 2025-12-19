@@ -27,7 +27,7 @@ class AppointmentStatus(Enum):
     PENDING_ACCEPT_REJECT = "PENDING_ACCEPT_REJECT"
     ACCEPTED = "ACCEPTED"
     REJECTED = "REJECTED"
-    COMPLETED = "COMPLETED"
+    # COMPLETED = "COMPLETED"
 
 
 class AccountCreationRequestStatus(Enum):

@@ -1,4 +1,4 @@
-import { FlatList, Image, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { FlatList, Image, ScrollView, Text, TouchableOpacity, View, StyleSheet, Dimensions } from "react-native";
 import { RecipeCategory, RecipePaginatedResponse } from "../shared/typesAndInterfaces";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, sizes } from "../shared/designSystem";
@@ -9,8 +9,23 @@ import { router } from "expo-router";
 import { useState } from "react";
 import api from "../shared/api";
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
 export default function RecipeScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+
+  const bannerImages = [
+    "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
+    "https://images.unsplash.com/photo-1490645935967-10de6ba17061",
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+  ];
+
+  const handleScroll = (event: any) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / SCREEN_WIDTH);
+    setCurrentImageIndex(index);
+  };
 
   const { data: recipeCategories } = useQuery({
     queryKey: ["Recipe categories"],
@@ -38,15 +53,22 @@ export default function RecipeScreen() {
 
         {/* ================= BANNER ================= */}
         <View style={styles.bannerContainer}>
-          <Image
-            source={{ uri: "https://images.unsplash.com/photo-1543353071-087f9a7ce56e" }}
-            style={styles.bannerImage}
-          />
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
+            {bannerImages.map((imageUri, index) => (
+              <Image key={index} source={{ uri: imageUri }} style={styles.bannerImage} />
+            ))}
+          </ScrollView>
 
           <View style={styles.paginationContainer}>
-            <View style={styles.dotInactive} />
-            <View style={styles.dotActive} />
-            <View style={styles.dotInactive} />
+            {bannerImages.map((_, index) => (
+              <View key={index} style={[index === currentImageIndex ? styles.dotActive : styles.dotInactive]} />
+            ))}
           </View>
         </View>
 
@@ -108,7 +130,8 @@ const styles = StyleSheet.create({
 
   header: {
     alignItems: "center",
-    paddingVertical: sizes.m,
+    paddingTop: sizes.l,
+    paddingBottom: sizes.m,
     backgroundColor: "#fff",
   },
   headerTitle: {
@@ -124,13 +147,13 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   bannerImage: {
-    width: "100%",
-    height: "100%",
+    width: SCREEN_WIDTH,
+    height: 200,
     resizeMode: "cover",
   },
   paginationContainer: {
     position: "absolute",
-    bottom: 10,
+    bottom: 20,
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
@@ -141,20 +164,27 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: "#FF8E8E",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   dotInactive: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "rgba(255,255,255,0.5)",
+    backgroundColor: "rgba(255,255,255,0.8)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
 
   categoryContainer: {
     paddingVertical: sizes.m,
     backgroundColor: "#FFDCDC",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    marginTop: -15,
   },
   sectionHeader: {
     flexDirection: "row",

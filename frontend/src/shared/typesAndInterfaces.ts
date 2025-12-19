@@ -10,11 +10,6 @@ export interface AppointmentPreviewData {
   status: AppointmentStatus;
 }
 
-export interface ArticlePreviewData {
-  id: number;
-  title: string;
-}
-
 export interface ConsultMessageExtraData {
   isConsultationRequest: boolean;
 }

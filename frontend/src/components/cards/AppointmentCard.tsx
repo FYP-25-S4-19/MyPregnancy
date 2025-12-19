@@ -1,12 +1,13 @@
 import { AppointmentPreviewData, AppointmentStatus } from "../../shared/typesAndInterfaces";
 import { colors, font, shadows, sizes } from "../../shared/designSystem";
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, ViewStyle } from "react-native";
 
 export interface AppointmentCardProps {
   data: AppointmentPreviewData;
+  viewStyle?: ViewStyle;
 }
 
-const AppointmentCard: React.FC<AppointmentCardProps> = ({ data }) => {
+const AppointmentCard: React.FC<AppointmentCardProps> = ({ data, viewStyle }) => {
   const getStatusColor = (status: AppointmentStatus): string => {
     switch (status) {
       case "ACCEPTED":
@@ -26,7 +27,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({ data }) => {
   });
 
   return (
-    <View style={styles.cardContainer}>
+    <View style={[styles.cardContainer, viewStyle]}>
       <Text style={styles.cardTitle}>
         {formattedDate} {data.date_time.slice(11, 16)}
       </Text>
