@@ -9,21 +9,25 @@ import {
   Dimensions,
   ActivityIndicator,
 } from "react-native";
-import { RecipeCategory, RecipePaginatedResponse } from "../shared/typesAndInterfaces";
+import { RecipeCategory, RecipeData, RecipePaginatedResponse } from "../shared/typesAndInterfaces";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, sizes } from "../shared/designSystem";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import RecipeCard from "../components/cards/RecipeCard";
+import { useSaveRecipe, useUnsaveRecipe } from "../shared/hooks/useRecipes";
 import { router } from "expo-router";
 import { useState } from "react";
 import api from "../shared/api";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export default function RecipeScreen() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+export default function RecipePreviewsScreen() {
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(["All"]);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+
+  const saveRecipeMutation = useSaveRecipe();
+  const unsaveRecipeMutation = useUnsaveRecipe();
 
   const bannerImages = [
     "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
@@ -63,10 +67,46 @@ export default function RecipeScreen() {
     },
   });
 
-  const allRecipes = recipesData?.pages.flatMap((page) => page.recipes) || [];
+  const allRecipes: RecipeData[] = recipesData?.pages.flatMap((page) => page.recipes) || [];
+  const filteredRecipes: RecipeData[] = allRecipes.filter((recipe) => {
+    if (selectedCategories.includes("All")) {
+      return true;
+    }
+    return selectedCategories.includes(recipe.category);
+  });
+
   const handleLoadMore = (): void => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
+    }
+  };
+
+  const toggleCategory = (categoryLabel: string): void => {
+    if (categoryLabel === "All") {
+      // If "All" is clicked, clear other selections and select only "All"
+      setSelectedCategories(["All"]);
+    } else {
+      setSelectedCategories((prev) => {
+        // Remove "All" if it's currently selected
+        const withoutAll = prev.filter((cat) => cat !== "All");
+
+        // Toggle the clicked category
+        if (withoutAll.includes(categoryLabel)) {
+          const updated = withoutAll.filter((cat) => cat !== categoryLabel);
+          // If no categories left, default to "All"
+          return updated.length === 0 ? ["All"] : updated;
+        } else {
+          return [...withoutAll, categoryLabel];
+        }
+      });
+    }
+  };
+
+  const handleToggleSave = (recipeId: number, isSaved: boolean) => {
+    if (isSaved) {
+      unsaveRecipeMutation.mutate(recipeId);
+    } else {
+      saveRecipeMutation.mutate(recipeId);
     }
   };
 
@@ -106,13 +146,23 @@ export default function RecipeScreen() {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
+          {/* Add "All" option */}
+          <TouchableOpacity
+            style={[styles.categoryChip, selectedCategories.includes("All") && styles.categoryChipActive]}
+            onPress={() => toggleCategory("All")}
+          >
+            <Text style={[styles.categoryText, selectedCategories.includes("All") && styles.categoryTextActive]}>
+              All
+            </Text>
+          </TouchableOpacity>
+
           {recipeCategories?.map((cat) => (
             <TouchableOpacity
               key={cat.id}
-              style={[styles.categoryChip, selectedCategory === cat.label && styles.categoryChipActive]}
-              onPress={() => setSelectedCategory(cat.label)}
+              style={[styles.categoryChip, selectedCategories.includes(cat.label) && styles.categoryChipActive]}
+              onPress={() => toggleCategory(cat.label)}
             >
-              <Text style={[styles.categoryText, selectedCategory === cat.label && styles.categoryTextActive]}>
+              <Text style={[styles.categoryText, selectedCategories.includes(cat.label) && styles.categoryTextActive]}>
                 {cat.label}
               </Text>
             </TouchableOpacity>
@@ -130,7 +180,7 @@ export default function RecipeScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <FlatList
-        data={allRecipes}
+        data={filteredRecipes}
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={renderHeader}
@@ -146,7 +196,7 @@ export default function RecipeScreen() {
             imgUrl={item.img_url}
             isSaved={item.is_saved}
             onViewPress={() => router.push(`/main/mother/recipe/${item.id}`)}
-            onSavePress={() => console.log("TODO Save recipe:", item.id)}
+            onSavePress={() => handleToggleSave(item.id, item.is_saved)}
           />
         )}
         ListEmptyComponent={

@@ -1,5 +1,5 @@
-import RecipeScreen from "@/src/screens/RecipeScreen";
+import RecipePreviewsScreen from "@/src/screens/RecipePreviewsScreen";
 
 export default function NutritionistRecipeScreen() {
-  return <RecipeScreen />;
+  return <RecipePreviewsScreen />;
 }

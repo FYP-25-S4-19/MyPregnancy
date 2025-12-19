@@ -10,6 +10,7 @@ from app.db.db_schema import (
     Recipe,
     RecipeCategory,
     RecipeToCategoryAssociation,
+    SavedRecipe,
     User,
 )
 from app.features.recipes.recipe_models import (
@@ -158,3 +159,40 @@ class RecipeService:
             )
 
         await self.db.delete(recipe)
+
+    async def save_recipe(self, recipe_id: int, user_id: UUID) -> None:
+        recipe = (await self.db.execute(select(Recipe).where(Recipe.id == recipe_id))).scalars().first()
+        if not recipe:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
+
+        existing_save = (
+            (
+                await self.db.execute(
+                    select(SavedRecipe).where(SavedRecipe.recipe_id == recipe_id, SavedRecipe.saver_id == user_id)
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        if existing_save:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Recipe already saved")
+
+        saved_recipe = SavedRecipe(recipe_id=recipe_id, saver_id=user_id)
+        self.db.add(saved_recipe)
+
+    async def unsave_recipe(self, recipe_id: int, user_id: UUID) -> None:
+        saved_recipe = (
+            (
+                await self.db.execute(
+                    select(SavedRecipe).where(SavedRecipe.recipe_id == recipe_id, SavedRecipe.saver_id == user_id)
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        if not saved_recipe:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not saved")
+
+        await self.db.delete(saved_recipe)
