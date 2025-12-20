@@ -1,22 +1,53 @@
-import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { websiteAPI } from '../../lib/api';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { websiteAPI, authAPI } from '../../lib/api';
+import { LogIn, X } from 'lucide-react';
+import { useState } from 'react';
 
 export default function DynamicPage() {
   const { slug } = useParams<{ slug: string }>();
-  
-  const { data: pageData, isLoading, error } = useQuery({
+  const navigate = useNavigate();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const loginMutation = useMutation({
+    mutationFn: (credentials: { username: string; password: string }) =>
+      authAPI.login(credentials.username, credentials.password),
+    onSuccess: (response) => {
+      // Store the token
+      localStorage.setItem('auth_token', response.data.access_token);
+      setShowLoginModal(false);
+      setUsername('');
+      setPassword('');
+      setError('');
+      // Redirect or show success
+      alert('Login successful!');
+    },
+    onError: () => {
+      setError('Invalid username or password');
+    },
+  });
+
+  const { data: pageData, isLoading, error: pageError } = useQuery({
     queryKey: ['page', slug],
     queryFn: () => websiteAPI.getPage(slug!).then(res => res.data),
     enabled: !!slug,
   });
 
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Page not found</div>;
+  if (pageError) return <div className="p-8 text-center text-red-600">Page not found</div>;
 
   const page = pageData?.page;
   const sections = page?.sections || [];
   const backgroundImage = page?.background_image;
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    loginMutation.mutate({ username, password });
+  };
 
   return (
     <div
@@ -27,6 +58,82 @@ export default function DynamicPage() {
         backgroundAttachment: 'fixed',
       }}
     >
+      {/* Fixed Login Button - Top Right */}
+      {!showLoginModal && (
+        <button
+          onClick={() => setShowLoginModal(true)}
+          className="absolute top-6 right-6 z-50 flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium shadow-lg"
+        >
+          <LogIn size={18} />
+          Login
+        </button>
+      )}
+      <br></br>
+      <br></br>
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-transparent">
+          <div className="bg-white rounded-lg shadow-2xl p-8 w-96">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Log In</h2>
+
+            {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="Enter your username"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+              <br></br>
+              <button
+                type="submit"
+                disabled={loginMutation.isPending}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50"
+              >
+                {loginMutation.isPending ? 'Logging in...' : 'Log In'}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-gray-600 mt-4">
+              Don't have an account?{' '}
+              <a href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                Sign up
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
+
       {sections.map((section: any) => (
         <SectionDisplay key={section.id} section={section} />
       ))}
@@ -35,19 +142,34 @@ export default function DynamicPage() {
 }
 
 function SectionDisplay({ section }: any) {
+  const navigate = useNavigate();
+
   switch (section.type) {
     case 'navbar':
       return (
         <nav style={{ backgroundColor: section.content.bgColor, color: section.content.textColor }} className="px-8 py-4 flex items-center justify-between">
           <div className="font-bold text-lg">{section.content.logo}</div>
           <div className="flex gap-6">
-            {section.content.links.map((link: any, idx: number) => (
-              <a key={idx} href={link.url} className="text-sm hover:opacity-75">
-                {link.label}
-              </a>
-            ))}
+            {section.content.links.map((link: any, idx: number) => {
+              if (link.url?.startsWith('/')) {
+                return (
+                  <Link key={idx} to={link.url} className="text-sm hover:opacity-75 transition">
+                    {link.label}
+                  </Link>
+                );
+              }
+              return (
+                <a key={idx} href={link.url} className="text-sm hover:opacity-75 transition">
+                  {link.label}
+                </a>
+              );
+            })}
           </div>
-          <button style={{ backgroundColor: section.content.buttonColor }} className="text-white px-4 py-2 rounded-lg">
+          <button 
+            onClick={() => navigate(section.content.buttonUrl || '/login')}
+            style={{ backgroundColor: section.content.buttonColor }} 
+            className="text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+          >
             {section.content.buttonText}
           </button>
         </nav>

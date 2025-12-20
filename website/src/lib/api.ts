@@ -33,8 +33,17 @@ export const websiteAPI = {
 };
 
 export const authAPI = {
-  login: (email: string, password: string) => 
-    api.post('/auth/jwt/login', { username: email, password }),
+  login: (username: string, password: string) => {
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('password', password);
+    
+    return api.post('/auth/jwt/login', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+  },
   logout: () => api.post('/auth/jwt/logout'),
   getMe: () => api.get('/users/me'),
 };
