@@ -16,10 +16,9 @@ from app.features.community_threads.thread_router import community_threads_route
 from app.features.educational_articles.edu_article_router import edu_articles_router
 from app.features.getstream.stream_router import stream_router
 from app.features.journal.journal_router import journal_router
-from app.features.miscellaneous.misc_routes import misc_router
+from app.features.miscellaneous.misc_routes import misc_router, router
 from app.features.recipes.recipe_router import recipe_router
 from app.features.risk.risk_router import router as risk_router
-from app.features.recipes.recipe_router import recipe_router
 from app.schemas import UserCreate, UserRead, UserUpdate
 
 if not settings.APP_ENV:
@@ -64,9 +63,10 @@ app.include_router(journal_router)
 app.include_router(account_router)
 app.include_router(stream_router)
 app.include_router(recipe_router)
+app.include_router(risk_router)
 app.include_router(community_threads_router)
 app.include_router(misc_router)
-app.include_router(risk_router)
+app.include_router(router)
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 

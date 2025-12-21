@@ -52,10 +52,10 @@ export default function WebsiteBuilder() {
   const saveMutation = useMutation({
     mutationFn: (data: any) => websiteAPI.updatePage(selectedPage, data),
     onSuccess: () => {
-      alert('Page saved successfully!');
+      alert('Website saved successfully!');
     },
     onError: () => {
-      alert('Failed to save page');
+      alert('Failed to save website');
     },
   });
 
@@ -297,6 +297,13 @@ export default function WebsiteBuilder() {
     );
   }
 
+  const handleSaveWebsite = () => {
+    saveMutation.mutate({
+      sections: sections,
+      background_image: backgroundImage,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Sidebar - Add Sections */}
@@ -410,9 +417,13 @@ export default function WebsiteBuilder() {
               <Eye size={20} />
               Preview
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+            <button
+              onClick={handleSaveWebsite}
+              disabled={saveMutation.isPending}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
+            >
               <Save size={20} />
-              Save
+              {saveMutation.isPending ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>
@@ -700,6 +711,26 @@ export default function WebsiteBuilder() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            updateSection({ image: event.target?.result });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="w-full text-sm"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -737,6 +768,125 @@ export default function WebsiteBuilder() {
                       onChange={(e) => updateSection({ bgColor: e.target.value })}
                       className="w-full h-10 rounded-lg cursor-pointer"
                     />
+                  </div>
+                </div>
+              )}
+
+              {currentSection.type === 'faq' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      value={currentSection.content.title}
+                      onChange={(e) => updateSection({ title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-gray-900">FAQ Items</h4>
+                      <button
+                        onClick={() => {
+                          const newItems = [...currentSection.content.items, { question: 'New Question?', answer: 'Answer here' }];
+                          updateSection({ items: newItems });
+                        }}
+                        className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+                      >
+                        + Add Item
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {currentSection.content.items.map((item: any, idx: number) => (
+                        <div key={idx} className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                              Question
+                            </label>
+                            <input
+                              type="text"
+                              value={item.question}
+                              onChange={(e) => {
+                                const newItems = [...currentSection.content.items];
+                                newItems[idx].question = e.target.value;
+                                updateSection({ items: newItems });
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                          </div>
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-2">
+                              Answer
+                            </label>
+                            <textarea
+                              value={item.answer}
+                              onChange={(e) => {
+                                const newItems = [...currentSection.content.items];
+                                newItems[idx].answer = e.target.value;
+                                updateSection({ items: newItems });
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-none"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const newItems = currentSection.content.items.filter((_: any, i: number) => i !== idx);
+                                updateSection({ items: newItems });
+                              }}
+                              className="px-2 py-1 ml-2 hover:bg-red-100 text-red-600 rounded text-sm transition"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {currentSection.type === 'testimonials' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      value={currentSection.content.title}
+                      onChange={(e) => updateSection({ title: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-gray-900">Testimonials</h4>
+                      <button
+                        onClick={() => {
+                          const newItems = [...currentSection.content.items, { name: 'New User', text: 'User testimonial', rating: 5 }];
+                          updateSection({ items: newItems });
+                        }}
+                        className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+                      >
+                        + Add Testimonial
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {currentSection.content.items.map((item: any, idx: number) => (
+                        <div key={idx} className="bg-white p-4 rounded-lg border border-gray-200">
+                          <div className="flex gap-1 mb-2">
+                            {[...Array(item.rating)].map((_, i) => (
+                              <span key={i} className="text-yellow-400">★</span>
+                            ))}
+                          </div>
+                          <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
+                          <p className="font-semibold text-gray-900">— {item.name}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -810,6 +960,9 @@ function SectionRenderer({ section, isSelected, onSelect }: any) {
           <div className="bg-white p-12 rounded-lg">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">{section.content.title}</h2>
             <p className="text-gray-700 leading-relaxed">{section.content.description}</p>
+            {section.content.image && (
+              <img src={section.content.image} alt="About" className="mt-6 w-full rounded-lg max-h-96 object-cover" />
+            )}
           </div>
         );
       case 'cta':
@@ -822,6 +975,39 @@ function SectionRenderer({ section, isSelected, onSelect }: any) {
             <button className="px-8 py-3 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition font-medium">
               {section.content.buttonText}
             </button>
+          </div>
+        );
+      case 'faq':
+        return (
+          <div className="bg-white p-12 rounded-lg">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
+            <div className="max-w-3xl mx-auto space-y-4">
+              {section.content.items.map((item: any, idx: number) => (
+                <div key={idx} className="border border-gray-300 rounded-lg p-4">
+                  <p className="font-semibold text-gray-900 mb-2">{item.question}</p>
+                  <p className="text-gray-700">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      case 'testimonials':
+        return (
+          <div className="bg-gray-50 p-12 rounded-lg">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
+            <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {section.content.items.map((item: any, idx: number) => (
+                <div key={idx} className="bg-white p-6 rounded-lg border border-gray-200">
+                  <div className="flex gap-1 mb-2">
+                    {[...Array(item.rating)].map((_, i) => (
+                      <span key={i} className="text-yellow-400">★</span>
+                    ))}
+                  </div>
+                  <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
+                  <p className="font-semibold text-gray-900">— {item.name}</p>
+                </div>
+              ))}
+            </div>
           </div>
         );
       default:

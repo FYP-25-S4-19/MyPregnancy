@@ -23,15 +23,27 @@ export const websiteAPI = {
   getPublicPages: () => api.get('/website/pages/public'),
   getPublicPage: (slug: string) => api.get(`/website/pages/public/${slug}`),
   getAllPages: () => api.get('/website/pages'),
-  getPage: (slug: string) => api.get(`/website/pages/${slug}`),
-  createPage: (data: any) => api.post('/website/pages', data),
-  updatePage: (slug: string, data: any) => api.put(`/website/pages/${slug}`, data),
+  getPage: (slug: string) => 
+    api.get(`/website/pages/${slug}`),  
+  
+  updatePage: (slug: string, data: any) => 
+    api.put(`/website/pages/${slug}`, data),  
+  
   deletePage: (slug: string) => api.delete(`/website/pages/${slug}`),
 };
 
 export const authAPI = {
-  login: (email: string, password: string) => 
-    api.post('/auth/jwt/login', { username: email, password }),
+  login: (username: string, password: string) => {
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('password', password);
+    
+    return api.post('/auth/jwt/login', formData, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+  },
   logout: () => api.post('/auth/jwt/logout'),
   getMe: () => api.get('/users/me'),
 };

@@ -4,27 +4,26 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import AdminLayout from './layouts/AdminLayout'
-// import Dashboard from './pages/admin/Dashboard'
-// import Users from './pages/admin/Users'
-// import Appointments from './pages/admin/Appointments'
 import WebsiteBuilder from './pages/admin/WebsiteBuilder'
-// import Home from './pages/public/Home'
-// import PublicPage from './pages/public/PublicPage'
-// import Login from './pages/Login'
+import PublicPage from "./pages/public/PublicPage";
+import ManageAccount from './pages/admin/manageAccount';
 
 function App() {
   return (
     <>
-
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<WebsiteBuilder />} />
-
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          {/* <Route path="website-builder" element={<WebsiteBuilder />} /> */}
+          <Route path="website-builder" element={<WebsiteBuilder />} />
         </Route>
+
+        {/* Public Routes - Specific routes BEFORE wildcard */}
+        <Route path="/" element={<WebsiteBuilder />} />
+        <Route path="/manage-account" element={<ManageAccount />} />
+        
+        {/* Wildcard route LAST */}
+        <Route path="/:slug" element={<PublicPage />} />
       </Routes>
     </>
   )

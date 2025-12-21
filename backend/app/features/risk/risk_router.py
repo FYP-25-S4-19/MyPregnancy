@@ -3,14 +3,14 @@ Risk prediction API endpoints.
 
 """
 
-from fastapi import APIRouter, HTTPException, status
-from loguru import logger
-import numpy as np
-import joblib
 from pathlib import Path
-from typing import Optional
 
-from .risk_schemas import RiskPredictionRequest, RiskPredictionResponse
+import joblib
+from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
+from loguru import logger
+
+from .risk_schemas import RiskPredictionRequest
 
 router = APIRouter(prefix="/risk", tags=["Risk Assessment"])
 
@@ -28,21 +28,21 @@ SCALER_PATH = MODELS_DIR / "risk_scaler.joblib"
 def load_model_artifacts():
     """Load model and scaler from disk (once)."""
     global _MODEL, _SCALER, _LOAD_ERROR
-    
+
     if _MODEL is not None and _SCALER is not None:
         return
-    
+
     try:
         if not MODEL_PATH.exists():
             _LOAD_ERROR = f"Model file not found: {MODEL_PATH}. Please run train_risk_model.py first."
             logger.error(_LOAD_ERROR)
             return
-        
+
         if not SCALER_PATH.exists():
             _LOAD_ERROR = f"Scaler file not found: {SCALER_PATH}. Please run train_risk_model.py first."
             logger.error(_LOAD_ERROR)
             return
-        
+
         _MODEL = joblib.load(MODEL_PATH)
         _SCALER = joblib.load(SCALER_PATH)
         logger.info(f"✓ Risk model loaded from {MODEL_PATH}")
@@ -52,39 +52,40 @@ def load_model_artifacts():
         logger.error(_LOAD_ERROR)
 
 
-from fastapi.responses import JSONResponse
-
 @router.post(
     "/predict",
     status_code=status.HTTP_200_OK,
     summary="Predict pregnancy health risk",
-    description="Predict high-risk pregnancy based on vital signs and health metrics"
+    description="Predict high-risk pregnancy based on vital signs and health metrics",
 )
 async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
     # Load model on first call
     load_model_artifacts()
-    
+
     if _MODEL is None or _SCALER is None:
         logger.error(f"Model not available: {_LOAD_ERROR}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=_LOAD_ERROR or "Risk prediction model not available. Please train the model first."
+            detail=_LOAD_ERROR or "Risk prediction model not available. Please train the model first.",
         )
-    
+
     try:
         # Calculate mean blood pressure
         mean_bp = (request.systolic_bp + request.diastolic_bp) / 2.0
 
         # Prepare features as DataFrame to preserve feature names
         import pandas as pd
-        features_df = pd.DataFrame([
-            {
-                "Age": float(request.age),
-                "MeanBP": float(mean_bp),
-                "BS": float(request.bs),
-                "HeartRate": float(request.heart_rate),
-            }
-        ])
+
+        features_df = pd.DataFrame(
+            [
+                {
+                    "Age": float(request.age),
+                    "MeanBP": float(mean_bp),
+                    "BS": float(request.bs),
+                    "HeartRate": float(request.heart_rate),
+                }
+            ]
+        )
 
         # Reindex to scaler feature order if available (prevents sklearn warnings)
         if hasattr(_SCALER, "feature_names_in_"):
@@ -140,7 +141,7 @@ async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
         logger.info(f"Risk prediction response (pre-validate): {response_data}")
 
         return JSONResponse(status_code=status.HTTP_200_OK, content=response_data)
-        
+
     except Exception as e:
         logger.exception(f"Risk prediction error: {str(e)}")
         safe = {
@@ -159,15 +160,15 @@ async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
     "/health",
     status_code=status.HTTP_200_OK,
     summary="Check risk model availability",
-    description="Check if risk prediction model is loaded and available"
+    description="Check if risk prediction model is loaded and available",
 )
 async def health_check():
     """Check if risk model is available."""
     load_model_artifacts()
-    
+
     return {
         "status": "healthy" if _MODEL is not None and _SCALER is not None else "unavailable",
         "model_loaded": _MODEL is not None,
         "scaler_loaded": _SCALER is not None,
-        "error": _LOAD_ERROR
+        "error": _LOAD_ERROR,
     }

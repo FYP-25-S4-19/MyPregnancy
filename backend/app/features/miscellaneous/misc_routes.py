@@ -1,13 +1,15 @@
 import base64
 import json
 from datetime import datetime
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import and_, null, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_config import get_db
-from app.db.db_schema import MCRNumber, VolunteerDoctor
+from app.db.db_schema import MCRNumber, Page, VolunteerDoctor
 from app.features.miscellaneous.misc_models import DoctorPreviewData, DoctorsPaginatedResponse
 from app.shared.utils import get_s3_bucket_prefix
 
@@ -85,3 +87,64 @@ async def list_of_doctors(
 @misc_router.get("/")
 async def index():
     return "Ping!"
+
+
+router = APIRouter(prefix="/website", tags=["Website"])
+
+
+class PageUpdate(BaseModel):
+    sections: List[Any] = []
+    background_image: Optional[str] = None
+
+
+@router.put("/pages/{slug}")
+async def update_page(slug: str, data: PageUpdate, db: AsyncSession = Depends(get_db)):
+    """Update or create a page with sections and background image"""
+    try:
+        result = await db.execute(select(Page).filter(Page.slug == slug))
+        page = result.scalars().first()
+
+        if not page:
+            # Create new page if it doesn't exist
+            page = Page(slug=slug, sections=data.sections, background_image=data.background_image)
+            db.add(page)
+        else:
+            # Update existing page
+            page.sections = data.sections
+            page.background_image = data.background_image
+
+        await db.commit()
+        await db.refresh(page)
+
+        return {
+            "id": page.id,
+            "slug": page.slug,
+            "sections": page.sections,
+            "background_image": page.background_image,
+            "message": "Page saved successfully",
+        }
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/pages/{slug}")
+async def get_page(slug: str, db: AsyncSession = Depends(get_db)):
+    """Get a page by slug"""
+    result = await db.execute(select(Page).filter(Page.slug == slug))
+    page = result.scalars().first()
+
+    if not page:
+        raise HTTPException(status_code=404, detail="Page not found")
+
+    return {
+        "page": {"id": page.id, "slug": page.slug, "sections": page.sections, "background_image": page.background_image}
+    }
+
+
+@router.get("/pages")
+async def get_all_pages(db: AsyncSession = Depends(get_db)):
+    """Get all pages"""
+    result = await db.execute(select(Page))
+    pages = result.scalars().all()
+    return {"pages": [{"id": p.id, "slug": p.slug, "sections": p.sections} for p in pages]}

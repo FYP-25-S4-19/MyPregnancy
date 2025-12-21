@@ -1,6 +1,5 @@
 import random
 from datetime import datetime, timedelta
-from math import floor
 
 from faker import Faker
 from sqlalchemy.orm import Session
