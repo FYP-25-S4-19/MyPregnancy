@@ -1,56 +1,15 @@
-import { CreateAppointmentResponse } from "../shared/typesAndInterfaces";
 import { TouchableOpacity, StyleSheet, Text } from "react-native";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { Channel as ChannelType } from "stream-chat";
-import useAuthStore from "@/src/shared/authStore";
-import utils from "@/src/shared/utils";
-import api from "@/src/shared/api";
 
 interface ConsultRequestChipProps {
   channel: ChannelType;
+  onPress?: () => void;
 }
 
-const ConsultRequestChip = ({ channel }: ConsultRequestChipProps) => {
-  const handlePress = async (): Promise<void> => {
-    if (!channel) return;
-
-    const myID = useAuthStore.getState().me?.id;
-    if (myID === undefined) {
-      return;
-    }
-
-    const doctor = utils.getOtherMemberInChannel(channel, myID.toString());
-    if (doctor === undefined) {
-      return;
-    }
-
-    const firstName = doctor.name?.split(" ")[0] || "Missing name wthelly";
-    try {
-      const today = new Date();
-      const startDatetime = new Date(today.setDate(today.getDate() + 7));
-      const res = await api.post<CreateAppointmentResponse>("/appointments/", {
-        doctor_id: doctor.id,
-        start_time: startDatetime.toISOString(),
-      });
-
-      await channel.sendMessage({
-        text: `
-              Request sent to Dr. ${firstName}.
-              [${utils.formatConsultRequestDate(startDatetime)}]
-              You'll be notified when they respond.
-            `,
-        consultData: {
-          appointmentID: res.data.appointment_id,
-          status: "pending",
-        },
-      });
-    } catch (err) {
-      console.error("Error sending consultation request message: ", err);
-    }
-  };
-
+const ConsultRequestChip = ({ channel, onPress }: ConsultRequestChipProps) => {
   return (
-    <TouchableOpacity style={styles.consultationChip} onPress={handlePress}>
+    <TouchableOpacity style={styles.consultationChip} onPress={onPress}>
       <Text style={styles.consultationText}>Request Consultation</Text>
     </TouchableOpacity>
   );
