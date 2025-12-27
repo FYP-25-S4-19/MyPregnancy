@@ -75,6 +75,7 @@ if __name__ == "__main__":
         all_thread_comments: list[ThreadComment] = CommunityThreadGenerator.generate_thread_comments(
             db_session, faker, all_users, all_community_threads, 25
         )
+        CommunityThreadGenerator.generate_thread_likes(db_session, all_users, all_community_threads)
         CommunityThreadGenerator.generate_comment_likes(db_session, preg_women, all_thread_comments)
         print("Finished seeding forum content!\n")
 

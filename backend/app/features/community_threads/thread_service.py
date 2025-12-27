@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -166,6 +168,7 @@ class ThreadService:
             thread_id=thread_id,
             commenter_id=commenter.id,
             content=comment_data.content,
+            commented_at=datetime.now(),
         )
 
     async def update_comment(self, comment_id: int, comment_data: UpdateCommentData, current_user: User) -> None:
