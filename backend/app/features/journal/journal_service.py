@@ -1,9 +1,10 @@
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
+from typing import Sequence
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy import Sequence, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -14,6 +15,7 @@ from app.db.db_schema import (
     JournalScalarMetricLog,
     KickTrackerDataPoint,
     KickTrackerSession,
+    ScalarMetric,
 )
 from app.features.journal.journal_models import (
     BinaryMetricCategoryGroup,
@@ -194,6 +196,76 @@ class JournalService:
             for bm_id in request.binary_metric_ids:
                 entry.journal_binary_metric_logs.append(JournalBinaryMetricLog(binary_metric_id=bm_id))
 
+    async def get_journal_entries_in_range(
+        self, mother_id: UUID, start_date: date, end_date: date
+    ) -> list[GetJournalEntryResponse]:
+        """
+        Fetch journal entries within a date range.
+        This enables efficient sliding window fetching.
+        """
+        # Fetch all possible binary metric options
+        binary_defs_result = await self.db.execute(select(BinaryMetric).order_by(BinaryMetric.id))
+        all_binary_defs: Sequence[BinaryMetric] = binary_defs_result.scalars().all()
+
+        # Fetch entries in date range
+        stmt = (
+            select(JournalEntry)
+            .where(
+                JournalEntry.author_id == mother_id,
+                JournalEntry.logged_on >= start_date,
+                JournalEntry.logged_on <= end_date,
+            )
+            .options(
+                selectinload(JournalEntry.journal_binary_metric_logs),
+                selectinload(JournalEntry.journal_scalar_metric_logs).joinedload(JournalScalarMetricLog.scalar_metric),
+            )
+            .order_by(JournalEntry.logged_on.desc())
+        )
+        entries_result = await self.db.execute(stmt)
+        entries = entries_result.scalars().all()
+
+        response_list: list[GetJournalEntryResponse] = []
+        for entry in entries:
+            selected_ids: set[int] = {log.binary_metric_id for log in entry.journal_binary_metric_logs}
+
+            grouped_binary: defaultdict[str, list[BinaryMetricView]] = defaultdict(list)
+            for definition in all_binary_defs:
+                is_selected: bool = definition.id in selected_ids
+                view_model = BinaryMetricView(
+                    metric_id=definition.id,
+                    label=definition.label,
+                    category=definition.category.value,
+                    is_selected=is_selected,
+                )
+                grouped_binary[definition.category.value].append(view_model)
+
+            binary_metrics_response: list[BinaryMetricCategoryGroup] = [
+                BinaryMetricCategoryGroup(category=cat, binary_metric_logs=logs) for cat, logs in grouped_binary.items()
+            ]
+
+            scalar_metrics_response = []
+            for log in entry.journal_scalar_metric_logs:
+                scalar_metrics_response.append(
+                    ScalarMetricView(
+                        metric_id=log.scalar_metric.id,
+                        label=log.scalar_metric.label,
+                        value=log.value,
+                        unit_of_measurement=log.scalar_metric.unit_of_measurement,
+                    )
+                )
+
+            response_list.append(
+                GetJournalEntryResponse(
+                    id=entry.id,
+                    logged_on=entry.logged_on,
+                    content=entry.content,
+                    binary_metrics=binary_metrics_response,
+                    scalar_metrics=scalar_metrics_response,
+                    blood_pressure=BloodPressureData(systolic=entry.systolic, diastolic=entry.diastolic),
+                )
+            )
+        return response_list
+
     async def delete_journal_entry(self, mother_id: UUID, entry_date: date) -> None:
         stmt = select(JournalEntry).where(JournalEntry.logged_on == entry_date, JournalEntry.author_id == mother_id)
         result = await self.db.execute(stmt)
@@ -202,3 +274,53 @@ class JournalService:
         if journal_entry is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Journal entry not found")
         await self.db.delete(journal_entry)
+
+    async def get_metrics_template(self) -> GetJournalEntryResponse:
+        """
+        Returns a template with all available binary and scalar metrics.
+        Useful for rendering the journal UI when no entries exist yet.
+        """
+        # Fetch all binary metrics
+        binary_defs_result = await self.db.execute(select(BinaryMetric).order_by(BinaryMetric.id))
+        all_binary_defs: Sequence[BinaryMetric] = binary_defs_result.scalars().all()
+
+        # Fetch all scalar metrics
+        scalar_defs_result = await self.db.execute(select(ScalarMetric).order_by(ScalarMetric.id))
+        all_scalar_defs: Sequence[ScalarMetric] = scalar_defs_result.scalars().all()
+
+        # Group binary metrics by category (all unselected)
+        grouped_binary: defaultdict[str, list[BinaryMetricView]] = defaultdict(list)
+        for definition in all_binary_defs:
+            view_model = BinaryMetricView(
+                metric_id=definition.id,
+                label=definition.label,
+                category=definition.category.value,
+                is_selected=False,
+            )
+            grouped_binary[definition.category.value].append(view_model)
+
+        binary_metrics_response: list[BinaryMetricCategoryGroup] = [
+            BinaryMetricCategoryGroup(category=cat, binary_metric_logs=logs) for cat, logs in grouped_binary.items()
+        ]
+
+        # Create scalar metrics list with zero values
+        scalar_metrics_response = []
+        for definition in all_scalar_defs:
+            scalar_metrics_response.append(
+                ScalarMetricView(
+                    metric_id=definition.id,
+                    label=definition.label,
+                    value=0.0,
+                    unit_of_measurement=definition.unit_of_measurement,
+                )
+            )
+
+        # Return template with empty/zero values
+        return GetJournalEntryResponse(
+            id=0,  # Template ID
+            logged_on=date.today(),
+            content="",
+            binary_metrics=binary_metrics_response,
+            scalar_metrics=scalar_metrics_response,
+            blood_pressure=BloodPressureData(systolic=0, diastolic=0),
+        )

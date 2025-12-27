@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.db_schema import (
     CommentLike,
     CommunityThread,
+    CommunityThreadLike,
     PregnantWoman,
     ThreadCategory,
     ThreadCategoryAssociation,
@@ -90,6 +91,17 @@ class CommunityThreadGenerator:
 
         db.add_all(all_thread_comments)
         return all_thread_comments
+
+    @staticmethod
+    def generate_thread_likes(db: Session, all_users: list[User], all_community_threads: list[CommunityThread]) -> None:
+        print("Generating thread likes.....")
+
+        for thread in all_community_threads:
+            num_likes: int = random.randint(0, len(all_users))
+            random_likers: list[User] = random.sample(all_users, num_likes)
+            for user in random_likers:
+                thread.community_thread_likes.append(CommunityThreadLike(thread=thread, liker=user))
+                db.add(thread)
 
     @staticmethod
     def generate_comment_likes(

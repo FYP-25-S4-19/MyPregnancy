@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import useAuthStore from "@/src/shared/authStore";
 import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
 import { getRiskColor, getRiskMessage, predictRisk, RiskPredictionResponse } from "@/src/shared/riskService";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useJournalWindow } from "@/src/shared/hooks/useJournalWindow";
+import { useUpsertJournalEntry, SCALAR_METRIC_IDS } from "@/src/shared/hooks/useJournalMetrics";
 
 const Icon = ({ name, size, color }: { name: string; size: number; color: string }) => {
   let symbol = "?";
@@ -140,7 +142,7 @@ export default function App() {
     }, 1000) as unknown as number;
   };
 
-  const stopKicks = () => {
+  const stopKicks = (): void => {
     setIsKicksRunning(false);
     if (timerRef.current) {
       clearInterval(timerRef.current as unknown as number);
@@ -148,14 +150,14 @@ export default function App() {
     }
   };
 
-  const resetKicks = () => {
+  const resetKicks = (): void => {
     stopKicks();
     setElapsedSec(0);
     setKickCount(0);
     setKickStartTime(null);
   };
 
-  const recordKick = () => {
+  const recordKick = (): void => {
     // Provide simple visual feedback via count increment
     setKickCount((c) => c + 1);
   };
@@ -169,117 +171,156 @@ export default function App() {
   // get the authenticated user object (store exposes `me`)
   const user = useAuthStore((s) => s.me);
 
-  // --- JOURNAL DATA STATE ---
-  type JournalData = {
-    feeling: string;
-    moods: string[];
-    symptoms: string[];
-    vitals: {
-      bloodPressure: [string, string];
-      sugar: string;
-      heartRate: string;
-      weight: string;
-    };
-  };
-  const moods = ["Calm", "Happy", "Energetic", "Sad", "Anxious", "Low Energy", "Depressed", "Confused", "Irritated"];
-  const symptoms = ["Everything is fine", "Cramps", "Tender breasts", "Headache", "Cravings", "Insomnia"];
+  // --- JOURNAL DATA with dynamic metrics from backend ---
+  const {
+    currentDate: journalDate,
+    navigateToDate,
+    currentEntry,
+    isLoading: isLoadingJournal,
+    getBinaryMetricsByCategory,
+  } = useJournalWindow(currentDate);
 
-  // Store all data by date
-  const [journals, setJournals] = useState<{ [date: string]: JournalData }>({});
+  // Local state for editing before save
+  const [localContent, setLocalContent] = useState("");
+  const [selectedMetricIds, setSelectedMetricIds] = useState<Set<number>>(new Set());
+  const [localVitals, setLocalVitals] = useState({
+    bloodPressure: ["", ""] as [string, string],
+    sugar: "",
+    heartRate: "",
+    weight: "",
+  });
 
-  // Ensure journal exists for current date infinitely rendering
-  const currentKey = dateKey(currentDate);
-  React.useEffect(() => {
-    if (!journals[currentKey]) {
-      setJournals((prev) => ({
-        ...prev,
-        [currentKey]: {
-          feeling: "",
-          moods: [],
-          symptoms: [],
-          vitals: {
-            bloodPressure: ["", ""],
-            sugar: "",
-            heartRate: "",
-            weight: "",
-          },
-        },
-      }));
+  // Mutation for saving journal entry
+  const upsertMutation = useUpsertJournalEntry();
+
+  // Sync local state when currentEntry changes
+  useEffect(() => {
+    if (currentEntry) {
+      setLocalContent(currentEntry.content);
+
+      // Extract selected metric IDs
+      const selectedIds = new Set<number>();
+      currentEntry.binary_metrics.forEach((categoryGroup) => {
+        categoryGroup.binary_metric_logs.forEach((metric) => {
+          if (metric.is_selected) {
+            selectedIds.add(metric.metric_id);
+          }
+        });
+      });
+      setSelectedMetricIds(selectedIds);
+
+      // Set vitals
+      setLocalVitals({
+        bloodPressure: [
+          currentEntry.blood_pressure.systolic?.toString() || "",
+          currentEntry.blood_pressure.diastolic?.toString() || "",
+        ],
+        sugar: currentEntry.scalar_metrics.find((m) => m.label.toLowerCase().includes("sugar"))?.value.toString() || "",
+        heartRate:
+          currentEntry.scalar_metrics.find((m) => m.label.toLowerCase().includes("heart"))?.value.toString() || "",
+        weight:
+          currentEntry.scalar_metrics.find((m) => m.label.toLowerCase().includes("weight"))?.value.toString() || "",
+      });
+    } else {
+      // No entry exists for this date - reset to defaults
+      setLocalContent("");
+      setSelectedMetricIds(new Set());
+      setLocalVitals({
+        bloodPressure: ["", ""],
+        sugar: "",
+        heartRate: "",
+        weight: "",
+      });
     }
-  }, [currentKey, journals]);
-
-  const journal = journals[currentKey] || {
-    feeling: "",
-    moods: [],
-    symptoms: [],
-    vitals: {
-      bloodPressure: ["", ""],
-      sugar: "",
-      heartRate: "",
-      weight: "",
-    },
-  };
+  }, [currentEntry]);
 
   const handleDateChange = (direction: "prev" | "next") => {
-    setCurrentDate((prev) => addDays(prev, direction === "next" ? 1 : -1));
+    const newDate = addDays(currentDate, direction === "next" ? 1 : -1);
+    setCurrentDate(newDate);
+    navigateToDate(newDate);
   };
 
   const handleFeelingChange = (text: string) => {
-    setJournals((prev) => ({
+    setLocalContent(text);
+  };
+
+  const toggleMetricSelection = (metricId: number) => {
+    setSelectedMetricIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(metricId)) {
+        newSet.delete(metricId);
+      } else {
+        newSet.add(metricId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleVitalChange = (field: string, value: string | [string, string]) => {
+    setLocalVitals((prev) => ({
       ...prev,
-      [currentKey]: {
-        ...journal,
-        feeling: text,
-      },
+      [field]: value,
     }));
   };
 
-  const setSelectedMoods = (newMoods: string[]) => {
-    setJournals((prev) => ({
-      ...prev,
-      [currentKey]: {
-        ...journal,
-        moods: newMoods,
-      },
-    }));
-  };
-  const setSelectedSymptoms = (newSymptoms: string[]) => {
-    setJournals((prev) => ({
-      ...prev,
-      [currentKey]: {
-        ...journal,
-        symptoms: newSymptoms,
-      },
-    }));
-  };
+  // Save journal entry
+  const handleSaveJournal = async () => {
+    try {
+      const dateStr = dateKey(currentDate);
 
-  const toggleSelection = (item: string, list: string[], setList: (list: string[]) => void) => {
-    if (list.includes(item)) {
-      setList(list.filter((i) => i !== item));
-    } else {
-      setList([...list, item]);
-    }
-  };
+      // Prepare scalar metrics using IDs from backend or fallback
+      const scalarMetrics = [];
 
-  const handleVitalChange = (field: keyof JournalData["vitals"], value: string | [string, string]) => {
-    setJournals((prev) => ({
-      ...prev,
-      [currentKey]: {
-        ...journal,
-        vitals: {
-          ...journal.vitals,
-          [field]: value,
+      // Get metric IDs from current entry's scalar metrics or use fallback
+      const sugarMetricId =
+        currentEntry?.scalar_metrics.find((m) => m.label.toLowerCase().includes("sugar"))?.metric_id ||
+        SCALAR_METRIC_IDS.SUGAR;
+      const heartRateMetricId =
+        currentEntry?.scalar_metrics.find((m) => m.label.toLowerCase().includes("heart"))?.metric_id ||
+        SCALAR_METRIC_IDS.HEART_RATE;
+      const weightMetricId =
+        currentEntry?.scalar_metrics.find((m) => m.label.toLowerCase().includes("weight"))?.metric_id ||
+        SCALAR_METRIC_IDS.WEIGHT;
+
+      if (localVitals.sugar) {
+        scalarMetrics.push({ metric_id: sugarMetricId, value: parseFloat(localVitals.sugar) });
+      }
+      if (localVitals.heartRate) {
+        scalarMetrics.push({ metric_id: heartRateMetricId, value: parseFloat(localVitals.heartRate) });
+      }
+      if (localVitals.weight) {
+        scalarMetrics.push({ metric_id: weightMetricId, value: parseFloat(localVitals.weight) });
+      }
+
+      await upsertMutation.mutateAsync({
+        entryDate: dateStr,
+        data: {
+          content: localContent,
+          binary_metric_ids: Array.from(selectedMetricIds),
+          scalar_metrics: scalarMetrics.length > 0 ? scalarMetrics : undefined,
+          blood_pressure:
+            localVitals.bloodPressure[0] && localVitals.bloodPressure[1]
+              ? {
+                  systolic: parseInt(localVitals.bloodPressure[0]),
+                  diastolic: parseInt(localVitals.bloodPressure[1]),
+                }
+              : undefined,
         },
-      },
-    }));
+      });
+
+      Alert.alert("Success", "Journal entry saved!");
+    } catch (error) {
+      Alert.alert("Error", "Failed to save journal entry");
+      console.error("Save journal error:", error);
+    }
   };
 
   // Note: use `isLoadingRisk` and `handleAssessRisk` for all risk checks
 
   // --- RISK ASSESSMENT ---
   const handleAssessRisk = async () => {
-    const { bloodPressure, sugar, heartRate } = journal.vitals;
-    
+    const { bloodPressure, sugar, heartRate } = localVitals;
+
     // Validate inputs
     if (!bloodPressure[0] || !bloodPressure[1] || !sugar || !heartRate) {
       Alert.alert("Missing Data", "Please fill in all vital signs (Blood Pressure, Blood Sugar, Heart Rate)");
@@ -291,40 +332,51 @@ export default function App() {
 
     try {
       setIsLoadingRisk(true);
-        // Parse and validate numeric inputs
-        const systolic = Number.parseFloat(bloodPressure[0]);
-        const diastolic = Number.parseFloat(bloodPressure[1]);
-        const bsVal = Number.parseFloat(sugar);
-        const hr = Number.parseFloat(heartRate);
+      // Parse and validate numeric inputs
+      const systolic = Number.parseFloat(bloodPressure[0]);
+      const diastolic = Number.parseFloat(bloodPressure[1]);
+      const bsVal = Number.parseFloat(sugar);
+      const hr = Number.parseFloat(heartRate);
 
-        const badField =
-          !Number.isFinite(systolic) ||
-          !Number.isFinite(diastolic) ||
-          !Number.isFinite(bsVal) ||
-          !Number.isFinite(hr) ||
-          !Number.isFinite(userAge as number);
+      const badField =
+        !Number.isFinite(systolic) ||
+        !Number.isFinite(diastolic) ||
+        !Number.isFinite(bsVal) ||
+        !Number.isFinite(hr) ||
+        !Number.isFinite(userAge as number);
 
-        if (badField) {
-          Alert.alert("Invalid input", "Please enter valid numeric values for your vitals.");
-          return;
-        }
+      if (badField) {
+        Alert.alert("Invalid input", "Please enter valid numeric values for your vitals.");
+        return;
+      }
 
-        // Basic range checks (match backend validators)
-        if (userAge <= 0 || userAge > 150 || systolic < 0 || systolic > 300 || diastolic < 0 || diastolic > 300 || bsVal < 0 || bsVal > 50 || hr <= 0 || hr > 250) {
-          Alert.alert("Invalid range", "One or more inputs are out of expected ranges. Please check and try again.");
-          return;
-        }
+      // Basic range checks (match backend validators)
+      if (
+        userAge <= 0 ||
+        userAge > 150 ||
+        systolic < 0 ||
+        systolic > 300 ||
+        diastolic < 0 ||
+        diastolic > 300 ||
+        bsVal < 0 ||
+        bsVal > 50 ||
+        hr <= 0 ||
+        hr > 250
+      ) {
+        Alert.alert("Invalid range", "One or more inputs are out of expected ranges. Please check and try again.");
+        return;
+      }
 
-        const result = await predictRisk({
-          age: userAge,
-          systolic_bp: systolic,
-          diastolic_bp: diastolic,
-          bs: bsVal,
-          heart_rate: hr,
-        });
+      const result = await predictRisk({
+        age: userAge,
+        systolic_bp: systolic,
+        diastolic_bp: diastolic,
+        bs: bsVal,
+        heart_rate: hr,
+      });
       // Normalize checks: treat new `risk_level` as source of truth when `is_high_risk` is absent
       setRiskResult(result);
-      const isHigh = result.is_high_risk ?? (result.risk_level === "high");
+      const isHigh = result.is_high_risk ?? result.risk_level === "high";
       if (isHigh) {
         Alert.alert("⚠️ High Risk Alert", getRiskMessage(result), [{ text: "OK" }]);
       }
@@ -383,99 +435,120 @@ export default function App() {
         {activeTab === "Journal" ? (
           <>
             {/* --- CARD 1: FEELING --- */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>How are you feeling?</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Type here.."
-            placeholderTextColor={colors.secondary}
-            multiline
-            value={journal.feeling}
-            onChangeText={handleFeelingChange}
-          />
-        </View>
-        {/* --- CARD 2: MOOD --- */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Mood</Text>
-          <View style={styles.chipContainer}>
-            {moods.map((mood) => (
-              <Chip
-                key={mood}
-                label={mood}
-                selected={journal.moods.includes(mood)}
-                onPress={() => toggleSelection(mood, journal.moods, setSelectedMoods)}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>How are you feeling?</Text>
+              <TextInput
+                style={styles.textArea}
+                placeholder="Type here.."
+                placeholderTextColor={colors.secondary}
+                multiline
+                value={localContent}
+                onChangeText={handleFeelingChange}
               />
-            ))}
-          </View>
-        </View>
-        {/* --- CARD 3: SYMPTOMS --- */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Symptoms</Text>
-          <View style={styles.chipContainer}>
-            {symptoms.map((symptom) => (
-              <Chip
-                key={symptom}
-                label={symptom}
-                selected={journal.symptoms.includes(symptom)}
-                onPress={() => toggleSelection(symptom, journal.symptoms, setSelectedSymptoms)}
-              />
-            ))}
-          </View>
-        </View>
-        {/* --- CARD 4: VITALS --- */}
-        <View style={styles.card}>
-          <VitalRow
-            label="Blood Pressure"
-            unit=""
-            isDoubleInput
-            value={journal.vitals.bloodPressure}
-            onChange={(v: [string, string]) => handleVitalChange("bloodPressure", v)}
-          />
-          <VitalRow
-            label="Sugar Level"
-            unit="mmol/L"
-            value={journal.vitals.sugar}
-            onChange={(v: string) => handleVitalChange("sugar", v)}
-          />
-          <VitalRow
-            label="Heart Rate"
-            unit="bpm"
-            value={journal.vitals.heartRate}
-            onChange={(v: string) => handleVitalChange("heartRate", v)}
-          />
-          <VitalRow
-            label="Weight"
-            unit="kg"
-            value={journal.vitals.weight}
-            onChange={(v: string) => handleVitalChange("weight", v)}
-          />
-          <View style={{ marginTop: sizes.s }}>
-            <TouchableOpacity style={styles.saveButton} onPress={handleAssessRisk} disabled={isLoadingRisk}>
-              <Text style={styles.saveButtonText}>{isLoadingRisk ? "Checking..." : "Check Risk"}</Text>
-            </TouchableOpacity>
-            {riskResult ? (
-              // Make 'mid' risk visually prominent
-              <View
-                style={[
-                  styles.riskCard,
-                  (riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid"
-                    ? styles.riskCardMid
-                    : { borderColor: getRiskColor(riskResult) },
-                ]}
-              >
-                <Text style={[styles.cardTitle, (riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid" ? styles.midTitle : {}]}>
-                  {(riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid" ? "⚠️ MID RISK" : "Risk Assessment"}
-                </Text>
-                <Text style={((riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid") ? styles.midMessage : { marginBottom: sizes.s }}>
-                  {riskResult.message}
-                </Text>
+            </View>
+
+            {/* --- DYNAMIC BINARY METRIC CATEGORIES --- */}
+            {isLoadingJournal ? (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Loading metrics...</Text>
               </View>
-            ) : null}
-          </View>
-        </View>
-
-
-
+            ) : Object.keys(getBinaryMetricsByCategory()).length === 0 ? (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>No metrics available</Text>
+                <Text style={{ color: colors.secondary }}>Unable to load journal metrics. Please try refreshing.</Text>
+              </View>
+            ) : (
+              Object.entries(getBinaryMetricsByCategory()).map(([category, metrics]) => (
+                <View key={category} style={styles.card}>
+                  <Text style={styles.cardTitle}>
+                    {category.charAt(0) + category.slice(1).toLowerCase().replace(/_/g, " ")}
+                  </Text>
+                  <View style={styles.chipContainer}>
+                    {metrics.map((metric) => (
+                      <Chip
+                        key={metric.metric_id}
+                        label={metric.label}
+                        selected={selectedMetricIds.has(metric.metric_id)}
+                        onPress={() => toggleMetricSelection(metric.metric_id)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))
+            )}
+            {/* --- CARD 3: VITALS --- */}
+            <View style={styles.card}>
+              <VitalRow
+                label="Blood Pressure"
+                unit=""
+                isDoubleInput
+                value={localVitals.bloodPressure}
+                onChange={(v: [string, string]) => handleVitalChange("bloodPressure", v)}
+              />
+              <VitalRow
+                label="Sugar Level"
+                unit="mmol/L"
+                value={localVitals.sugar}
+                onChange={(v: string) => handleVitalChange("sugar", v)}
+              />
+              <VitalRow
+                label="Heart Rate"
+                unit="bpm"
+                value={localVitals.heartRate}
+                onChange={(v: string) => handleVitalChange("heartRate", v)}
+              />
+              <VitalRow
+                label="Weight"
+                unit="kg"
+                value={localVitals.weight}
+                onChange={(v: string) => handleVitalChange("weight", v)}
+              />
+              <View style={{ marginTop: sizes.s }}>
+                <TouchableOpacity
+                  style={[styles.saveButton, { marginBottom: sizes.xs }]}
+                  onPress={handleSaveJournal}
+                  disabled={upsertMutation.isPending}
+                >
+                  <Text style={styles.saveButtonText}>{upsertMutation.isPending ? "Saving..." : "Save Journal"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveButton} onPress={handleAssessRisk} disabled={isLoadingRisk}>
+                  <Text style={styles.saveButtonText}>{isLoadingRisk ? "Checking..." : "Check Risk"}</Text>
+                </TouchableOpacity>
+                {riskResult ? (
+                  // Make 'mid' risk visually prominent
+                  <View
+                    style={[
+                      styles.riskCard,
+                      (riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid"
+                        ? styles.riskCardMid
+                        : { borderColor: getRiskColor(riskResult) },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.cardTitle,
+                        (riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid"
+                          ? styles.midTitle
+                          : {},
+                      ]}
+                    >
+                      {(riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid"
+                        ? "⚠️ MID RISK"
+                        : "Risk Assessment"}
+                    </Text>
+                    <Text
+                      style={
+                        (riskResult.risk_level ?? (riskResult.is_high_risk ? "high" : "low")) === "mid"
+                          ? styles.midMessage
+                          : { marginBottom: sizes.s }
+                      }
+                    >
+                      {riskResult.message}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            </View>
           </>
         ) : null}
 
@@ -491,7 +564,10 @@ export default function App() {
             </TouchableOpacity>
 
             <View style={styles.kickControls}>
-              <TouchableOpacity style={[styles.kickBtn, isKicksRunning && styles.kickBtnActive]} onPress={isKicksRunning ? stopKicks : startKicks}>
+              <TouchableOpacity
+                style={[styles.kickBtn, isKicksRunning && styles.kickBtnActive]}
+                onPress={isKicksRunning ? stopKicks : startKicks}
+              >
                 <Text style={styles.kickBtnText}>{isKicksRunning ? "Stop" : "Start"}</Text>
               </TouchableOpacity>
 
@@ -505,10 +581,9 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity onPress={() => Alert.alert("Past kick counts", "Feature not implemented yet.") }>
+            <TouchableOpacity onPress={() => Alert.alert("Past kick counts", "Feature not implemented yet.")}>
               <Text style={styles.viewPast}>view past kick counts</Text>
             </TouchableOpacity>
-
           </View>
         ) : (
           <View style={{ height: 80 }} />
@@ -944,5 +1019,5 @@ const styles = StyleSheet.create({
     marginTop: sizes.s,
     fontSize: font.m - 2,
     fontWeight: "600",
-  }
+  },
 });

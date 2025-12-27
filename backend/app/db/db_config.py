@@ -19,12 +19,20 @@ ASYNC_DATABASE_URL = os.getenv("ASYNC_DATABASE_URL") or ""
 if not ASYNC_DATABASE_URL:
     raise RuntimeError("ASYNC_DATABASE_URL not set in '.env' file'")
 
-async_engine = create_async_engine(ASYNC_DATABASE_URL, pool_pre_ping=True)
+async_engine = create_async_engine(
+    ASYNC_DATABASE_URL,
+    pool_pre_ping=True,
+    # Explicitly manage the footprint on shared RDS
+    pool_size=5,
+    max_overflow=10,
+)
+
 AsyncSessionLocal = async_sessionmaker(
     bind=async_engine,
     class_=AsyncSession,
     autocommit=False,
     autoflush=False,
+    # Keep this 'False' for Async compatibility
     expire_on_commit=False,
 )
 
