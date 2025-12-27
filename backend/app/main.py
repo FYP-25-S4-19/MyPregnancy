@@ -11,6 +11,7 @@ from starlette.responses import JSONResponse
 from app.core.settings import settings
 from app.core.users_manager import auth_backend, fastapi_users
 from app.features.accounts.account_router import account_router
+from app.features.admin.admin_router import admin_router
 from app.features.appointments.appointment_router import appointments_router
 from app.features.community_threads.thread_router import community_threads_router
 from app.features.educational_articles.edu_article_router import edu_articles_router
@@ -57,6 +58,7 @@ app.include_router(
     prefix="/users",
     tags=["Users"],
 )
+app.include_router(admin_router)
 app.include_router(edu_articles_router)
 app.include_router(appointments_router)
 app.include_router(journal_router)
