@@ -1,13 +1,12 @@
 import { TouchableOpacity, StyleSheet, Text } from "react-native";
 import { colors, font, sizes } from "@/src/shared/designSystem";
-import { Channel as ChannelType } from "stream-chat";
+import { FC } from "react";
 
 interface ConsultRequestChipProps {
-  channel: ChannelType;
-  onPress?: () => void;
+  onPress: () => void;
 }
 
-const ConsultRequestChip = ({ channel, onPress }: ConsultRequestChipProps) => {
+const ConsultRequestChip: FC<ConsultRequestChipProps> = ({ onPress }) => {
   return (
     <TouchableOpacity style={styles.consultationChip} onPress={onPress}>
       <Text style={styles.consultationText}>Request Consultation</Text>

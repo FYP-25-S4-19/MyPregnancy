@@ -206,7 +206,7 @@ You'll be notified when they respond.
         <KeyboardAvoidingView keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}>
           <View style={[styles.inputWrapper, { marginBottom: headerHeight * 1.2 }]}>
             {/* Only mothers can request consultations */}
-            {!isDoctor && <ConsultRequestChip channel={channel} onPress={handleOpenBookingModal} />}
+            {!isDoctor && <ConsultRequestChip onPress={handleOpenBookingModal} />}
             <MessageInput
               additionalTextInputProps={{
                 style: {
