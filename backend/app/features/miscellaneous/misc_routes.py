@@ -2,18 +2,75 @@ import base64
 import json
 from datetime import datetime
 from typing import Any, List, Optional
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import and_, null, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import MCRNumber, Page, VolunteerDoctor
-from app.features.miscellaneous.misc_models import DoctorPreviewData, DoctorsPaginatedResponse
+from app.db.db_schema import DoctorRating, MCRNumber, Page, PregnantWoman, VolunteerDoctor
+from app.features.miscellaneous.misc_models import (
+    DoctorPreviewData,
+    DoctorRatingRequest,
+    DoctorRatingResponse,
+    DoctorsPaginatedResponse,
+)
 from app.shared.utils import get_s3_bucket_prefix
 
 misc_router = APIRouter(tags=["Miscellaneous"])
+
+
+@misc_router.get("/doctors/{doctor_id}/rating", response_model=DoctorRatingResponse)
+async def check_doctor_rating(
+    doctor_id: UUID,
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    db: AsyncSession = Depends(get_db),
+) -> DoctorRatingResponse:
+    doctor_stmt = select(VolunteerDoctor).where(VolunteerDoctor.id == doctor_id)  # Check if doctor exists
+    doctor = (await db.execute(doctor_stmt)).scalars().first()
+    if not doctor:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
+
+    rating_stmt = select(DoctorRating).where(  # Check for existing rating
+        and_(DoctorRating.doctor_id == doctor_id, DoctorRating.rater_id == mother.id)
+    )
+    existing_rating = (await db.execute(rating_stmt)).scalars().first()
+
+    return DoctorRatingResponse(has_rating=(existing_rating is not None))
+
+
+@misc_router.post("/doctors/{doctor_id}/rating", status_code=status.HTTP_204_NO_CONTENT)
+async def rate_doctor(
+    doctor_id: UUID,
+    rating_request: DoctorRatingRequest,
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    try:
+        doctor_stmt = select(VolunteerDoctor).where(VolunteerDoctor.id == doctor_id)  # Check if doctor exists
+        doctor = (await db.execute(doctor_stmt)).scalars().first()
+        if not doctor:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
+
+        rating_stmt = select(DoctorRating).where(  # Check for existing rating
+            and_(DoctorRating.doctor_id == doctor_id, DoctorRating.rater_id == mother.id)
+        )
+        existing_rating = (await db.execute(rating_stmt)).scalars().first()
+        if existing_rating:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Rating already exists")
+
+        new_rating = DoctorRating(
+            rater=mother,
+            doctor=doctor,
+            rating=rating_request.rating,
+        )
+        db.add(new_rating)
+        await db.commit()
+    except Exception:
+        await db.rollback()
 
 
 @misc_router.get("/avail-mcr", response_model=list[str])

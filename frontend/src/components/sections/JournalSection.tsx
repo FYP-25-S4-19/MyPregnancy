@@ -67,7 +67,12 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
       </View>
 
       <View style={styles.metricsContainer}>
-        <MetricRow label="Blood Pressure" value={data ? `${data.bp_systolic} / ${data.bp_diastolic}` : ""} unit="" />
+        <MetricRow
+          label="Blood Pressure"
+          value={data?.bp_systolic?.toString() || "0"}
+          value2={data?.bp_diastolic?.toString() || "0"}
+          unit=""
+        />
         <MetricRow label="Sugar Level" value={data.sugar_level?.toString() || ""} unit="mmol/L" />
         <MetricRow label="Heart Rate" value={data.heart_rate?.toString() || ""} unit="bpm" />
         <MetricRow label="Weight" value={data.weight?.toString() || ""} unit="kg" />
@@ -80,17 +85,32 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
 interface MetricRowProps {
   label: string;
   value?: string;
+  value2?: string;
   unit: string;
 }
 
-function MetricRow({ label, value, unit }: MetricRowProps) {
+function MetricRow({ label, value, value2, unit }: MetricRowProps) {
   return (
     <View style={styles.metricRow}>
       <Text style={styles.metricLabel}>• {label}</Text>
       <View style={styles.metricValueContainer}>
-        <View style={styles.valueBox}>
-          <Text style={styles.metricValue}>{value}</Text>
-        </View>
+        {value2 !== undefined ? (
+          // <View style={{ flex: 1 }}>
+          <>
+            <View style={styles.valueBox}>
+              <Text style={styles.metricValue}>{value}</Text>
+            </View>
+            <Text style={styles.bpSeparator}>/</Text>
+            <View style={styles.valueBox}>
+              <Text style={styles.metricValue}>{value2}</Text>
+            </View>
+          </>
+        ) : (
+          // </View>
+          <View style={styles.valueBox}>
+            <Text style={styles.metricValue}>{value}</Text>
+          </View>
+        )}
         <Text style={styles.metricUnit}>{unit}</Text>
       </View>
     </View>
@@ -167,5 +187,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     opacity: 0.6,
     minWidth: 50,
+  },
+  bpSeparator: {
+    fontSize: font.l,
+    fontWeight: "600",
+    color: colors.text,
+    opacity: 0.6,
+    marginHorizontal: -4,
   },
 });
