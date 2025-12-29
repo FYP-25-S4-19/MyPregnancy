@@ -1,29 +1,63 @@
 import { Edit, Trash2, Eye, Search } from 'lucide-react';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { adminAPI } from '../../lib/api';
 
 interface User {
   id: string;
-  email: string;
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  role: string;
+  name: string;
+  email?: string;
+  mcr_no?: string;
+  due_date?: string;
+  date_of_birth?: string;
+  created_at: string;
   is_active: boolean;
+  role: string;
 }
 
+interface MappedUser extends User {
+  email: string;
+}
+
+
 export default function ManageAccount() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQueries, setSearchQueries] = useState<{ [key: string]: string }>({});
   const [expandedRoles, setExpandedRoles] = useState<{ [key: string]: boolean }>({});
   
-  // TODO: Uncomment and use this API call once the backend /users endpoint is available
-  // const { data: usersData, isLoading } = useQuery({
-  //   queryKey: ['all-users'],
-  //   queryFn: () => usersAPI.getAllUsers().then(res => res.data),
-  // });
-  // const allUsers = usersData || [];
+  // Fetch data from admin endpoints
+  const { data: doctorsData = [] } = useQuery({
+    queryKey: ['admin-doctors'],
+    queryFn: () => adminAPI.getAllDoctors().then(res => res.data),
+  });
 
-  // Empty arrays - no API call (remove this line and uncomment above when API is ready)
-  const allUsers: User[] = [];
+  const { data: mothersData = [] } = useQuery({
+    queryKey: ['admin-mothers'],
+    queryFn: () => adminAPI.getAllMothers().then(res => res.data),
+  });
+
+  const { data: nutritionistsData = [] } = useQuery({
+    queryKey: ['admin-nutritionists'],
+    queryFn: () => adminAPI.getAllNutritionists().then(res => res.data),
+  });
+
+  // Combine all users and add role property with email field
+  const allUsers: MappedUser[] = [
+    ...mothersData.map((user: any) => ({ 
+      ...user, 
+      role: 'PREGNANT_WOMAN',
+      email: user.name // Use name as email fallback for display
+    })),
+    ...doctorsData.map((user: any) => ({ 
+      ...user, 
+      role: 'VOLUNTEER_DOCTOR',
+      email: user.name // Use name as email fallback for display
+    })),
+    ...nutritionistsData.map((user: any) => ({ 
+      ...user, 
+      role: 'NUTRITIONIST',
+      email: user.name // Use name as email fallback for display
+    })),
+  ];
 
   const toggleExpandRole = (role: string) => {
     setExpandedRoles(prev => ({
@@ -42,40 +76,54 @@ export default function ManageAccount() {
   const roleOrder = ['PREGNANT_WOMAN', 'VOLUNTEER_DOCTOR', 'NUTRITIONIST', 'MERCHANDISE'];
 
   const getFullName = (user: User) => {
-    const parts = [user.first_name, user.middle_name, user.last_name].filter(Boolean);
-    return parts.join(' ');
+    return user.name || 'N/A';
   };
 
-  const UserTable = ({ users, roleInfo, role }: { users: User[]; roleInfo: any; role: string }) => {
+  const getDisplayDate = (user: User, role: string) => {
+    if (role === 'PREGNANT_WOMAN' && user.date_of_birth) {
+      return new Date(user.date_of_birth).toLocaleDateString();
+    }
+    if (role === 'PREGNANT_WOMAN' && user.due_date) {
+      return `Due: ${new Date(user.due_date).toLocaleDateString()}`;
+    }
+    if (role === 'VOLUNTEER_DOCTOR' && user.mcr_no) {
+      return user.mcr_no;
+    }
+    return '-';
+  };
+
+  const UserTable = ({ users, roleInfo, role }: { users: MappedUser[]; roleInfo: any; role: string }) => {
     return (
       <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">No</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Full Name</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                {role === 'PREGNANT_WOMAN' ? 'Date of Birth' : roleInfo.displayField}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">No</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Full Name</th>
+              {role !== 'NUTRITIONIST' && (
+                <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
+                  {role === 'PREGNANT_WOMAN' ? 'Date of Birth' : roleInfo.displayField}
+                </th>
+              )}
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Status</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.length > 0 ? (
-              users.map((user: User, index: number) => (
+              users.map((user: MappedUser, index: number) => (
                 <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{getFullName(user)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{user.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">-</td>
-                  <td className="px-6 py-4 text-sm">
+                  <td className="px-6 py-4 text-sm text-center text-gray-700">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-center text-gray-900">{getFullName(user)}</td>
+                  {role !== 'NUTRITIONIST' && (
+                    <td className="px-6 py-4 text-sm text-center text-gray-700">{getDisplayDate(user, role)}</td>
+                  )}
+                  <td className="px-6 py-4 text-sm text-center">
                     <span className="px-3 py-1 rounded-full text-xs font-medium text-green-600 bg-green-50">
                       Active
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm flex gap-2">
+                  <td className="px-6 py-4 text-sm flex gap-2 justify-center">
                     <button className="p-1 hover:bg-gray-100 rounded transition">
                       <Eye size={18} className="text-gray-600" />
                     </button>
@@ -110,10 +158,13 @@ export default function ManageAccount() {
         <>
           {roleOrder.map((role) => {
             const roleInfo = roleMapping[role];
-            const roleUsers = allUsers.filter((u: User) => u.role === role);
+            const roleUsers = allUsers.filter((u: MappedUser) => u.role === role);
+            
+            // Get search query for this specific role
+            const searchQuery = searchQueries[role] || '';
             
             // Filter users based on search query
-            const filteredUsers = roleUsers.filter((u: User) => 
+            const filteredUsers = roleUsers.filter((u: MappedUser) => 
               getFullName(u).toLowerCase().includes(searchQuery.toLowerCase()) ||
               u.email.toLowerCase().includes(searchQuery.toLowerCase())
             );
@@ -130,18 +181,17 @@ export default function ManageAccount() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">{roleInfo.label}</h2>
                   <div className="flex items-center gap-4">
-                    {role === 'PREGNANT_WOMAN' && (
-                      <div className="relative">
-                        <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    )}
+                    <div className="relative">
+                      <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchQueries[role] || ''}
+                        onChange={(e) => setSearchQueries(prev => ({ ...prev, [role]: e.target.value }))}
+                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <br></br>
+                    </div>
                     {hasMore && (
                       <button 
                         onClick={() => toggleExpandRole(role)}
@@ -152,7 +202,7 @@ export default function ManageAccount() {
                     )}
                   </div>
                 </div>
-
+                    <br></br>
                 {/* Users Table */}
                 <UserTable users={displayUsers} roleInfo={roleInfo} role={role} />
 

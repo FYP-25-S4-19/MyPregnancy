@@ -53,6 +53,12 @@ export const usersAPI = {
   deleteUser: (id: number) => api.delete(`/users/${id}`),
 };
 
+export const adminAPI = {
+  getAllDoctors: () => api.get('/admin/users/doctors'),
+  getAllMothers: () => api.get('/admin/users/mothers'),
+  getAllNutritionists: () => api.get('/admin/users/nutrionists'),
+};
+
 export const appointmentsAPI = {
   getAllAppointments: () => api.get('/appointments'),
   getAppointment: (id: number) => api.get(`/appointments/${id}`),
