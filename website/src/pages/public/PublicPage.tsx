@@ -1,39 +1,118 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { websiteAPI, authAPI } from '../../lib/api';
-import { LogIn, X } from 'lucide-react';
+import { LogIn, X, AlertCircle, Mail, Lock, Loader } from 'lucide-react';
 import { useState } from 'react';
 
 export default function DynamicPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const loginMutation = useMutation({
-    mutationFn: (credentials: { username: string; password: string }) =>
-      authAPI.login(credentials.username, credentials.password),
-    onSuccess: (response) => {
-      // Store the token
-      localStorage.setItem('auth_token', response.data.access_token);
-      setShowLoginModal(false);
-      setUsername('');
-      setPassword('');
-      setError('');
-      // Redirect or show success
-      alert('Login successful!');
-    },
-    onError: () => {
-      setError('Invalid username or password');
-    },
-  });
+  // Use 'home' as default page if no slug is provided
+  const pageSlug = slug || 'home';
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      // Step 1: Login with email/password
+      console.log('🔐 Attempting login with email:', email);
+      const loginResponse = await authAPI.login(email, password);
+      console.log('✅ Login successful, response:', loginResponse.data);
+      
+      const token = loginResponse.data.access_token;
+      localStorage.setItem('auth_token', token);
+      console.log('✅ Token stored');
+      
+      // Step 2: Fetch user data to verify role
+      try {
+        console.log('👤 Fetching user data...');
+        const userResponse = await authAPI.getMe();
+        console.log('✅ User data received:', userResponse.data);
+        
+        const userData = userResponse.data;
+        let userRole = userData.role;
+        
+        // Handle both enum and string formats
+        console.log('🔍 Raw role from API:', userRole, 'Type:', typeof userRole);
+        
+        // If it's an object (enum), extract the value
+        if (typeof userRole === 'object' && userRole !== null) {
+          userRole = userRole.value || String(userRole);
+        }
+        
+        // Convert to string and normalize
+        userRole = String(userRole).trim().toUpperCase();
+        
+        console.log('🔍 Processed role:', userRole);
+        
+        // STRICT check: Only allow ADMIN role
+        const isAdmin = userRole === 'ADMIN';
+        console.log('🔐 Is ADMIN?', isAdmin);
+        console.log('🔐 Role comparison: "' + userRole + '" === "ADMIN"?', isAdmin);
+        
+        if (!isAdmin) {
+          console.log('❌ Access denied - user role is:', userRole);
+          setError(`Access Denied: Your role is "${userRole}". Only users with ADMIN role can access this dashboard.`);
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user_role');
+          localStorage.removeItem('user_id');
+          localStorage.removeItem('user_email');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('✅ ADMIN role verified - storing user data');
+        // User is admin - store data and redirect
+        localStorage.setItem('user_role', userRole);
+        localStorage.setItem('user_id', userData.id);
+        localStorage.setItem('user_email', userData.email);
+        
+        console.log('🚀 Redirecting to manage account...');
+        setShowLoginModal(false);
+        setEmail('');
+        setPassword('');
+        setError('');
+        // Redirect to manage account page
+        window.location.assign('/admin/manage-account');
+        
+      } catch (userErr: any) {
+        console.error('❌ Failed to fetch user data:', userErr);
+        const errorMsg = userErr.response?.data?.detail || userErr.message || 'Failed to fetch user information';
+        setError(errorMsg);
+        localStorage.removeItem('auth_token');
+        setLoading(false);
+      }
+      
+    } catch (err: any) {
+      console.error('❌ Login error:', err);
+      console.error('Error response:', err.response?.data);
+      
+      // Handle different error types
+      if (err.response?.status === 401 || err.response?.status === 400) {
+        setError('Invalid email or password');
+      } else if (err.response?.status === 422) {
+        setError('Invalid email format');
+      } else if (err.message === 'Network Error') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(err.response?.data?.detail || err.message || 'Login failed. Please try again.');
+      }
+      setLoading(false);
+    }
+  };
 
   const { data: pageData, isLoading, error: pageError } = useQuery({
-    queryKey: ['page', slug],
-    queryFn: () => websiteAPI.getPage(slug!).then(res => res.data),
-    enabled: !!slug,
+    queryKey: ['page', pageSlug],
+    queryFn: () => websiteAPI.getPage(pageSlug).then(res => res.data),
+    enabled: !!pageSlug,
   });
 
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
@@ -42,12 +121,6 @@ export default function DynamicPage() {
   const page = pageData?.page;
   const sections = page?.sections || [];
   const backgroundImage = page?.background_image;
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    loginMutation.mutate({ username, password });
-  };
 
   return (
     <div
@@ -68,80 +141,117 @@ export default function DynamicPage() {
           Login
         </button>
       )}
-      <br></br>
-      <br></br>
-      {/* Login Modal */}
+
+      {/* Login Modal - Admin Dashboard */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-transparent">
-          <div className="bg-white rounded-lg shadow-2xl p-8 w-96">
+        <div className="fixed inset-0 z-40 flex items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
             {/* Close Button */}
             <button
-              onClick={() => setShowLoginModal(false)}
+              onClick={() => {
+                setShowLoginModal(false);
+                setEmail('');
+                setPassword('');
+                setError('');
+              }}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
             >
               <X size={24} />
             </button>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Log In</h2>
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">MyPregnancy</h1>
+              <p className="text-gray-600 font-medium">Admin Dashboard</p>
+              <p className="text-sm text-gray-500 mt-1">Admins only</p>
+            </div>
 
-            {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
+            {/* Error Alert */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
+                <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-700 text-sm font-medium">Login Failed</p>
+                  <p className="text-red-600 text-sm mt-1">{error}</p>
+                </div>
+              </div>
+            )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            {/* Login Form */}
+            <form onSubmit={handleLogin} className="space-y-5">
+              {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
+                  Email Address
                 </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  placeholder="Enter your username"
-                  required
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
+                    placeholder="admin@example.com"
+                    required
+                    disabled={loading}
+                  />
+                </div>
               </div>
 
+              {/* Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  placeholder="Enter your password"
-                  required
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
+                    placeholder="••••••••"
+                    required
+                    disabled={loading}
+                  />
+                </div>
               </div>
-              <br></br>
+
+              {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loginMutation.isPending}
-                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50"
+                disabled={loading}
+                className="w-full bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white py-3 rounded-lg font-semibold transition disabled:cursor-not-allowed mt-6"
               >
-                {loginMutation.isPending ? 'Logging in...' : 'Log In'}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader size={20} className="animate-spin" />
+                    Logging in...
+                  </span>
+                ) : (
+                  'Log In'
+                )}
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-600 mt-4">
-              Don't have an account?{' '}
-              <a href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                Sign up
-              </a>
-            </p>
+            {/* Footer Info */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-center text-xs text-gray-500">
+                Admin access only. Only ADMIN users can log in here.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       {sections.map((section: any) => (
-        <SectionDisplay key={section.id} section={section} />
+        <SectionDisplay key={section.id} section={section} onLoginClick={() => setShowLoginModal(true)} />
       ))}
     </div>
   );
 }
 
-function SectionDisplay({ section }: any) {
+function SectionDisplay({ section, onLoginClick }: any) {
   const navigate = useNavigate();
 
   switch (section.type) {
@@ -166,7 +276,7 @@ function SectionDisplay({ section }: any) {
             })}
           </div>
           <button 
-            onClick={() => navigate(section.content.buttonUrl || '/login')}
+            onClick={() => onLoginClick()}
             style={{ backgroundColor: section.content.buttonColor }} 
             className="text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
           >

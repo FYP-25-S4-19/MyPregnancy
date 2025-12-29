@@ -307,7 +307,7 @@ export default function WebsiteBuilder() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Sidebar - Add Sections */}
-      <div className="w-64 bg-white border-r border-gray-200 p-6 overflow-y-auto">
+      <div className="w-98 bg-white border-r border-gray-200 ">
         <button
           onClick={() => navigate('/admin/dashboard')}
           className="mb-6 text-sm text-gray-600 hover:text-gray-900"
@@ -429,10 +429,10 @@ export default function WebsiteBuilder() {
         </div>
 
         {/* Editor Content */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden min-h-screen">
           {/* Canvas */}
-          <div className="flex-1 overflow-y-auto p-8 bg-gray-100">
-            <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 bg-gray-100">
+            <div className="w-full space-y-6 min-h-full pr-4">
               {sections.map((section) => (
                 <SectionRenderer
                   key={section.id}
@@ -905,22 +905,44 @@ function SectionRenderer({ section, isSelected, onSelect }: any) {
 
   const renderContent = () => {
     switch (section.type) {
-      case 'navbar':
+      case 'navbar': {
+        const [menuOpen, setMenuOpen] = useState(false);
         return (
           <nav style={{ backgroundColor: section.content.bgColor, color: section.content.textColor }} className="px-8 py-4 flex items-center justify-between rounded-lg">
             <div className="font-bold text-lg">{section.content.logo}</div>
-            <div className="flex gap-6">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex flex-col gap-1 md:hidden"
+            >
+              <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
+              <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
+              <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
+            </button>
+            <div className={`hidden md:flex gap-6`}>
               {section.content.links.map((link: any, idx: number) => (
                 <a key={idx} href={link.url} className="text-sm hover:opacity-75 transition">
                   {link.label}
                 </a>
               ))}
             </div>
-            <button style={{ backgroundColor: section.content.buttonColor }} className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+            <button style={{ backgroundColor: section.content.buttonColor }} className="hidden md:block text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
               {section.content.buttonText}
             </button>
+            {menuOpen && (
+              <div className="absolute top-16 left-0 right-0 md:hidden p-4 flex flex-col gap-4" style={{ backgroundColor: section.content.bgColor }}>
+                {section.content.links.map((link: any, idx: number) => (
+                  <a key={idx} href={link.url} className="text-sm hover:opacity-75 transition block">
+                    {link.label}
+                  </a>
+                ))}
+                <button style={{ backgroundColor: section.content.buttonColor }} className="text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition w-full">
+                  {section.content.buttonText}
+                </button>
+              </div>
+            )}
           </nav>
         );
+      }
       case 'hero':
         return (
           <div

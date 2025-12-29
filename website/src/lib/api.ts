@@ -34,14 +34,12 @@ export const websiteAPI = {
 
 export const authAPI = {
   login: (username: string, password: string) => {
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('password', password);
-    
-    return api.post('/auth/jwt/login', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+    const body = new URLSearchParams();
+    body.append('username', username);
+    body.append('password', password);
+
+    return api.post('/auth/jwt/login', body, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
   },
   logout: () => api.post('/auth/jwt/logout'),
