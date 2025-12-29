@@ -6,6 +6,7 @@ from app.core.users_manager import optional_current_active_user
 from app.db.db_config import get_db
 from app.db.db_schema import Merchant, PregnantWoman, User
 from app.features.products.product_models import (
+    ProductCategoryResponse,
     ProductDetailedResponse,
     ProductPreviewResponse,
     ProductPreviewsPaginatedResponse,
@@ -17,6 +18,13 @@ product_router = APIRouter(prefix="/products", tags=["Products"])
 
 def get_product_service(db: AsyncSession = Depends(get_db)) -> ProductService:
     return ProductService(db)
+
+
+@product_router.get("/categories", response_model=list[ProductCategoryResponse])
+async def get_product_categories(
+    service: ProductService = Depends(get_product_service),
+) -> list[ProductCategoryResponse]:
+    return await service.get_product_categories()
 
 
 @product_router.post("/", status_code=status.HTTP_201_CREATED)
@@ -86,7 +94,6 @@ async def like_product(
     service: ProductService = Depends(get_product_service),
     db: AsyncSession = Depends(get_db),
 ):
-    """Like a product. Only mothers can like products."""
     try:
         new_like = await service.like_product(product_id, mother)
         db.add(new_like)
@@ -103,7 +110,6 @@ async def unlike_product(
     service: ProductService = Depends(get_product_service),
     db: AsyncSession = Depends(get_db),
 ):
-    """Unlike a product. Only mothers can unlike products."""
     try:
         await service.unlike_product(product_id, mother)
         await db.commit()

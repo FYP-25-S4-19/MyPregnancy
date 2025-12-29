@@ -42,6 +42,7 @@ class UserRole(Enum):
     VOLUNTEER_DOCTOR = "VOLUNTEER_DOCTOR"
     PREGNANT_WOMAN = "PREGNANT_WOMAN"
     NUTRITIONIST = "NUTRITIONIST"
+    MERCHANT = "MERCHANT"
 
 
 class BinaryMetricCategory(Enum):

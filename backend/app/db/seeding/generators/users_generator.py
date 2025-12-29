@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.db_schema import (
     Admin,
     MCRNumber,
+    Merchant,
     Nutritionist,
     PregnantWoman,
     UserRole,
@@ -184,6 +185,43 @@ class UsersGenerator:
 
             all_nutritionists.append(nutritionist)
         return all_nutritionists
+
+    @staticmethod
+    def generate_merchants(
+        db: Session, faker: Faker, password_hasher: PasswordHasher, profile_img_folder: str
+    ) -> list[Merchant]:
+        if not os.path.exists(profile_img_folder):
+            raise ValueError(f"Profile image folder does not exist: {profile_img_folder}")
+
+        print("Generating users (Merchants)....")
+        all_merchants: list[Merchant] = []
+        for folder_item in pathlib.Path(profile_img_folder).iterdir():
+            if not folder_item.is_file():
+                continue
+            if not folder_item.name.lower().endswith((".png", ".jpg", ".jpeg")):
+                continue
+
+            fake_created_at: datetime = faker.date_time_between(start_date="-3y", end_date="now")
+            full_name: str = folder_item.stem  # Exclude the extension
+            fullname_parts: list[str] = full_name.split("_")
+
+            merchant = Merchant(
+                first_name=fullname_parts[0],
+                middle_name=fullname_parts[1] if len(fullname_parts) >= 3 else "",
+                last_name=fullname_parts[2] if len(fullname_parts) >= 3 else fullname_parts[1],
+                role=UserRole.MERCHANT,
+                created_at=fake_created_at,
+                email=f"{full_name}@gmail.com",
+                hashed_password=password_hasher.hash(full_name),
+            )
+            db.add(merchant)
+            db.flush()
+
+            # Assign profile image
+            profile_img_key = S3StorageInterface.put_profile_img_from_filepath(merchant.id, str(folder_item))
+            merchant.profile_img_key = profile_img_key
+            all_merchants.append(merchant)
+        return all_merchants
 
     @staticmethod
     def generate_admins(db: Session, faker: Faker, password_hasher: PasswordHasher, admins_json: str) -> list[Admin]:

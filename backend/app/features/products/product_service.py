@@ -20,6 +20,11 @@ class ProductService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def get_product_categories(self) -> list[ProductCategoryResponse]:
+        stmt = select(ProductCategory)
+        categories = (await self.db.execute(stmt)).scalars().all()
+        return [ProductCategoryResponse(id=cat.id, label=cat.label) for cat in categories]
+
     async def add_new_product(
         self, name: str, merchant: Merchant, category: str, price_cents: int, description: str, img_file: UploadFile
     ) -> None:
