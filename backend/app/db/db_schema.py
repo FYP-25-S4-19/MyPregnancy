@@ -548,7 +548,7 @@ class Notification(Base):
     is_seen: Mapped[bool] = mapped_column(server_default=text("FALSE"), index=True)
 
     # ----- Type + Data -----
-    # For use at the application layer. Perhaps the type can dictate where you are led to when the app is clicked
+    # For use at the application layer. Perhaps the type can dictate the shape of the 'data' field
     # type = "article", data = "45" (i.e. New suggested article, click to go to article ID=45)
     # type = "message_reply", data = "<SOME_JSON_DATA>" (i.e. JSON object containing link to message)
     type: Mapped["NotificationType"] = mapped_column(SQLAlchemyEnum(NotificationType))

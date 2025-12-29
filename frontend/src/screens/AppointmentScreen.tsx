@@ -15,30 +15,6 @@ interface MarkedDateCustomStyles {
   selectedTextColor?: string;
 }
 
-// const APPOINTMENTS: AppointmentData[] = [
-//   {
-//     id: "1",
-//     dateString: "2025-11-01",
-//     time: "11:00AM",
-//     doctor: "Dr. John",
-//     status: "Rejected",
-//   },
-//   {
-//     id: "2",
-//     dateString: "2025-11-04",
-//     time: "11:00AM",
-//     doctor: "Dr. John",
-//     status: "Accepted",
-//   },
-//   {
-//     id: "3",
-//     dateString: "2025-11-08",
-//     time: "09:30AM",
-//     doctor: "Dr. Sarah",
-//     status: "Pending",
-//   },
-// ];
-
 const StatusLegend: React.FC = () => (
   <View style={styles.legendContainer}>
     <View style={styles.legendItem}>
