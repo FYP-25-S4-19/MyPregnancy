@@ -6,6 +6,7 @@ from enum import Enum
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import (
+    CheckConstraint,
     DateTime,
     ForeignKey,
     String,
@@ -142,6 +143,7 @@ class PregnantWoman(User):
     journal_entries: Mapped[list["JournalEntry"]] = relationship(back_populates="author")
     kick_tracker_sessions: Mapped[list["KickTrackerSession"]] = relationship(back_populates="mother")
     doctor_ratings: Mapped[list["DoctorRating"]] = relationship(back_populates="rater")
+    liked_products: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="mother")
 
 
 class Nutritionist(User):
@@ -151,6 +153,13 @@ class Nutritionist(User):
 
     qualification_img_key: Mapped[str | None]
     recipes_created: Mapped[list["Recipe"]] = relationship(back_populates="nutritionist")
+
+
+class Merchant(User):
+    __tablename__ = "merchants"
+    __mapper_args__ = {"polymorphic_identity": "merchant"}
+    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
+    products: Mapped[list["Product"]] = relationship(back_populates="merchant")
 
 
 # ===========================================================
@@ -514,6 +523,43 @@ class KickTrackerDataPoint(Base):
 
     session_id: Mapped[int] = mapped_column(ForeignKey("kick_tracker_sessions.id"))
     session: Mapped["KickTrackerSession"] = relationship(back_populates="kicks")
+
+
+# ==============================================
+# ============= PRODUCT/MERCHANT ===============
+# ==============================================
+class Product(Base):
+    __tablename__ = "products"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True)
+
+    merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id"))
+    merchant: Mapped[Merchant] = relationship(back_populates="products")
+
+    category_id: Mapped[int] = mapped_column(ForeignKey("product_categories.id"))
+    category: Mapped["ProductCategory"] = relationship(back_populates="products")
+
+    price_cents: Mapped[int] = mapped_column(CheckConstraint("price_cents >= 0"))
+    description: Mapped[str] = mapped_column(Text)
+    img_key: Mapped[str | None]
+
+    liked_by_mothers: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="product")
+
+
+class ProductCategory(Base):
+    __tablename__ = "product_categories"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    products: Mapped[list[Product]] = relationship(back_populates="category")
+
+
+class MotherLikeProduct(Base):
+    __tablename__ = "mother_like_products"
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"), primary_key=True)
+    mother: Mapped[PregnantWoman] = relationship(back_populates="liked_products")
+
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), primary_key=True)
+    product: Mapped[Product] = relationship(back_populates="liked_by_mothers")
 
 
 # ===========================================

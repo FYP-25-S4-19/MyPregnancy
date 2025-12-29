@@ -64,5 +64,4 @@ class AdminService:
         user = result.scalars().first()
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
         user.is_active = is_active
