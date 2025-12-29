@@ -12,6 +12,28 @@ from app.core.settings import settings
 
 class S3StorageInterface:
     # =================================================================
+    # =========================== PRODUCT =============================
+    # =================================================================
+    PRODUCT_PREFIX = "products"
+
+    @staticmethod
+    def put_product_img(product_id: int, product_img: UploadFile) -> str | None:
+        return S3StorageInterface._upload_file_stream(
+            prefix=S3StorageInterface.PRODUCT_PREFIX,
+            file_name=str(product_id),
+            file_obj=product_img.file,
+            content_type=str(product_img.content_type),
+        )
+
+    @staticmethod
+    def put_product_img_from_filepath(product_id: int, product_img_filepath: str) -> str | None:
+        return S3StorageInterface._put_img_from_filepath(
+            prefix=S3StorageInterface.PRODUCT_PREFIX,
+            file_name=str(product_id),
+            img_filepath=product_img_filepath,
+        )
+
+    # =================================================================
     # =========================== RECIPES =============================
     # =================================================================
     RECIPE_PREFIX = "recipes"

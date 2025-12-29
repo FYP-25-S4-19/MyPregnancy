@@ -542,6 +542,7 @@ class Product(Base):
     price_cents: Mapped[int] = mapped_column(CheckConstraint("price_cents >= 0"))
     description: Mapped[str] = mapped_column(Text)
     img_key: Mapped[str | None]
+    listed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     liked_by_mothers: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="product")
 
