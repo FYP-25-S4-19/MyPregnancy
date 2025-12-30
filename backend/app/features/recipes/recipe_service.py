@@ -127,17 +127,20 @@ class RecipeService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Instructions cannot be empty")
 
         new_recipe = Recipe(
-            nutritionist_id=nutritionist.id,
+            nutritionist=nutritionist,
             name=name,
-            instructions_markdown=instructions,
             description=description,
             est_calories=est_calories,
             pregnancy_benefit=pregnancy_benefit,
+            img_key="",
             serving_count=serving_count,
+            ingredients=ingredients,
+            instructions_markdown=instructions,
         )
         self.db.add(new_recipe)
         await self.db.flush()
 
+        await image_file.seek(0)
         recipe_img_key = S3StorageInterface.put_recipe_img(new_recipe.id, image_file)
         if recipe_img_key is None:
             raise HTTPException(

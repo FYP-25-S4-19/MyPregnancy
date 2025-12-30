@@ -200,6 +200,7 @@ class S3StorageInterface:
     @staticmethod
     def _upload_file_stream(prefix: str, file_name: str, file_obj: BinaryIO, content_type: str) -> str | None:
         try:
+            print("Uploading file stream to S3...")
             extension = mimetypes.guess_extension(content_type)
             if not extension:
                 if "jpeg" in content_type:
@@ -208,14 +209,19 @@ class S3StorageInterface:
                     extension = ".png"
                 else:
                     extension = ".jpg"
+            print("Found extension!", extension)
 
             obj_key = f"{prefix}/{file_name}{extension}"
+            print("Crafted object key:", obj_key)
+
             s3_client.upload_fileobj(
                 Fileobj=file_obj,
                 Bucket=settings.S3_BUCKET_NAME,
                 Key=obj_key,
                 ExtraArgs={"ContentType": content_type},
             )
+            print("Upload successful!, Object Key:", obj_key)
+
             return obj_key
         except (BotoCoreError, ClientError) as e:
             print(f"Error uploading file stream: {e}")
