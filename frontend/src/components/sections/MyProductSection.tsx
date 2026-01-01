@@ -1,15 +1,16 @@
 import { View, StyleSheet, ScrollView, Text, TouchableOpacity, TextInput, Image } from "react-native";
+import { useProductCategories, useProductPreviews } from "@/src/shared/hooks/useProducts";
 import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
+import utils from "@/src/shared/utils";
+import { FC, useState } from "react";
 
-const DUMMY_CATEGORIES = ["All", "Snacks", "Baby Essentials", "Supplements"];
-const DUMMY_PRODUCTS = [
-  { id: "1", name: "Newborn Baby Clothes", price: "$60", image: "https://via.placeholder.com/150" },
-  { id: "2", name: "Newborn Baby Clothes", price: "$60", image: "https://via.placeholder.com/150" },
-  { id: "3", name: "Organic Snack Pack", price: "$12", image: "https://via.placeholder.com/150" },
-];
+export const MyProductsSection: FC = () => {
+  const [selectedCategory, setSelectedCategory] = useState("");
 
-export const MyProductsSection = () => {
+  const { data: productCategories } = useProductCategories();
+  const { data: productPreviews } = useProductPreviews(6);
+
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>My Product</Text>
@@ -22,24 +23,42 @@ export const MyProductsSection = () => {
 
       {/* Category Pills */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categories}>
-        {DUMMY_CATEGORIES.map((cat, i) => (
-          <TouchableOpacity key={cat} style={[styles.pill, i === 0 && styles.activePill]}>
-            <Text style={[styles.pillText]}>{cat}</Text>
-          </TouchableOpacity>
-        ))}
+        {productCategories &&
+          productCategories.map((cat) => (
+            <TouchableOpacity
+              key={cat.id}
+              style={[styles.pill, cat.label === selectedCategory && styles.activePill]}
+              onPress={() => {
+                setSelectedCategory((oldLabel) => {
+                  return cat.label === oldLabel ? "" : cat.label;
+                });
+              }}
+            >
+              <Text style={[styles.pillText]}>{cat.label}</Text>
+            </TouchableOpacity>
+          ))}
       </ScrollView>
 
       {/* Product Grid */}
       <View style={styles.grid}>
-        {DUMMY_PRODUCTS.map((item) => (
-          <View key={item.id} style={styles.card}>
-            <Image source={{ uri: item.image }} style={styles.productImage} />
-            <View style={styles.cardInfo}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productPrice}>{item.price}</Text>
-            </View>
-          </View>
-        ))}
+        {productPreviews?.products &&
+          productPreviews.products.flatMap((item) => {
+            return (
+              ((selectedCategory.length > 0 && item.category === selectedCategory) ||
+                selectedCategory.length === 0) && (
+                <View key={item.id} style={styles.card}>
+                  <Image source={{ uri: item.img_url || "" }} style={styles.productImage} />
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.productName}>{item.name}</Text>
+                    <Text style={styles.productPrice}>
+                      {"$"}
+                      {utils.centsToDollarStr(item.price_cents)}
+                    </Text>
+                  </View>
+                </View>
+              )
+            );
+          })}
       </View>
     </View>
   );

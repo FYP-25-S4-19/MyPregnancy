@@ -74,6 +74,29 @@ export interface CreateThreadData {
 export interface CreateCommentData {
   content: string;
 }
+//===================================================
+//=================== PRODUCTS ======================
+//===================================================
+export interface ProductCategory {
+  id: number;
+  label: string;
+}
+
+export interface ProductPreview {
+  id: number;
+  name: string;
+  merchant_name: string;
+  category: string;
+  price_cents: number;
+  img_url: string | null;
+  is_liked: boolean;
+}
+
+export interface ProductPreviewPaginatedResponse {
+  products: ProductPreview[];
+  next_cursor: number | null;
+  has_more: boolean;
+}
 //==================================================
 //=================== RECIPE =======================
 //==================================================

@@ -1,7 +1,6 @@
-import { jwtDecode } from "jwt-decode";
 import { JwtData, MeData } from "./typesAndInterfaces";
 import { Channel, UserResponse } from "stream-chat";
-import { getDevHostIp } from "./api";
+import { jwtDecode } from "jwt-decode";
 
 const utils = {
   /**
@@ -74,6 +73,10 @@ const utils = {
       .split(" ")
       .map((word) => (word.length > 0 ? word.charAt(0).toUpperCase() : ""))
       .join("");
+  },
+  centsToDollarStr(cents: number): string {
+    const dollars = cents / 100;
+    return `${dollars.toFixed(2)}`;
   },
 };
 
