@@ -2,11 +2,17 @@ import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { FC } from "react";
+import { router } from "expo-router";
 
 export const AddProductSection: FC = () => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity
+        onPress={() => {
+          router.push("/main/merchant/shop/addNewProduct");
+        }}
+        style={styles.button}
+      >
         <Ionicons name="add" size={24} color={colors.text} />
         <Text style={styles.buttonText}>Add New Product</Text>
       </TouchableOpacity>

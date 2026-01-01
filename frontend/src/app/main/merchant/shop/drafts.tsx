@@ -1,3 +1,3 @@
-export default function DraftsPage() {
+export default function DraftsScreen() {
   return <></>;
 }

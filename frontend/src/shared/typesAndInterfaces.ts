@@ -97,6 +97,26 @@ export interface ProductPreviewPaginatedResponse {
   next_cursor: number | null;
   has_more: boolean;
 }
+
+export interface ProductDetailedResponse {
+  id: number;
+  name: string;
+  merchant_id: string;
+  merchant_name: string;
+  category: ProductCategory;
+  price_cents: number;
+  description: string;
+  img_url: string | null;
+  is_liked: boolean;
+}
+
+export interface ProductMutationData {
+  name: string;
+  category: string;
+  price_cents: number;
+  description: string;
+  img_file: File | any;
+}
 //==================================================
 //=================== RECIPE =======================
 //==================================================

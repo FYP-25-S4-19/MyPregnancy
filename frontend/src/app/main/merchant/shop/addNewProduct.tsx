@@ -1,3 +1,288 @@
-export default function AddNewProductPage() {
-  return <></>;
+import { useAddNewProductMutation, useProductCategories } from "@/src/shared/hooks/useProducts";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Dropdown } from "react-native-element-dropdown";
+import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { router } from "expo-router";
+
+export default function AddProductScreen() {
+  const [productName, setProductName] = useState("");
+  const [category, setCategory] = useState<string | null>(null);
+  const [price, setPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [isFocus, setIsFocus] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const { data: productCategories } = useProductCategories();
+  const { mutate: addNewProduct, isPending } = useAddNewProductMutation();
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setImageUri(result.assets[0].uri);
+      }
+    } catch {
+      Alert.alert("Error", "Failed to pick image");
+    }
+  };
+
+  const validateForm = (): boolean => {
+    if (!productName.trim()) {
+      Alert.alert("Validation Error", "Please enter a product name");
+      return false;
+    }
+    if (!category) {
+      Alert.alert("Validation Error", "Please select a category");
+      return false;
+    }
+    if (!price.trim() || isNaN(Number(price)) || Number(price) <= 0) {
+      Alert.alert("Validation Error", "Please enter a valid price");
+      return false;
+    }
+    if (!description.trim()) {
+      Alert.alert("Validation Error", "Please enter a description");
+      return false;
+    }
+    if (!imageUri) {
+      Alert.alert("Validation Error", "Please upload a product image");
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddNewProduct = async (): Promise<void> => {
+    if (!validateForm()) return;
+
+    // Convert price to cents
+    const priceCents = Math.round(Number(price) * 100);
+
+    // Get filename and type from URI
+    const filename = imageUri!.split("/").pop() || "image.jpg";
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : "image/jpeg";
+
+    // Create file object for upload
+    const imageFile = {
+      uri: imageUri!,
+      name: filename,
+      type,
+    };
+
+    addNewProduct(
+      {
+        name: productName,
+        category: category!,
+        price_cents: priceCents,
+        description: description,
+        img_file: imageFile as any,
+      },
+      {
+        onSuccess: () => {
+          Alert.alert("Success", "Product added successfully!", [{ text: "OK", onPress: () => router.back() }]);
+        },
+        onError: (error: any) => {
+          Alert.alert("Error", error.response?.data?.detail || "Failed to add product");
+        },
+      },
+    );
+  };
+
+  return (
+    <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <Text style={styles.title}>Add New Product</Text>
+
+        <View style={styles.formContainer}>
+          {/* Product Name */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Product Name:</Text>
+            <TextInput
+              style={styles.inputContainer}
+              placeholder="Enter product name"
+              placeholderTextColor={colors.tabIcon}
+              value={productName}
+              onChangeText={setProductName}
+            />
+          </View>
+
+          {/* Category Dropdown */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Category:</Text>
+            <Dropdown
+              style={[styles.inputContainer, isFocus && { borderColor: colors.primary }]}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              inputSearchStyle={styles.inputSearchStyle}
+              data={
+                productCategories?.map((c) => {
+                  return {
+                    id: c.id,
+                    label: c.label,
+                    value: c.label,
+                  };
+                }) || []
+              }
+              maxHeight={300}
+              labelField="label"
+              valueField="value"
+              placeholder={!isFocus ? "Select category" : "..."}
+              value={category}
+              onFocus={() => setIsFocus(true)}
+              onBlur={() => setIsFocus(false)}
+              onChange={(item) => {
+                setCategory(item.value);
+                setIsFocus(false);
+              }}
+              renderRightIcon={() => <Ionicons name="chevron-down" size={20} color={colors.text} />}
+            />
+          </View>
+
+          {/* Price */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Price:</Text>
+            <View style={[styles.inputContainer, styles.priceRow]}>
+              <Text style={styles.priceCurrency}>$</Text>
+              <TextInput
+                style={{ flex: 1, color: colors.text }}
+                placeholder="0.00"
+                keyboardType="numeric"
+                value={price}
+                onChangeText={setPrice}
+              />
+            </View>
+          </View>
+
+          {/* Description */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Description:</Text>
+            <TextInput
+              style={[styles.inputContainer, styles.textArea]}
+              placeholder="Enter product description"
+              multiline
+              value={description}
+              onChangeText={setDescription}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Photo Upload */}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Photo:</Text>
+            <TouchableOpacity style={styles.uploadContainer} onPress={pickImage}>
+              {imageUri ? (
+                <Image source={{ uri: imageUri }} style={styles.previewImage} />
+              ) : (
+                <>
+                  <Ionicons name="images-outline" size={40} color={colors.tabIcon} />
+                  <Text style={styles.uploadText}>Choose Files to Upload</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={[styles.button, styles.draftButton]} disabled={isPending}>
+              <Text style={styles.draftButtonText}>Draft</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleAddNewProduct}
+              style={[styles.button, styles.addButton]}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Text style={styles.addButtonText}>Add</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.veryLightPink },
+  scrollViewContent: { padding: sizes.l },
+  title: {
+    fontSize: font.xl,
+    fontWeight: "bold",
+    color: colors.text,
+    textAlign: "center",
+    marginBottom: sizes.xl,
+  },
+  formContainer: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.borderRadius,
+    padding: sizes.l,
+    ...shadows.medium,
+  },
+  formGroup: { marginBottom: sizes.m },
+  label: {
+    fontSize: font.s,
+    fontWeight: "bold",
+    color: colors.text,
+    marginBottom: sizes.xs,
+  },
+  inputContainer: {
+    backgroundColor: colors.white,
+    borderRadius: 16, // Larger border radius
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    paddingHorizontal: sizes.m,
+    height: 45,
+    justifyContent: "center",
+  },
+  priceRow: { flexDirection: "row", alignItems: "center" },
+  priceCurrency: { marginRight: sizes.xs, fontWeight: "bold", color: colors.text },
+  textArea: { height: 100, paddingTop: sizes.s },
+  placeholderStyle: { fontSize: font.s, color: colors.tabIcon },
+  selectedTextStyle: { fontSize: font.s, color: colors.text },
+  inputSearchStyle: { height: 40, fontSize: font.s },
+  uploadContainer: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    height: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    borderStyle: "dashed",
+  },
+  uploadText: { color: colors.text, marginTop: sizes.s, fontWeight: "600" },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 16,
+    resizeMode: "cover",
+  },
+  buttonRow: { flexDirection: "row", justifyContent: "flex-end", marginTop: sizes.l },
+  button: { paddingVertical: sizes.s, paddingHorizontal: sizes.xl, borderRadius: 12, marginLeft: sizes.m },
+  draftButton: { backgroundColor: colors.secondary },
+  draftButtonText: { color: colors.text, fontWeight: "bold" },
+  addButton: { backgroundColor: colors.primary },
+  addButtonText: { color: colors.white, fontWeight: "bold" },
+  footerText: { textAlign: "center", marginTop: sizes.xl, fontSize: font.m, color: colors.text, fontWeight: "bold" },
+});
