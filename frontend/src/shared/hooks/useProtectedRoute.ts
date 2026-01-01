@@ -40,7 +40,7 @@ export function useProtectedRoute() {
       if (me?.role === "PREGNANT_WOMAN") router.replace("/main/mother");
       else if (me?.role === "NUTRITIONIST") router.replace("/main/nutritionist");
       else if (me?.role === "VOLUNTEER_DOCTOR") router.replace("/main/doctor");
-      // else router.replace("/main");
+      else if (me?.role === "MERCHANT") router.replace("/main/merchant");
     }
   }, [accessToken, segments, isHydrated, me?.role, rootNavigationState?.key]);
 }

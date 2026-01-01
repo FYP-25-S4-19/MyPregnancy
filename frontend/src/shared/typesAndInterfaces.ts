@@ -121,7 +121,7 @@ export interface JwtData {
   sub: string;
 }
 
-export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST";
+export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST" | "MERCHANT";
 //====================================================
 //================== MISCELLANEOUS ===================
 //====================================================
