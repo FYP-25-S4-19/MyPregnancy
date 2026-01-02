@@ -12,8 +12,12 @@ from sqlalchemy import (
     Text,
     func,
     text,
+    Integer,
+    JSON,
+    Date
 )
 from sqlalchemy import Enum as SQLAlchemyEnum
+from sqlalchemy import String, Integer, Text, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -136,6 +140,16 @@ class PregnantWoman(User):
 
     due_date: Mapped[date | None]  # Nullable (may not be expecting)
     date_of_birth: Mapped[date]
+
+    pregnancy_stage: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    pregnancy_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    expected_due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    baby_date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    blood_type: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    allergies: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    diet_preferences: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    medical_conditions: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     saved_volunteer_doctors: Mapped[list["SavedVolunteerDoctor"]] = relationship(back_populates="mother")
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="mother")

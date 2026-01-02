@@ -1,14 +1,14 @@
-import { View, Text, ScrollView, TouchableOpacity, Pressable } from "react-native";
-import PregnancyDetailsCard from "@/src/components/cards/PregnancyDetailsCard";
 import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
+import PregnancyDetailsCard from "@/src/components/cards/PregnancyDetailsCard";
 import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
-import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
-import { SafeAreaView } from "react-native-safe-area-context";
 import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
-import React, { useState } from "react";
+import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
+import React, { useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MotherProfileScreen() {
   const me = useAuthStore((state) => state.me);
@@ -94,8 +94,7 @@ export default function MotherProfileScreen() {
           </View>
         </View>
 
-        <Pressable onPress={() => router.push("/(onboarding)/pregnancy-details")} />
-
+        
         {/* Pregnancy Details Card */}
         <PregnancyDetailsCard data={pregnancyData} onUpdateField={handlePregnancyUpdate} />
 

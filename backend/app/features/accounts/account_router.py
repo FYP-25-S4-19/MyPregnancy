@@ -5,8 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.password_hasher import get_password_hasher
 from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import Admin, UserRole
-from app.features.accounts.account_models import AccountCreationRequestView, RejectAccountCreationRequestReason
+from app.db.db_schema import Admin, UserRole, PregnantWoman
+from app.features.accounts.account_models import (
+    PregnancyDetailsUpdateRequest,
+    HealthProfileUpdateRequest,
+    MyProfileResponse,
+    AccountCreationRequestView,
+    RejectAccountCreationRequestReason
+)
 from app.features.accounts.account_service import AccountService
 
 account_router = APIRouter(prefix="/account-requests", tags=["Account Creation Requests"])
@@ -14,6 +20,41 @@ account_router = APIRouter(prefix="/account-requests", tags=["Account Creation R
 
 def get_account_service(db: AsyncSession = Depends(get_db)) -> AccountService:
     return AccountService(db)
+
+@account_router.put("/me/pregnancy-details")
+async def update_my_pregnancy_details(
+    payload: PregnancyDetailsUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    service: AccountService = Depends(get_account_service),
+) -> None:
+    try:
+        await service.update_pregnancy_details(mother, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+@account_router.put("/me/health-profile")
+async def update_my_health_profile(
+    payload: HealthProfileUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    service: AccountService = Depends(get_account_service),
+) -> None:
+    try:
+        await service.update_health_profile(mother, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+@account_router.get("/me/profile", response_model=MyProfileResponse)
+async def get_my_profile(
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    service: AccountService = Depends(get_account_service),
+) -> MyProfileResponse:
+    return await service.get_my_profile(mother)
 
 
 @account_router.get("/", response_model=list[AccountCreationRequestView])

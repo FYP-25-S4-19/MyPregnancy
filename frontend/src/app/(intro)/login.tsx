@@ -1,13 +1,13 @@
-import { View, TextInput, StyleSheet, Text, TouchableOpacity, Alert } from "react-native";
-import { colors, font, sizes } from "@/src/shared/designSystem";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { MeData } from "@/src/shared/typesAndInterfaces";
-import useAuthStore from "@/src/shared/authStore";
-import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { jwtDecode } from "jwt-decode";
-import { router } from "expo-router";
 import api from "@/src/shared/api";
+import useAuthStore from "@/src/shared/authStore";
+import { colors, font, sizes } from "@/src/shared/designSystem";
+import { MeData } from "@/src/shared/typesAndInterfaces";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { jwtDecode } from "jwt-decode";
+import React, { useState } from "react";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface LoginResponse {
   access_token: string;
@@ -48,7 +48,7 @@ export default function LoginScreen() {
       const meRes = await api.get<MeData>("/users/me");
       setMe(meRes.data);
 
-      router.replace("/(onboarding)/pregnancy-details");
+      router.replace("/main/(notab)/(onboarding)/pregnancy-details");
     } catch (err) {
       console.error(err);
       clearAuthState();
