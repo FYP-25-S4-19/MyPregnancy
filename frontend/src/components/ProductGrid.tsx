@@ -1,49 +1,86 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from "react-native";
 import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
 import { ProductPreview } from "@/src/shared/typesAndInterfaces";
-import { router } from "expo-router";
-import { FC } from "react";
-import utils from "@/src/shared/utils";
+import { FC, useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import utils from "@/src/shared/utils";
+import { router } from "expo-router";
 
 interface ProductGridProps {
   products: ProductPreview[];
   selectedCategory?: string;
+  productDetailRoute?: (productId: number) => string;
 }
 
-export const ProductGrid: FC<ProductGridProps> = ({ products, selectedCategory = "" }) => {
-  const filteredProducts = products.filter(
-    (item) => selectedCategory.length === 0 || item.category === selectedCategory
-  );
+const ProductCard: FC<{ item: ProductPreview; isVisible: boolean; detailRoute: string }> = ({
+  item,
+  isVisible,
+  detailRoute,
+}) => {
+  const opacity = useRef(new Animated.Value(1)).current;
+  const [shouldRender, setShouldRender] = useState(true);
 
-  const handleProductPress = (productId: number) => {
-    router.push(`/main/merchant/shop/${productId}`);
+  useEffect(() => {
+    if (isVisible) {
+      setShouldRender(true);
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        setShouldRender(false);
+      });
+    }
+  }, [isVisible, opacity]);
+
+  if (!shouldRender) {
+    return null;
+  }
+
+  const handlePress = () => {
+    router.navigate(detailRoute as any);
   };
 
   return (
-    <View style={styles.grid}>
-      {filteredProducts.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          style={styles.card}
-          onPress={() => handleProductPress(item.id)}
-          activeOpacity={0.7}
-        >
-          {item.img_url ? (
-            <Image source={{ uri: item.img_url }} style={styles.productImage} resizeMode="cover" />
-          ) : (
-            <View style={[styles.productImage, styles.placeholderImage]}>
-              <Ionicons name="image-outline" size={40} color={colors.tabIcon} />
-            </View>
-          )}
-          <View style={styles.cardInfo}>
-            <Text style={styles.productName} numberOfLines={2}>
-              {item.name}
-            </Text>
-            <Text style={styles.productPrice}>${utils.centsToDollarStr(item.price_cents)}</Text>
+    <Animated.View style={[styles.cardWrapper, { opacity }]}>
+      <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={handlePress}>
+        {item.img_url ? (
+          <Image source={{ uri: item.img_url }} style={styles.productImage} resizeMode="cover" />
+        ) : (
+          <View style={[styles.productImage, styles.placeholderImage]}>
+            <Ionicons name="image-outline" size={40} color={colors.tabIcon} />
           </View>
-        </TouchableOpacity>
-      ))}
+        )}
+        <View style={styles.cardInfo}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {item.name}
+          </Text>
+          <Text style={styles.productPrice}>${utils.centsToDollarStr(item.price_cents)}</Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+export const ProductGrid: FC<ProductGridProps> = ({
+  products,
+  selectedCategory = "",
+  productDetailRoute = (id) => `/main/merchant/shop/${id}`,
+}) => {
+  return (
+    <View style={styles.grid}>
+      {products.map((item) => {
+        const isVisible = selectedCategory.length === 0 || item.category === selectedCategory;
+        return (
+          <ProductCard key={item.id} item={item} isVisible={isVisible} detailRoute={productDetailRoute(item.id)} />
+        );
+      })}
     </View>
   );
 };
@@ -54,11 +91,14 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
+  cardWrapper: {
+    width: "48%",
+    marginBottom: sizes.m,
+  },
   card: {
     backgroundColor: colors.white,
-    width: "48%",
+    width: "100%",
     borderRadius: sizes.borderRadius,
-    marginBottom: sizes.m,
     overflow: "hidden",
     ...shadows.small,
   },

@@ -9,7 +9,6 @@ import { router } from "expo-router";
 import { AddProductSection } from "@/src/components/sections/AddProductSection";
 import { MyProductsSection } from "@/src/components/sections/MyProductSection";
 
-// app/main/merchant/index.tsx (or your specific path)
 export default function MerchantHomeScreen() {
   const me = useAuthStore((state) => state.me);
   const fullname = me ? utils.formatFullname(me) : "";
