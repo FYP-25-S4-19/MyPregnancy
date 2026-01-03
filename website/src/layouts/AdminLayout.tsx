@@ -12,9 +12,7 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Users', href: '/admin/users', icon: Users },
-  { name: 'Appointments', href: '/admin/appointments', icon: Calendar },
+  { name: 'Users', href: '/admin/manage-account', icon: Users },
   { name: 'Website Builder', href: '/admin/website-builder', icon: Globe },
 ];
 
@@ -24,7 +22,10 @@ export default function AdminLayout() {
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
-    navigate('/login');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_email');
+    navigate('/');
   };
 
   return (
@@ -67,7 +68,7 @@ export default function AdminLayout() {
                 className={({ isActive }) => `
                   flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
                   ${isActive 
-                    ? 'bg-primary text-white' 
+                    ? 'bg-blue-600 text-white' 
                     : 'text-gray-700 hover:bg-gray-100'
                   }
                 `}

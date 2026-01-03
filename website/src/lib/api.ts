@@ -34,14 +34,12 @@ export const websiteAPI = {
 
 export const authAPI = {
   login: (username: string, password: string) => {
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('password', password);
-    
-    return api.post('/auth/jwt/login', formData, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+    const body = new URLSearchParams();
+    body.append('username', username);
+    body.append('password', password);
+
+    return api.post('/auth/jwt/login', body, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
   },
   logout: () => api.post('/auth/jwt/logout'),
@@ -53,6 +51,12 @@ export const usersAPI = {
   getUser: (id: number) => api.get(`/users/${id}`),
   updateUser: (id: number, data: any) => api.patch(`/users/${id}`, data),
   deleteUser: (id: number) => api.delete(`/users/${id}`),
+};
+
+export const adminAPI = {
+  getAllDoctors: () => api.get('/admin/users/doctors'),
+  getAllMothers: () => api.get('/admin/users/mothers'),
+  getAllNutritionists: () => api.get('/admin/users/nutrionists'),
 };
 
 export const appointmentsAPI = {

@@ -65,7 +65,7 @@ async def create_recipe(
             instructions,
             ingredients,
             description,
-            int(est_calories),
+            est_calories,
             pregnancy_benefit,
             int(serving_count),
             image_file,
