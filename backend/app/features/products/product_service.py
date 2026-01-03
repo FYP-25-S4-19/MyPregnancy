@@ -5,10 +5,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import Merchant, MotherLikeProduct, PregnantWoman, Product, ProductCategory, User
+from app.db.db_schema import Merchant, MotherLikeProduct, PregnantWoman, Product, ProductCategory, ProductDraft, User
 from app.features.products.product_models import (
     ProductCategoryResponse,
     ProductDetailedResponse,
+    ProductDraftCreateRequest,
+    ProductDraftResponse,
+    ProductDraftUpdateRequest,
     ProductPreviewResponse,
     ProductPreviewsPaginatedResponse,
 )
@@ -217,3 +220,211 @@ class ProductService:
             )
             for product in products
         ]
+
+    # =================================================================
+    # ====================== DRAFT METHODS ============================
+    # =================================================================
+
+    async def create_product_draft(
+        self, merchant: Merchant, draft_data: ProductDraftCreateRequest
+    ) -> ProductDraftResponse:
+        """Create a new product draft for a merchant."""
+        # Validate category if provided
+        if draft_data.category_id is not None:
+            category_stmt = select(ProductCategory).where(ProductCategory.id == draft_data.category_id)
+            category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+            if not category:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product category")
+
+        new_draft = ProductDraft(
+            merchant_id=merchant.id,
+            name=draft_data.name,
+            category_id=draft_data.category_id,
+            price_cents=draft_data.price_cents,
+            description=draft_data.description,
+        )
+        self.db.add(new_draft)
+        await self.db.flush()
+
+        return await self._build_draft_response(new_draft)
+
+    async def get_product_draft(self, draft_id: int, merchant_id: UUID) -> ProductDraftResponse:
+        """Get a single product draft. Only the owning merchant can view."""
+        stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
+        draft = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not draft:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
+
+        if draft.merchant_id != merchant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this draft",
+            )
+
+        return await self._build_draft_response(draft)
+
+    async def list_product_drafts(self, merchant_id: UUID) -> list[ProductDraftResponse]:
+        """List all product drafts for a merchant."""
+        stmt = (
+            select(ProductDraft).where(ProductDraft.merchant_id == merchant_id).order_by(ProductDraft.updated_at.desc())
+        )
+        drafts = (await self.db.execute(stmt)).scalars().all()
+
+        return [await self._build_draft_response(draft) for draft in drafts]
+
+    async def update_product_draft(
+        self, draft_id: int, merchant_id: UUID, draft_data: ProductDraftUpdateRequest
+    ) -> ProductDraftResponse:
+        """Update a product draft. Only the owning merchant can update."""
+        stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
+        draft = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not draft:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
+
+        if draft.merchant_id != merchant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this draft",
+            )
+
+        # Validate category if being updated
+        if draft_data.category_id is not None:
+            category_stmt = select(ProductCategory).where(ProductCategory.id == draft_data.category_id)
+            category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+            if not category:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product category")
+
+        # Update fields (only if provided in request)
+        if draft_data.name is not None:
+            draft.name = draft_data.name
+        if draft_data.category_id is not None:
+            draft.category_id = draft_data.category_id
+        if draft_data.price_cents is not None:
+            draft.price_cents = draft_data.price_cents
+        if draft_data.description is not None:
+            draft.description = draft_data.description
+
+        await self.db.flush()
+        return await self._build_draft_response(draft)
+
+    async def upload_product_draft_image(self, draft_id: int, merchant_id: UUID, img_file: UploadFile) -> None:
+        """Upload or replace image for a product draft."""
+        stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
+        draft = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not draft:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
+
+        if draft.merchant_id != merchant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this draft",
+            )
+
+        # Upload to S3 using a special prefix for drafts
+        img_key = S3StorageInterface.put_product_draft_img(draft.id, img_file)
+        if not img_key:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to upload draft image",
+            )
+        draft.img_key = img_key
+
+    async def delete_product_draft(self, draft_id: int, merchant_id: UUID) -> None:
+        """Delete a product draft. Only the owning merchant can delete."""
+        stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
+        draft = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not draft:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
+
+        if draft.merchant_id != merchant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this draft",
+            )
+
+        await self.db.delete(draft)
+
+    async def publish_product_draft(self, draft_id: int, merchant: Merchant) -> Product:
+        """Publish a draft as a live product. Validates all required fields are present."""
+        stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
+        draft = (await self.db.execute(stmt)).scalar_one_or_none()
+
+        if not draft:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
+
+        if draft.merchant_id != merchant.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to publish this draft",
+            )
+
+        # Validate all required fields are present
+        if not draft.name:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Product name is required")
+        if draft.category_id is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Product category is required")
+        if draft.price_cents is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Product price is required")
+        if not draft.description:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Product description is required")
+        if not draft.img_key:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Product image is required")
+
+        # Get the category
+        category_stmt = select(ProductCategory).where(ProductCategory.id == draft.category_id)
+        category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+        if not category:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product category")
+
+        # Create the published product
+        new_product = Product(
+            name=draft.name,
+            merchant=merchant,
+            category=category,
+            price_cents=draft.price_cents,
+            description=draft.description,
+        )
+        self.db.add(new_product)
+        await self.db.flush()
+
+        # Copy/promote the draft image to the product image location
+        if draft.img_key:
+            # Promote the image from draft storage to product storage
+            img_key = S3StorageInterface.promote_product_draft_img(new_product.id, draft.img_key)
+            if img_key:
+                new_product.img_key = img_key
+            else:
+                # Fallback: just use the draft img_key if promotion fails
+                new_product.img_key = draft.img_key
+
+        # Delete the draft after successful publication
+        await self.db.delete(draft)
+
+        return new_product
+
+    async def _build_draft_response(self, draft: ProductDraft) -> ProductDraftResponse:
+        """Helper to build a ProductDraftResponse from a ProductDraft entity."""
+        category_label = None
+        if draft.category_id is not None:
+            category_stmt = select(ProductCategory).where(ProductCategory.id == draft.category_id)
+            category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+            if category:
+                category_label = category.label
+
+        img_url = (get_s3_bucket_prefix() + draft.img_key) if draft.img_key else None
+
+        return ProductDraftResponse(
+            id=draft.id,
+            name=draft.name,
+            category_id=draft.category_id,
+            category_label=category_label,
+            price_cents=draft.price_cents,
+            description=draft.description,
+            img_url=img_url,
+            created_at=draft.created_at,
+            updated_at=draft.updated_at,
+        )

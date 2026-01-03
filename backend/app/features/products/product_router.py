@@ -8,6 +8,9 @@ from app.db.db_schema import Merchant, PregnantWoman, User
 from app.features.products.product_models import (
     ProductCategoryResponse,
     ProductDetailedResponse,
+    ProductDraftCreateRequest,
+    ProductDraftResponse,
+    ProductDraftUpdateRequest,
     ProductPreviewResponse,
     ProductPreviewsPaginatedResponse,
 )
@@ -123,3 +126,105 @@ async def view_liked_products(
     mother: PregnantWoman = Depends(require_role(PregnantWoman)), service: ProductService = Depends(get_product_service)
 ) -> list[ProductPreviewResponse]:
     return await service.view_liked_products(mother)
+
+
+# =================================================================
+# ====================== DRAFT ENDPOINTS ==========================
+# =================================================================
+
+
+@product_router.post("/drafts", status_code=status.HTTP_201_CREATED, response_model=ProductDraftResponse)
+async def create_product_draft(
+    draft_data: ProductDraftCreateRequest,
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: ProductService = Depends(get_product_service),
+    db: AsyncSession = Depends(get_db),
+) -> ProductDraftResponse:
+    try:
+        draft = await service.create_product_draft(merchant, draft_data)
+        await db.commit()
+        return draft
+    except:
+        await db.rollback()
+        raise
+
+
+@product_router.get("/drafts", response_model=list[ProductDraftResponse])
+async def list_product_drafts(
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: ProductService = Depends(get_product_service),
+) -> list[ProductDraftResponse]:
+    return await service.list_product_drafts(merchant.id)
+
+
+@product_router.get("/drafts/{draft_id}", response_model=ProductDraftResponse)
+async def get_product_draft(
+    draft_id: int,
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: ProductService = Depends(get_product_service),
+) -> ProductDraftResponse:
+    return await service.get_product_draft(draft_id, merchant.id)
+
+
+@product_router.patch("/drafts/{draft_id}", response_model=ProductDraftResponse)
+async def update_product_draft(
+    draft_id: int,
+    draft_data: ProductDraftUpdateRequest,
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: ProductService = Depends(get_product_service),
+    db: AsyncSession = Depends(get_db),
+) -> ProductDraftResponse:
+    try:
+        draft = await service.update_product_draft(draft_id, merchant.id, draft_data)
+        await db.commit()
+        return draft
+    except:
+        await db.rollback()
+        raise
+
+
+@product_router.post("/drafts/{draft_id}/image", status_code=status.HTTP_204_NO_CONTENT)
+async def upload_product_draft_image(
+    draft_id: int,
+    img_file: UploadFile = File(...),
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: ProductService = Depends(get_product_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.upload_product_draft_image(draft_id, merchant.id, img_file)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@product_router.delete("/drafts/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product_draft(
+    draft_id: int,
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: ProductService = Depends(get_product_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.delete_product_draft(draft_id, merchant.id)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@product_router.post("/drafts/{draft_id}/publish", status_code=status.HTTP_201_CREATED)
+async def publish_product_draft(
+    draft_id: int,
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: ProductService = Depends(get_product_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        product = await service.publish_product_draft(draft_id, merchant)
+        await db.commit()
+        return {"message": "Product published successfully", "product_id": product.id}
+    except:
+        await db.rollback()
+        raise

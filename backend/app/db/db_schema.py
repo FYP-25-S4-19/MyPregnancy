@@ -156,6 +156,7 @@ class Nutritionist(User):
 
     qualification_img_key: Mapped[str | None]
     recipes_created: Mapped[list["Recipe"]] = relationship(back_populates="nutritionist")
+    recipe_drafts: Mapped[list["RecipeDraft"]] = relationship(back_populates="nutritionist")
 
 
 class Merchant(User):
@@ -163,6 +164,7 @@ class Merchant(User):
     __mapper_args__ = {"polymorphic_identity": "merchant"}
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
     products: Mapped[list["Product"]] = relationship(back_populates="merchant")
+    product_drafts: Mapped[list["ProductDraft"]] = relationship(back_populates="merchant")
 
 
 # ===========================================================
@@ -447,8 +449,37 @@ class Recipe(Base):
     ingredients: Mapped[str]
     instructions_markdown: Mapped[str]
 
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
     recipe_category_associations: Mapped[list["RecipeToCategoryAssociation"]] = relationship(back_populates="recipe")
     saved_recipes: Mapped[list["SavedRecipe"]] = relationship(back_populates="recipe")
+
+
+class RecipeDraft(Base):
+    __tablename__ = "recipe_drafts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    nutritionist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nutritionists.id"))
+    nutritionist: Mapped["Nutritionist"] = relationship(back_populates="recipe_drafts")
+
+    # All content fields are nullable since drafts can be incomplete
+    name: Mapped[str | None]
+    description: Mapped[str | None]
+    est_calories: Mapped[str | None]
+    pregnancy_benefit: Mapped[str | None]
+
+    img_key: Mapped[str | None]
+    serving_count: Mapped[int | None]
+    ingredients: Mapped[str | None]
+    instructions_markdown: Mapped[str | None]
+
+    # Category ID stored directly for simplicity (no associations for drafts)
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("recipe_categories.id"))
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class RecipeCategory(Base):
@@ -555,6 +586,26 @@ class ProductCategory(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     label: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     products: Mapped[list[Product]] = relationship(back_populates="category")
+
+
+class ProductDraft(Base):
+    __tablename__ = "product_drafts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id"))
+    merchant: Mapped[Merchant] = relationship(back_populates="product_drafts")
+
+    # All content fields are nullable since drafts can be incomplete
+    name: Mapped[str | None] = mapped_column(String(255))
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("product_categories.id"))
+    price_cents: Mapped[int | None] = mapped_column(CheckConstraint("price_cents >= 0 OR price_cents IS NULL"))
+    description: Mapped[str | None] = mapped_column(Text)
+    img_key: Mapped[str | None]
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class MotherLikeProduct(Base):

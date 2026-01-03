@@ -1,9 +1,9 @@
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from "react-native";
 import ArticleSection from "@/src/components/sections/ArticleSection";
 import HomePageHeader from "@/src/components/headers/HomePageHeader";
+import { colors, sizes, shadows } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from "react-native";
-import { colors, sizes, font } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
@@ -21,30 +21,21 @@ export default function MotherHomeScreen() {
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
           />
 
-          
-          <ArticleSection
-            onViewAll={() =>
-              router.push("/main/nutritionist/(home)/articles")
-            }
-          />
+          <ArticleSection onViewAll={() => router.push("/main/nutritionist/(home)/articles")} />
 
           <View style={{ height: 20 }} />
 
           <CommunityThreadsSection
-            onViewAll={() =>
-              router.push("/main/nutritionist/(home)/threads")
-            }
-            onThreadPress={(threadID) =>
-              router.push(`/main/(notab)/threads/${threadID}`)
-            }
+            onViewAll={() => router.push("/main/nutritionist/(home)/threads")}
+            onThreadPress={(threadID) => router.push(`/main/(notab)/threads/${threadID}`)}
           />
 
           {/* ✅ Add Recipe Button */}
           <TouchableOpacity
             style={styles.addRecipeBtn}
-            onPress={() => { 
+            onPress={() => {
               // router.replace("/main/nutritionist/recipe")
-              router.push("/main/nutritionist/recipe/add")
+              router.push("/main/nutritionist/recipe/add");
             }}
           >
             <Text style={styles.addRecipeText}>＋ Add Recipe</Text>
@@ -63,17 +54,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.veryLightPink,
   },
   addRecipeBtn: {
-    marginHorizontal: sizes.l,
-    marginTop: sizes.m,
-    marginBottom: sizes.l,
+    paddingLeft: sizes.m,
+    marginHorizontal: sizes.m,
+    marginVertical: sizes.l,
     backgroundColor: colors.white,
     paddingVertical: sizes.m,
     borderRadius: sizes.s,
     alignItems: "flex-start",
+    ...shadows.small,
   },
   addRecipeText: {
     color: colors.text,
     fontWeight: "700",
-    fontSize: sizes.m,
+    fontSize: sizes.m * 1.2,
   },
 });
