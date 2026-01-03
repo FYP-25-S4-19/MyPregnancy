@@ -5,14 +5,7 @@ from datetime import date, datetime
 from enum import Enum
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
-from sqlalchemy import (
-    DateTime,
-    ForeignKey,
-    String,
-    Text,
-    func,
-    text,
-)
+from sqlalchemy import JSON, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, func, text
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
@@ -41,6 +34,7 @@ class UserRole(Enum):
     VOLUNTEER_DOCTOR = "VOLUNTEER_DOCTOR"
     PREGNANT_WOMAN = "PREGNANT_WOMAN"
     NUTRITIONIST = "NUTRITIONIST"
+    MERCHANT = "MERCHANT"
 
 
 class BinaryMetricCategory(Enum):
@@ -137,11 +131,22 @@ class PregnantWoman(User):
     due_date: Mapped[date | None]  # Nullable (may not be expecting)
     date_of_birth: Mapped[date]
 
+    pregnancy_stage: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    pregnancy_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    expected_due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    baby_date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    blood_type: Mapped[str | None] = mapped_column(String(5), nullable=True)
+    allergies: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    diet_preferences: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    medical_conditions: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     saved_volunteer_doctors: Mapped[list["SavedVolunteerDoctor"]] = relationship(back_populates="mother")
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="mother")
     journal_entries: Mapped[list["JournalEntry"]] = relationship(back_populates="author")
     kick_tracker_sessions: Mapped[list["KickTrackerSession"]] = relationship(back_populates="mother")
     doctor_ratings: Mapped[list["DoctorRating"]] = relationship(back_populates="rater")
+    liked_products: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="mother")
 
 
 class Nutritionist(User):
@@ -151,6 +156,15 @@ class Nutritionist(User):
 
     qualification_img_key: Mapped[str | None]
     recipes_created: Mapped[list["Recipe"]] = relationship(back_populates="nutritionist")
+    recipe_drafts: Mapped[list["RecipeDraft"]] = relationship(back_populates="nutritionist")
+
+
+class Merchant(User):
+    __tablename__ = "merchants"
+    __mapper_args__ = {"polymorphic_identity": "merchant"}
+    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
+    products: Mapped[list["Product"]] = relationship(back_populates="merchant")
+    product_drafts: Mapped[list["ProductDraft"]] = relationship(back_populates="merchant")
 
 
 # ===========================================================
@@ -435,8 +449,37 @@ class Recipe(Base):
     ingredients: Mapped[str]
     instructions_markdown: Mapped[str]
 
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
     recipe_category_associations: Mapped[list["RecipeToCategoryAssociation"]] = relationship(back_populates="recipe")
     saved_recipes: Mapped[list["SavedRecipe"]] = relationship(back_populates="recipe")
+
+
+class RecipeDraft(Base):
+    __tablename__ = "recipe_drafts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    nutritionist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nutritionists.id"))
+    nutritionist: Mapped["Nutritionist"] = relationship(back_populates="recipe_drafts")
+
+    # All content fields are nullable since drafts can be incomplete
+    name: Mapped[str | None]
+    description: Mapped[str | None]
+    est_calories: Mapped[str | None]
+    pregnancy_benefit: Mapped[str | None]
+
+    img_key: Mapped[str | None]
+    serving_count: Mapped[int | None]
+    ingredients: Mapped[str | None]
+    instructions_markdown: Mapped[str | None]
+
+    # Category ID stored directly for simplicity (no associations for drafts)
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("recipe_categories.id"))
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class RecipeCategory(Base):
@@ -514,6 +557,64 @@ class KickTrackerDataPoint(Base):
 
     session_id: Mapped[int] = mapped_column(ForeignKey("kick_tracker_sessions.id"))
     session: Mapped["KickTrackerSession"] = relationship(back_populates="kicks")
+
+
+# ==============================================
+# ============= PRODUCT/MERCHANT ===============
+# ==============================================
+class Product(Base):
+    __tablename__ = "products"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True)
+
+    merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id"))
+    merchant: Mapped[Merchant] = relationship(back_populates="products")
+
+    category_id: Mapped[int] = mapped_column(ForeignKey("product_categories.id"))
+    category: Mapped["ProductCategory"] = relationship(back_populates="products")
+
+    price_cents: Mapped[int] = mapped_column(CheckConstraint("price_cents >= 0"))
+    description: Mapped[str] = mapped_column(Text)
+    img_key: Mapped[str | None]
+    listed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    liked_by_mothers: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="product")
+
+
+class ProductCategory(Base):
+    __tablename__ = "product_categories"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    products: Mapped[list[Product]] = relationship(back_populates="category")
+
+
+class ProductDraft(Base):
+    __tablename__ = "product_drafts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id"))
+    merchant: Mapped[Merchant] = relationship(back_populates="product_drafts")
+
+    # All content fields are nullable since drafts can be incomplete
+    name: Mapped[str | None] = mapped_column(String(255))
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("product_categories.id"))
+    price_cents: Mapped[int | None] = mapped_column(CheckConstraint("price_cents >= 0 OR price_cents IS NULL"))
+    description: Mapped[str | None] = mapped_column(Text)
+    img_key: Mapped[str | None]
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class MotherLikeProduct(Base):
+    __tablename__ = "mother_like_products"
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"), primary_key=True)
+    mother: Mapped[PregnantWoman] = relationship(back_populates="liked_products")
+
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), primary_key=True)
+    product: Mapped[Product] = relationship(back_populates="liked_by_mothers")
 
 
 # ===========================================

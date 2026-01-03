@@ -74,6 +74,49 @@ export interface CreateThreadData {
 export interface CreateCommentData {
   content: string;
 }
+//===================================================
+//=================== PRODUCTS ======================
+//===================================================
+export interface ProductCategory {
+  id: number;
+  label: string;
+}
+
+export interface ProductPreview {
+  id: number;
+  name: string;
+  merchant_name: string;
+  category: string;
+  price_cents: number;
+  img_url: string | null;
+  is_liked: boolean;
+}
+
+export interface ProductPreviewPaginatedResponse {
+  products: ProductPreview[];
+  next_cursor: number | null;
+  has_more: boolean;
+}
+
+export interface ProductDetailedResponse {
+  id: number;
+  name: string;
+  merchant_id: string;
+  merchant_name: string;
+  category: ProductCategory;
+  price_cents: number;
+  description: string;
+  img_url: string | null;
+  is_liked: boolean;
+}
+
+export interface ProductMutationData {
+  name: string;
+  category: string;
+  price_cents: number;
+  description: string;
+  img_file: File | any;
+}
 //==================================================
 //=================== RECIPE =======================
 //==================================================
@@ -121,7 +164,7 @@ export interface JwtData {
   sub: string;
 }
 
-export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST";
+export type RoleType = "PREGNANT_WOMAN" | "VOLUNTEER_DOCTOR" | "NUTRITIONIST" | "MERCHANT";
 //====================================================
 //================== MISCELLANEOUS ===================
 //====================================================

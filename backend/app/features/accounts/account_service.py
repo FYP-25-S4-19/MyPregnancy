@@ -8,10 +8,16 @@ from app.db.db_schema import (
     DoctorAccountCreationRequest,
     Nutritionist,
     NutritionistAccountCreationRequest,
+    PregnantWoman,
     UserRole,
     VolunteerDoctor,
 )
-from app.features.accounts.account_models import AccountCreationRequestView
+from app.features.accounts.account_models import (
+    AccountCreationRequestView,
+    HealthProfileUpdateRequest,
+    MyProfileResponse,
+    PregnancyDetailsUpdateRequest,
+)
 from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import is_valid_image
 
@@ -19,6 +25,42 @@ from app.shared.utils import is_valid_image
 class AccountService:
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    async def update_pregnancy_details(self, mother: PregnantWoman, data: PregnancyDetailsUpdateRequest) -> None:
+        mother.pregnancy_stage = data.stage
+        mother.pregnancy_week = data.pregnancy_week
+
+        # stage-based fields
+        if data.stage == "pregnant":
+            mother.expected_due_date = data.expected_due_date
+            mother.baby_date_of_birth = None
+        elif data.stage == "postpartum":
+            mother.baby_date_of_birth = data.baby_date_of_birth
+            mother.expected_due_date = None
+        else:  # planning
+            mother.expected_due_date = None
+            mother.baby_date_of_birth = None
+
+        await self.db.flush()
+
+    async def update_health_profile(self, mother: PregnantWoman, data: HealthProfileUpdateRequest) -> None:
+        mother.blood_type = data.blood_type
+        mother.allergies = data.allergies or []
+        mother.diet_preferences = data.diet_preferences or []
+        mother.medical_conditions = data.medical_conditions
+        await self.db.flush()
+
+    async def get_my_profile(self, mother: PregnantWoman) -> MyProfileResponse:
+        return MyProfileResponse(
+            stage=mother.pregnancy_stage,
+            pregnancy_week=mother.pregnancy_week,
+            expected_due_date=mother.expected_due_date,
+            baby_date_of_birth=mother.baby_date_of_birth,
+            blood_type=mother.blood_type,
+            allergies=mother.allergies or [],
+            diet_preferences=mother.diet_preferences or [],
+            medical_conditions=mother.medical_conditions,
+        )
 
     async def get_account_creation_requests(self) -> list[AccountCreationRequestView]:
         doctor_creation_requests = [

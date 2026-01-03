@@ -7,12 +7,16 @@ interface SearchBarProps {
   placeholder?: string;
   value?: string;
   onChangeText?: (text: string) => void;
+  onSearchPress?: ()=> void;
+  onSubmitEditing?: () => void;
 }
 
 export default function SearchBar({
   placeholder = "Search a Doctor or a specialization...",
   value,
   onChangeText,
+  onSearchPress,
+  onSubmitEditing,
 }: SearchBarProps) {
   return (
     <View style={styles.container}>
@@ -22,8 +26,14 @@ export default function SearchBar({
         placeholderTextColor={colors.tabIcon}
         value={value}
         onChangeText={onChangeText}
+        returnKeyType="search"
+        onSubmitEditing={onSubmitEditing}
       />
-      <TouchableOpacity style={styles.iconContainer}>
+      <TouchableOpacity 
+        style={styles.iconContainer}
+        onPress={onSearchPress ?? onSubmitEditing}
+        disabled={!onSearchPress && !onSubmitEditing}
+      >
         <Ionicons name="search" size={sizes.icon} color={colors.tabIcon} />
       </TouchableOpacity>
     </View>

@@ -8,6 +8,7 @@ from app.db.db_schema import (
     EduArticle,
     JournalEntry,
     MCRNumber,
+    Merchant,
     Nutritionist,
     PregnantWoman,
     ThreadCategory,
@@ -52,7 +53,7 @@ if __name__ == "__main__":
             db_session,
             faker,
             password_hasher,
-            "./seed_data/profiles/volunteer_doctors",
+            "./seed_data/profiles/doctors",
             QUALIFICATION_FILEPATH,
             available_mcr_numbers,
         )
@@ -63,8 +64,11 @@ if __name__ == "__main__":
             "./seed_data/profiles/nutritionists",
             QUALIFICATION_FILEPATH,
         )
+        merchants: list[Merchant] = UsersGenerator.generate_merchants(
+            db_session, faker, password_hasher, "./seed_data/profiles/merchants"
+        )
         UsersGenerator.generate_admins(db_session, faker, password_hasher, "./seed_data/profiles/admins.json")
-        all_users: list[User] = preg_women + doctors + nutritionists
+        all_users: list[User] = preg_women + doctors + nutritionists + merchants
         print("Finished seeding the database users!\n")
 
         # ------- Generate Community Thread --------
@@ -105,6 +109,8 @@ if __name__ == "__main__":
         MiscGenerator.generate_appointments(db_session, faker, doctors, preg_women)
         MiscGenerator.generate_doctor_ratings(db_session, preg_women, doctors)
         MiscGenerator.generate_mother_save_doctor(db_session, preg_women, doctors)
+        all_products = MiscGenerator.generate_baby_products(db_session, merchants, "./seed_data/products/_data.json")
+        MiscGenerator.generate_mother_like_product(db_session, preg_women, all_products)
         print("Finished seeding miscellaneous content!\n")
 
         db_session.commit()

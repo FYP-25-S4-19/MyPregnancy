@@ -1,0 +1,702 @@
+[
+  {
+    "name": "Adjustable Baby Gate",
+    "category": "Safety",
+    "price_cents": 7800,
+    "description": "Pressure-mounted steel safety gate with an easy-walk-through handle.",
+    "photo_url": "adjustable_baby_gate.jpg"
+  },
+  {
+    "name": "Adjustable Mesh Bath Sling",
+    "category": "Bath",
+    "price_cents": 1600,
+    "description": "Soft mesh cradle that fits inside a sink or tub to support newborns during their first baths.",
+    "photo_url": "adjustable_mesh_bath_sling.jpg"
+  },
+  {
+    "name": "All-Terrain Jogging Stroller",
+    "category": "Travel",
+    "price_cents": 54900,
+    "description": "Equipped with mountain bike-style suspension and air-filled tires for smooth rides on any surface.",
+    "photo_url": "all_terrain_jogging_stroller.jpg"
+  },
+  {
+    "name": "Animal Ear Hooded Cardigan",
+    "category": "Clothing",
+    "price_cents": 3400,
+    "description": "Thick knit sweater with a cozy hood and small 3D ears for an adorable look.",
+    "photo_url": "animal_ear_hooded_cardigan.jpg"
+  },
+  {
+    "name": "Animal Shape Sorter",
+    "category": "Toys",
+    "price_cents": 1900,
+    "description": "Classic wooden toy that teaches problem-solving and color recognition.",
+    "photo_url": "animal_shape_sorter.jpg"
+  },
+  {
+    "name": "Anti-Colic Baby Bottle",
+    "category": "Feeding",
+    "price_cents": 1200,
+    "description": "Designed with an advanced venting system to reduce air ingestion and soothe tummy discomfort.",
+    "photo_url": "anti_colic_baby_bottle.jpg"
+  },
+  {
+    "name": "Anti-Slip Baby Socks",
+    "category": "Clothing",
+    "price_cents": 1100,
+    "description": "Six-pack of cotton socks with rubberized grippers on the soles for early walkers.",
+    "photo_url": "anti_slip_baby_socks.jpg"
+  },
+  {
+    "name": "Anti-Tip Furniture Anchors",
+    "category": "Safety",
+    "price_cents": 1500,
+    "description": "Heavy-duty straps to secure dressers and bookshelves to the wall for a baby-proof home.",
+    "photo_url": "anti_tip_furniture_anchors.jpg"
+  },
+  {
+    "name": "Automatic Formula Pro Mixer",
+    "category": "Feeding",
+    "price_cents": 19900,
+    "description": "Patented technology automatically mixes, heats, and dispenses formula to the perfect consistency in seconds.",
+    "photo_url": "automatic_formula_pro_mixer.jpg"
+  },
+  {
+    "name": "Baby Eczema Soothing Cream",
+    "category": "Health",
+    "price_cents": 1900,
+    "description": "Colloidal oatmeal-based lotion clinically proven to relieve dry, itchy, and irritated skin.",
+    "photo_url": "baby_eczema_soothing_cream.jpg"
+  },
+  {
+    "name": "Baby Food Steam Processor",
+    "category": "Feeding",
+    "price_cents": 15500,
+    "description": "4-in-1 device that steams, blends, defrosts, and reheats organic baby meals in one bowl.",
+    "photo_url": "baby_food_steam_processor.jpg"
+  },
+  {
+    "name": "Baby Grooming Kit",
+    "category": "Health",
+    "price_cents": 2100,
+    "description": "Essential set including soft hairbrush, comb, nail clippers, and nasal aspirator.",
+    "photo_url": "baby_grooming_kit.jpg"
+  },
+  {
+    "name": "Baby Hand and Footprint Kit",
+    "category": "Nursery",
+    "price_cents": 2500,
+    "description": "Clean-touch ink pad and frame to create a lasting memory without getting ink on baby's skin.",
+    "photo_url": "baby_hand_and_footprint_kit.jpg"
+  },
+  {
+    "name": "Baby Knee Pads",
+    "category": "Clothing",
+    "price_cents": 850,
+    "description": "Protective padded sleeves for crawling babies on hard floors.",
+    "photo_url": "baby_knee_pads.jpg"
+  },
+  {
+    "name": "Baby Laundry Detergent",
+    "category": "Cleaning",
+    "price_cents": 1400,
+    "description": "Hypoallergenic, plant-based detergent specifically formulated for sensitive skin.",
+    "photo_url": "baby_laundry_detergent.jpg"
+  },
+  {
+    "name": "Baby Milestone Blocks",
+    "category": "Nursery",
+    "price_cents": 2200,
+    "description": "Wooden blocks for photography to track baby's growth in days, weeks, and months.",
+    "photo_url": "baby_milestone_blocks.jpg"
+  },
+  {
+    "name": "Baby Shusher Sound Machine",
+    "category": "Nursery",
+    "price_cents": 3400,
+    "description": "Uses a rhythmic 'shush' sound to engage baby's natural calming reflex; portable and battery-operated.",
+    "photo_url": "baby_shusher_sound_machine.jpg"
+  },
+  {
+    "name": "Baby Sunglasses with Strap",
+    "category": "Essentials",
+    "price_cents": 2200,
+    "description": "Polarized, shatter-resistant lenses with 100% UVA/UVB protection and a stay-on strap.",
+    "photo_url": "baby_sunglasses_with_strap.jpg"
+  },
+  {
+    "name": "Bamboo Nursing Pads",
+    "category": "Maternity",
+    "price_cents": 1650,
+    "description": "Washable and reusable organic bamboo pads with a waterproof layer for nursing mothers.",
+    "photo_url": "bamboo_nursing_pads.jpg"
+  },
+  {
+    "name": "Biodegradable Bamboo Diapers",
+    "category": "Essentials",
+    "price_cents": 3500,
+    "description": "Eco-friendly, highly absorbent diapers made from sustainable bamboo fibers; free from chlorine and fragrances.",
+    "photo_url": "biodegradable_bamboo_diapers.jpg"
+  },
+  {
+    "name": "Bottle Sterilizer and Dryer",
+    "category": "Feeding",
+    "price_cents": 8500,
+    "description": "Steam sterilizer that kills 99.9% of germs and dries bottles automatically.",
+    "photo_url": "bottle_sterilizer_and_dryer.jpg"
+  },
+  {
+    "name": "Breastmilk Chiller Flask",
+    "category": "Feeding",
+    "price_cents": 7200,
+    "description": "Double-walled stainless steel flask that keeps expressed milk at a safe temperature for 24+ hours.",
+    "photo_url": "breastmilk_chiller_flask.jpg"
+  },
+  {
+    "name": "Breathable Crib Mattress",
+    "category": "Nursery",
+    "price_cents": 18000,
+    "description": "Firm, hypoallergenic mattress with a removable and washable 3D-mesh cover.",
+    "photo_url": "breathable_crib_mattress.jpg"
+  },
+  {
+    "name": "Canvas Diaper Backpack",
+    "category": "Essentials",
+    "price_cents": 6500,
+    "description": "Spacious bag with insulated bottle pockets and a waterproof lining.",
+    "photo_url": "canvas_diaper_backpack.jpg"
+  },
+  {
+    "name": "Canvas Teepee Play Tent",
+    "category": "Nursery",
+    "price_cents": 8500,
+    "description": "A cozy reading nook made from heavy-duty canvas and natural pine poles.",
+    "photo_url": "canvas_teepee_play_tent.jpg"
+  },
+  {
+    "name": "Cloud Shaped Night Light",
+    "category": "Nursery",
+    "price_cents": 2800,
+    "description": "Soft-touch silicone light with dimmable warm glow and 15-minute auto-shutoff timer.",
+    "photo_url": "cloud_shaped_night_light.jpg"
+  },
+  {
+    "name": "Collapsible Diaper Caddy",
+    "category": "Essentials",
+    "price_cents": 2400,
+    "description": "Felt organizer with adjustable compartments to keep diapers, wipes, and creams tidy in any room.",
+    "photo_url": "collapsible_diaper_caddy.jpg"
+  },
+  {
+    "name": "Convertible Car Seat",
+    "category": "Travel",
+    "price_cents": 29900,
+    "description": "Side-impact protection and adjustable headrest that grows with your child from birth to toddlerhood.",
+    "photo_url": "convertible_car_seat.jpg"
+  },
+  {
+    "name": "Convertible Learning Tower",
+    "category": "Toys",
+    "price_cents": 12500,
+    "description": "A secure standing platform that allows toddlers to participate in kitchen activities and crafts safely.",
+    "photo_url": "convertible_learning_tower.jpg"
+  },
+  {
+    "name": "Convertible Wooden Crib",
+    "category": "Nursery",
+    "price_cents": 34900,
+    "description": "Solid pine crib that converts into a toddler bed and later a daybed.",
+    "photo_url": "convertible_wooden_crib.jpg"
+  },
+  {
+    "name": "Cool Mist Humidifier",
+    "category": "Health",
+    "price_cents": 5500,
+    "description": "Whisper-quiet ultrasonic humidifier to help baby breathe easier during dry seasons or congestion.",
+    "photo_url": "cool_mist_humidifier.jpg"
+  },
+  {
+    "name": "Corner Protectors Set",
+    "category": "Safety",
+    "price_cents": 1200,
+    "description": "Clear, soft silicone bumpers to prevent injuries from sharp table corners.",
+    "photo_url": "corner_protectors_set.jpg"
+  },
+  {
+    "name": "Digital Video Baby Monitor",
+    "category": "Safety",
+    "price_cents": 12000,
+    "description": "High-definition camera with night vision and two-way audio for peace of mind.",
+    "photo_url": "digital_video_baby_monitor.jpg"
+  },
+  {
+    "name": "Electric Breast Pump",
+    "category": "Feeding",
+    "price_cents": 18900,
+    "description": "Hospital-grade portable pump with adjustable suction levels and quiet motor.",
+    "photo_url": "electric_breast_pump.jpg"
+  },
+  {
+    "name": "Electric Nail Trimmer",
+    "category": "Health",
+    "price_cents": 2450,
+    "description": "Safe, rotary filing tool with multiple speeds to trim baby's nails without nicking skin.",
+    "photo_url": "electric_nail_trimmer.jpg"
+  },
+  {
+    "name": "Electronic Nasal Aspirator",
+    "category": "Health",
+    "price_cents": 4500,
+    "description": "USB-rechargeable suction device with multiple levels to clear stuffy noses quickly and gently.",
+    "photo_url": "electronic_nasal_aspirator.jpg"
+  },
+  {
+    "name": "Electronic Rocking Chair",
+    "category": "Nursery",
+    "price_cents": 15500,
+    "description": "Multi-speed motorized rocker with built-in lullabies and a toy bar.",
+    "photo_url": "electronic_rocking_chair.jpg"
+  },
+  {
+    "name": "Ergonomic Baby Carrier",
+    "category": "Travel",
+    "price_cents": 14500,
+    "description": "Multi-position carrier with lumbar support and breathable mesh for long walks.",
+    "photo_url": "ergonomic_baby_carrier.jpg"
+  },
+  {
+    "name": "Finger Toothbrush Set",
+    "category": "Health",
+    "price_cents": 850,
+    "description": "Soft BPA-free silicone brushes that fit over a parent's finger to clean emerging teeth and gums.",
+    "photo_url": "finger_toothbrush_set.jpg"
+  },
+  {
+    "name": "First Words Board Book",
+    "category": "Toys",
+    "price_cents": 900,
+    "description": "Durable, thick-paged book with bright illustrations to encourage language development.",
+    "photo_url": "first_words_board_book.jpg"
+  },
+  {
+    "name": "Floating Bath Thermometer",
+    "category": "Bath",
+    "price_cents": 1400,
+    "description": "BPA-free toy that provides instant digital readings to ensure water is at a safe temperature.",
+    "photo_url": "floating_bath_thermometer.jpg"
+  },
+  {
+    "name": "Floating Sea Turtle Bath Toy",
+    "category": "Toys",
+    "price_cents": 1200,
+    "description": "Wind-up swimming turtle that encourages sensory play and makes bath time fun.",
+    "photo_url": "floating_sea_turtle_bath_toy.jpg"
+  },
+  {
+    "name": "Folding Baby Bathtub",
+    "category": "Bath",
+    "price_cents": 3800,
+    "description": "Space-saving collapsible tub with a temperature-sensitive drain plug.",
+    "photo_url": "folding_baby_bathtub.jpg"
+  },
+  {
+    "name": "Formula Dispenser Container",
+    "category": "Feeding",
+    "price_cents": 950,
+    "description": "Three-compartment stackable container for pre-measured formula portions on the go.",
+    "photo_url": "formula_dispenser_container.jpg"
+  },
+  {
+    "name": "Hands-Free Wearable Breast Pump",
+    "category": "Feeding",
+    "price_cents": 24900,
+    "description": "Slim, wireless pump that fits inside a standard nursing bra for discreet pumping on the go.",
+    "photo_url": "hands_free_wearable_breast_pump.jpg"
+  },
+  {
+    "name": "High Back Booster Seat",
+    "category": "Travel",
+    "price_cents": 8900,
+    "description": "Forward-facing car seat for older infants with adjustable side-impact wings.",
+    "photo_url": "high_back_booster_seat.jpg"
+  },
+  {
+    "name": "High Chair with Newborn Insert",
+    "category": "Nursery",
+    "price_cents": 21000,
+    "description": "Ergonomic wooden high chair that adjusts to bring your baby to the table from birth through adulthood.",
+    "photo_url": "high_chair_with_newborn_insert.jpg"
+  },
+  {
+    "name": "High Contrast Flashcards",
+    "category": "Toys",
+    "price_cents": 1400,
+    "description": "Black and white sensory cards designed to stimulate visual development in newborns.",
+    "photo_url": "high_contrast_flashcards.jpg"
+  },
+  {
+    "name": "Hooded Bamboo Bath Towel",
+    "category": "Bath",
+    "price_cents": 2800,
+    "description": "Extra absorbent bamboo-fiber towel with a cute animal hood for post-bath snuggles.",
+    "photo_url": "hooded_bamboo_bath_towel.jpg"
+  },
+  {
+    "name": "Inflatable Airplane Bed",
+    "category": "Travel",
+    "price_cents": 6500,
+    "description": "Universal travel bed that turns an airplane seat into a flat surface for toddlers to sleep comfortably.",
+    "photo_url": "inflatable_airplane_bed.jpg"
+  },
+  {
+    "name": "Inflatable Bath Support",
+    "category": "Bath",
+    "price_cents": 1900,
+    "description": "Contoured support seat to keep baby safe and upright during bath time.",
+    "photo_url": "inflatable_bath_support.jpg"
+  },
+  {
+    "name": "Insulated Bottle Bag",
+    "category": "Travel",
+    "price_cents": 1800,
+    "description": "Thermal-lined pouch that keeps two large bottles warm or cold for up to 4 hours.",
+    "photo_url": "insulated_bottle_bag.jpg"
+  },
+  {
+    "name": "Knit Cotton Cardigan",
+    "category": "Clothing",
+    "price_cents": 2900,
+    "description": "Classic button-up sweater made from soft, non-itchy cotton yarn.",
+    "photo_url": "knit_cotton_cardigan.jpg"
+  },
+  {
+    "name": "Knitted Bear Beanie",
+    "category": "Clothing",
+    "price_cents": 1500,
+    "description": "Hand-knitted wool blend hat with cute ear details to keep baby's head warm and cozy.",
+    "photo_url": "knitted_bear_beanie.jpg"
+  },
+  {
+    "name": "Lightweight Travel Stroller",
+    "category": "Travel",
+    "price_cents": 17500,
+    "description": "One-hand fold stroller that fits in overhead airplane compartments.",
+    "photo_url": "lightweight_travel_stroller.jpg"
+  },
+  {
+    "name": "Magnetic Me Footie",
+    "category": "Clothing",
+    "price_cents": 4000,
+    "description": "Silky soft modal fabric featuring hidden magnetic closures for the world's fastest diaper changes.",
+    "photo_url": "magnetic_me_footie.jpg"
+  },
+  {
+    "name": "Maternity Support Belt",
+    "category": "Maternity",
+    "price_cents": 3200,
+    "description": "Ergonomic belly band that relieves pelvic and back pain by redistributing pregnancy weight.",
+    "photo_url": "maternity_support_belt.jpg"
+  },
+  {
+    "name": "Montessori Play Gym",
+    "category": "Toys",
+    "price_cents": 14000,
+    "description": "Sustainable wood gym featuring organic cotton hanging toys and a high-contrast play mat.",
+    "photo_url": "montessori_play_gym.jpg"
+  },
+  {
+    "name": "Muslin Swaddle Blanket",
+    "category": "Nursery",
+    "price_cents": 2400,
+    "description": "Large, lightweight 100% muslin cotton blanket that gets softer with every wash.",
+    "photo_url": "muslin_swaddle_blanket.jpg"
+  },
+  {
+    "name": "Nasal Aspirator Bulb",
+    "category": "Health",
+    "price_cents": 700,
+    "description": "Hospital-grade silicone bulb for clearing baby's nose safely and effectively.",
+    "photo_url": "nasal_aspirator_bulb.jpg"
+  },
+  {
+    "name": "Nesting Doll Sensory Toy",
+    "category": "Toys",
+    "price_cents": 2100,
+    "description": "Modern silicone nesting dolls that help develop fine motor skills and spatial reasoning.",
+    "photo_url": "nesting_doll_sensory_toy.jpg"
+  },
+  {
+    "name": "Night Light Star Projector",
+    "category": "Nursery",
+    "price_cents": 2900,
+    "description": "Projects a rotating starry sky onto the ceiling to help soothe baby to sleep.",
+    "photo_url": "night_light_star_projector.jpg"
+  },
+  {
+    "name": "No-Scratch Mittens",
+    "category": "Clothing",
+    "price_cents": 600,
+    "description": "Soft cotton mittens with gentle elastic wrists to prevent babies from scratching their face.",
+    "photo_url": "no_scratch_mittens.jpg"
+  },
+  {
+    "name": "Non-Contact Infrared Thermometer",
+    "category": "Health",
+    "price_cents": 4500,
+    "description": "Instant temperature readings without waking the baby, using high-precision sensors.",
+    "photo_url": "non_contact_infrared_thermometer.jpg"
+  },
+  {
+    "name": "Organic Bamboo Washcloths",
+    "category": "Bath",
+    "price_cents": 1500,
+    "description": "Pack of six ultra-soft cloths perfect for baby's delicate facial skin.",
+    "photo_url": "organic_bamboo_washcloths.jpg"
+  },
+  {
+    "name": "Organic Cotton Onesie",
+    "category": "Clothing",
+    "price_cents": 1850,
+    "description": "Ultra-soft, breathable organic cotton bodysuit with nickel-free snaps for easy diaper changes.",
+    "photo_url": "organic_cotton_onesie.jpg"
+  },
+  {
+    "name": "Organic Cotton Sun Hat",
+    "category": "Clothing",
+    "price_cents": 1800,
+    "description": "UPF 50+ rated fabric with a wide brim and adjustable chin strap for maximum sun protection.",
+    "photo_url": "organic_cotton_sun_hat.jpg"
+  },
+  {
+    "name": "Organic Fruit Puree Pack",
+    "category": "Feeding",
+    "price_cents": 450,
+    "description": "Stage 1 organic apple and pear blend with no added sugar or preservatives.",
+    "photo_url": "organic_fruit_puree_pack.jpg"
+  },
+  {
+    "name": "Organic Merino Wool Cardigan",
+    "category": "Clothing",
+    "price_cents": 5500,
+    "description": "Temperature-regulating wool sweater that keeps baby warm in winter and cool in summer.",
+    "photo_url": "organic_merino_wool_cardigan.jpg"
+  },
+  {
+    "name": "Pacifier Clip Set",
+    "category": "Essentials",
+    "price_cents": 1100,
+    "description": "Universal clips that keep pacifiers or teething toys clean and within reach.",
+    "photo_url": "pacifier_clip_set.jpg"
+  },
+  {
+    "name": "Plush Elephant Comforter",
+    "category": "Toys",
+    "price_cents": 1800,
+    "description": "A soft security blanket with a plush elephant head for sensory comfort.",
+    "photo_url": "plush_elephant_comforter.jpg"
+  },
+  {
+    "name": "Portable Diaper Changing Pad",
+    "category": "Essentials",
+    "price_cents": 2250,
+    "description": "Waterproof, foldable mat with built-in pillow and storage pockets for wipes and diapers.",
+    "photo_url": "portable_diaper_changing_pad.jpg"
+  },
+  {
+    "name": "Portable High Chair",
+    "category": "Travel",
+    "price_cents": 4200,
+    "description": "Fabric harness that fits over standard dining chairs to keep baby secure during meals.",
+    "photo_url": "portable_high_chair.jpg"
+  },
+  {
+    "name": "Postpartum Recovery Kit",
+    "category": "Maternity",
+    "price_cents": 9500,
+    "description": "Comprehensive set including peri bottles, cooling pad liners, and healing foam for new moms.",
+    "photo_url": "postpartum_recovery_kit.jpg"
+  },
+  {
+    "name": "Quilted Play Mat",
+    "category": "Nursery",
+    "price_cents": 5500,
+    "description": "Large, padded floor mat perfect for tummy time and nursery floor activities.",
+    "photo_url": "quilted_play_mat.jpg"
+  },
+  {
+    "name": "Reusable Silicone Breastmilk Bags",
+    "category": "Feeding",
+    "price_cents": 2800,
+    "description": "Self-standing, leak-proof silicone bags for freezing and storing breastmilk without plastic waste.",
+    "photo_url": "reusable_silicone_breastmilk_bags.jpg"
+  },
+  {
+    "name": "Ruffle Sleeve Romper",
+    "category": "Clothing",
+    "price_cents": 2600,
+    "description": "Vintage-inspired floral romper made from soft linen with snaps for easy access.",
+    "photo_url": "ruffle_sleeve_romper.jpg"
+  },
+  {
+    "name": "Self-Feeding Silicone Spoons",
+    "category": "Feeding",
+    "price_cents": 1150,
+    "description": "Short, textured handles designed for the 'dip and scoop' stage of baby-led weaning.",
+    "photo_url": "self_feeding_silicone_spoons.jpg"
+  },
+  {
+    "name": "Silicone Bottle Brush",
+    "category": "Cleaning",
+    "price_cents": 1250,
+    "description": "Non-scratch bristles that reach every corner of bottles and nipples.",
+    "photo_url": "silicone_bottle_brush.jpg"
+  },
+  {
+    "name": "Silicone Fresh Food Feeder",
+    "category": "Feeding",
+    "price_cents": 1100,
+    "description": "Allows baby to safely explore whole foods without the risk of choking.",
+    "photo_url": "silicone_fresh_food_feeder.jpg"
+  },
+  {
+    "name": "Silicone Magnetic Bib",
+    "category": "Feeding",
+    "price_cents": 1400,
+    "description": "Waterproof silicone bib with a strong magnetic clasp and a wide pocket to catch food crumbs.",
+    "photo_url": "silicone_magnetic_bib.jpg"
+  },
+  {
+    "name": "Silicone Pacifier with Case",
+    "category": "Essentials",
+    "price_cents": 1250,
+    "description": "One-piece medical-grade silicone pacifier that mimics the shape of a mother's breast.",
+    "photo_url": "silicone_pacifier_with_case.jpg"
+  },
+  {
+    "name": "Silicone Suction Plate",
+    "category": "Feeding",
+    "price_cents": 1600,
+    "description": "Divided plate that sticks to high-chair trays to prevent spills and messes.",
+    "photo_url": "silicone_suction_plate.jpg"
+  },
+  {
+    "name": "Silicone Teething Ring",
+    "category": "Toys",
+    "price_cents": 895,
+    "description": "BPA-free food-grade silicone with multiple textures to soothe sore gums during teething.",
+    "photo_url": "silicone_teething_ring.jpg"
+  },
+  {
+    "name": "Silicone Training Cup",
+    "category": "Feeding",
+    "price_cents": 1350,
+    "description": "Open-top cup designed for tiny hands to practice the transition from bottles.",
+    "photo_url": "silicone_training_cup.jpg"
+  },
+  {
+    "name": "Silver Nursing Cups",
+    "category": "Maternity",
+    "price_cents": 6000,
+    "description": "Pure 925 silver cups that naturally soothe and protect nursing nipples between feeds.",
+    "photo_url": "silver_nursing_cups.jpg"
+  },
+  {
+    "name": "Sleep Sack Swaddle",
+    "category": "Nursery",
+    "price_cents": 3200,
+    "description": "Wearable blanket that replaces loose bedding for a safer, deeper sleep.",
+    "photo_url": "sleep_sack_swaddle.jpg"
+  },
+  {
+    "name": "Smart Sleep Tracking Sock",
+    "category": "Safety",
+    "price_cents": 29900,
+    "description": "Wearable sensor that tracks baby's heart rate, oxygen levels, and sleep trends with real-time phone alerts.",
+    "photo_url": "smart_sleep_tracking_sock.jpg"
+  },
+  {
+    "name": "Soft Sole Leather Moccasins",
+    "category": "Clothing",
+    "price_cents": 3200,
+    "description": "Genuine leather shoes that allow natural foot movement and growth.",
+    "photo_url": "soft_sole_leather_moccasins.jpg"
+  },
+  {
+    "name": "Stacking Nesting Cups",
+    "category": "Toys",
+    "price_cents": 1050,
+    "description": "Classic colorful cups that help develop fine motor skills and hand-eye coordination.",
+    "photo_url": "stacking_nesting_cups.jpg"
+  },
+  {
+    "name": "Stroller Rocker Attachment",
+    "category": "Travel",
+    "price_cents": 5000,
+    "description": "Portable device that clips onto your stroller and creates a gentle rocking motion to keep baby asleep.",
+    "photo_url": "stroller_rocker_attachment.jpg"
+  },
+  {
+    "name": "Teething Mitt",
+    "category": "Toys",
+    "price_cents": 950,
+    "description": "Wearable crinkle mitt with a silicone chewing surface for babies who can't hold toys yet.",
+    "photo_url": "teething_mitt.jpg"
+  },
+  {
+    "name": "Tummy Time Water Mat",
+    "category": "Toys",
+    "price_cents": 1950,
+    "description": "Inflatable sensory mat with floating sea animals to strengthen neck and shoulder muscles.",
+    "photo_url": "tummy_time_water_mat.jpg"
+  },
+  {
+    "name": "UV Bottle Sterilizer",
+    "category": "Cleaning",
+    "price_cents": 21000,
+    "description": "Uses medical-grade UV light to sanitize bottles, pacifiers, and electronics in 10 minutes.",
+    "photo_url": "uv_bottle_sterilizer.jpg"
+  },
+  {
+    "name": "UVC Sanitizing Bag",
+    "category": "Cleaning",
+    "price_cents": 7500,
+    "description": "Portable bag that uses medical-grade UV light to kill 99.9% of bacteria on pacifiers and toys in 5 minutes.",
+    "photo_url": "uvc_sanitizing_bag.jpg"
+  },
+  {
+    "name": "Waterproof Bib Set",
+    "category": "Feeding",
+    "price_cents": 1500,
+    "description": "Pack of three easy-wipe bibs with a deep pocket to catch falling food.",
+    "photo_url": "waterproof_bib_set.jpg"
+  },
+  {
+    "name": "Waterproof Outdoor Picnic Mat",
+    "category": "Travel",
+    "price_cents": 3800,
+    "description": "Large, sand-proof and waterproof mat perfect for park dates and outdoor tummy time.",
+    "photo_url": "waterproof_outdoor_picnic_mat.jpg"
+  },
+  {
+    "name": "Weighted Transition Swaddle",
+    "category": "Nursery",
+    "price_cents": 3800,
+    "description": "Gently weighted chest area helps baby feel secure while allowing arms to be free for safe movement.",
+    "photo_url": "weighted_transition_swaddle.jpg"
+  },
+  {
+    "name": "White Noise Machine",
+    "category": "Nursery",
+    "price_cents": 3500,
+    "description": "Portable sound machine with soothing rain, ocean, and heartbeat sounds.",
+    "photo_url": "white_noise_machine.jpg"
+  },
+  {
+    "name": "Wooden Activity Cube",
+    "category": "Toys",
+    "price_cents": 4800,
+    "description": "Five-sided educational toy featuring beads, gears, and animal shapes.",
+    "photo_url": "wooden_activity_cube.jpg"
+  }
+]

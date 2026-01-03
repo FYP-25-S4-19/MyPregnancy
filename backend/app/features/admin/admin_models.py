@@ -18,3 +18,7 @@ class DoctorModel(UserModel):
 class MotherModel(UserModel):
     due_date: date | None
     date_of_birth: date
+
+
+class UserEditRequestModel(CustomBaseModel):
+    is_active: bool

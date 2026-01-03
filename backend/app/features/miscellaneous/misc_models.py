@@ -1,6 +1,16 @@
 from uuid import UUID
 
+from pydantic import Field
+
 from app.core.custom_base_model import CustomBaseModel
+
+
+class DoctorRatingRequest(CustomBaseModel):
+    rating: int = Field(..., ge=1, le=5, description="Rating value between 1 and 5")
+
+
+class DoctorRatingResponse(CustomBaseModel):
+    has_rating: bool
 
 
 class DoctorPreviewData(CustomBaseModel):

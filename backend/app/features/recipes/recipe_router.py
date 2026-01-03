@@ -8,6 +8,9 @@ from app.db.db_schema import Nutritionist, User
 from app.features.recipes.recipe_models import (
     RecipeCategoryResponse,
     RecipeDetailedResponse,
+    RecipeDraftCreateRequest,
+    RecipeDraftResponse,
+    RecipeDraftUpdateRequest,
     RecipePreviewsPaginatedResponse,
 )
 from app.features.recipes.recipe_service import RecipeService
@@ -65,7 +68,7 @@ async def create_recipe(
             instructions,
             ingredients,
             description,
-            int(est_calories),
+            est_calories,
             pregnancy_benefit,
             int(serving_count),
             image_file,
@@ -117,6 +120,108 @@ async def unsave_recipe(
     try:
         await service.unsave_recipe(recipe_id, user.id)
         await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+# =================================================================
+# ====================== DRAFT ENDPOINTS ==========================
+# =================================================================
+
+
+@recipe_router.post("/drafts", status_code=status.HTTP_201_CREATED, response_model=RecipeDraftResponse)
+async def create_recipe_draft(
+    draft_data: RecipeDraftCreateRequest,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+) -> RecipeDraftResponse:
+    try:
+        draft = await service.create_recipe_draft(nutritionist, draft_data)
+        await db.commit()
+        return draft
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.get("/drafts", response_model=list[RecipeDraftResponse])
+async def list_recipe_drafts(
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+) -> list[RecipeDraftResponse]:
+    return await service.list_recipe_drafts(nutritionist.id)
+
+
+@recipe_router.get("/drafts/{draft_id}", response_model=RecipeDraftResponse)
+async def get_recipe_draft(
+    draft_id: int,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+) -> RecipeDraftResponse:
+    return await service.get_recipe_draft(draft_id, nutritionist.id)
+
+
+@recipe_router.patch("/drafts/{draft_id}", response_model=RecipeDraftResponse)
+async def update_recipe_draft(
+    draft_id: int,
+    draft_data: RecipeDraftUpdateRequest,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+) -> RecipeDraftResponse:
+    try:
+        draft = await service.update_recipe_draft(draft_id, nutritionist.id, draft_data)
+        await db.commit()
+        return draft
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.post("/drafts/{draft_id}/image", status_code=status.HTTP_204_NO_CONTENT)
+async def upload_recipe_draft_image(
+    draft_id: int,
+    img_file: UploadFile = File(...),
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.upload_recipe_draft_image(draft_id, nutritionist.id, img_file)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.delete("/drafts/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recipe_draft(
+    draft_id: int,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.delete_recipe_draft(draft_id, nutritionist.id)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.post("/drafts/{draft_id}/publish", status_code=status.HTTP_201_CREATED)
+async def publish_recipe_draft(
+    draft_id: int,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        recipe = await service.publish_recipe_draft(draft_id, nutritionist)
+        await db.commit()
+        return {"message": "Recipe published successfully", "recipe_id": recipe.id}
     except:
         await db.rollback()
         raise

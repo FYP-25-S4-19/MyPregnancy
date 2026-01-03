@@ -12,6 +12,68 @@ from app.core.settings import settings
 
 class S3StorageInterface:
     # =================================================================
+    # =========================== PRODUCT =============================
+    # =================================================================
+    PRODUCT_PREFIX = "products"
+
+    @staticmethod
+    def put_product_img(product_id: int, product_img: UploadFile) -> str | None:
+        return S3StorageInterface._upload_file_stream(
+            prefix=S3StorageInterface.PRODUCT_PREFIX,
+            file_name=str(product_id),
+            file_obj=product_img.file,
+            content_type=str(product_img.content_type),
+        )
+
+    @staticmethod
+    def put_product_img_from_filepath(product_id: int, product_img_filepath: str) -> str | None:
+        return S3StorageInterface._put_img_from_filepath(
+            prefix=S3StorageInterface.PRODUCT_PREFIX,
+            file_name=str(product_id),
+            img_filepath=product_img_filepath,
+        )
+
+    # =================================================================
+    # ===================== PRODUCT DRAFTS ============================
+    # =================================================================
+    PRODUCT_DRAFT_PREFIX = "product-drafts"
+
+    @staticmethod
+    def put_product_draft_img(draft_id: int, draft_img: UploadFile) -> str | None:
+        return S3StorageInterface._upload_file_stream(
+            prefix=S3StorageInterface.PRODUCT_DRAFT_PREFIX,
+            file_name=str(draft_id),
+            file_obj=draft_img.file,
+            content_type=str(draft_img.content_type),
+        )
+
+    @staticmethod
+    def promote_product_draft_img(product_id: int, draft_img_key: str) -> str | None:
+        """
+        Copies a product draft image to the published product storage.
+        Returns the new image key for the published product, or None on failure.
+        """
+        try:
+            # Parse the extension from the draft key
+            extension = draft_img_key.split(".")[-1] if "." in draft_img_key else "jpg"
+            new_key = f"{S3StorageInterface.PRODUCT_PREFIX}/{product_id}.{extension}"
+
+            # Copy the object from draft to product location
+            s3_client.copy_object(
+                Bucket=settings.S3_BUCKET_NAME,
+                CopySource={"Bucket": settings.S3_BUCKET_NAME, "Key": draft_img_key},
+                Key=new_key,
+            )
+
+            # Optionally delete the draft image after successful copy
+            s3_client.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=draft_img_key)
+
+            return new_key
+        except (BotoCoreError, ClientError) as e:
+            print(f"Error promoting product draft image: {e}")
+            return None
+
+    # =================================================================
     # =========================== RECIPES =============================
     # =================================================================
     RECIPE_PREFIX = "recipes"
@@ -32,6 +94,46 @@ class S3StorageInterface:
             file_name=str(recipe_id),
             img_filepath=recipe_img_filepath,
         )
+
+    # =================================================================
+    # ===================== RECIPE DRAFTS =============================
+    # =================================================================
+    RECIPE_DRAFT_PREFIX = "recipe-drafts"
+
+    @staticmethod
+    def put_recipe_draft_img(draft_id: int, draft_img: UploadFile) -> str | None:
+        return S3StorageInterface._upload_file_stream(
+            prefix=S3StorageInterface.RECIPE_DRAFT_PREFIX,
+            file_name=str(draft_id),
+            file_obj=draft_img.file,
+            content_type=str(draft_img.content_type),
+        )
+
+    @staticmethod
+    def promote_recipe_draft_img(recipe_id: int, draft_img_key: str) -> str | None:
+        """
+        Copies a recipe draft image to the published recipe storage.
+        Returns the new image key for the published recipe, or None on failure.
+        """
+        try:
+            # Parse the extension from the draft key
+            extension = draft_img_key.split(".")[-1] if "." in draft_img_key else "jpg"
+            new_key = f"{S3StorageInterface.RECIPE_PREFIX}/{recipe_id}.{extension}"
+
+            # Copy the object from draft to recipe location
+            s3_client.copy_object(
+                Bucket=settings.S3_BUCKET_NAME,
+                CopySource={"Bucket": settings.S3_BUCKET_NAME, "Key": draft_img_key},
+                Key=new_key,
+            )
+
+            # Optionally delete the draft image after successful copy
+            s3_client.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=draft_img_key)
+
+            return new_key
+        except (BotoCoreError, ClientError) as e:
+            print(f"Error promoting recipe draft image: {e}")
+            return None
 
     # =======================================================================================
     # ============== STAGING AREA FOR QUALIFICATIONS (DOCTOR + NUTRITIONIST) ================
@@ -210,12 +312,14 @@ class S3StorageInterface:
                     extension = ".jpg"
 
             obj_key = f"{prefix}/{file_name}{extension}"
+
             s3_client.upload_fileobj(
                 Fileobj=file_obj,
                 Bucket=settings.S3_BUCKET_NAME,
                 Key=obj_key,
                 ExtraArgs={"ContentType": content_type},
             )
+
             return obj_key
         except (BotoCoreError, ClientError) as e:
             print(f"Error uploading file stream: {e}")

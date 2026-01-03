@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ChatHeader from "@/src/components/headers/ChatHeader";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import { Calendar, DateData } from "react-native-calendars";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import useAuthStore from "@/src/shared/authStore";
 import React, { useState, useMemo } from "react";
 import utils from "@/src/shared/utils";
@@ -43,11 +43,14 @@ export default function IndividualChatScreen() {
   const [channelType, channelID] = (cid as string)?.split(":") || [null, null];
   const streamVideoClient = useStreamVideoClient();
 
-  // Modal state
-  const [showBookingModal, setShowBookingModal] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  // Rating modal state
+  // const [showRatingModal, setShowRatingModal] = useState(false);
+
+  // Booking modal state
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
-  const [isBooking, setIsBooking] = useState<boolean>(false);
+  const [isBooking, setIsBooking] = useState(false);
 
   // Generate available time slots for selected date
   const availableTimeSlots = useMemo((): TimeSlot[] => {

@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from app.core.custom_base_model import CustomBaseModel
@@ -11,11 +12,13 @@ class ArticlePreviewData(CustomBaseModel):
 class ArticleOverviewResponse(CustomBaseModel):
     id: int
     title: str
+    category: str
+    excerpt: str
 
 
 class ArticleDetailedResponse(CustomBaseModel):
     id: int
-    author_id: UUID
+    author_id: Optional[UUID] = None
     author: str
     category: str
     img_key: str | None

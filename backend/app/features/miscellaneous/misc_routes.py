@@ -2,18 +2,75 @@ import base64
 import json
 from datetime import datetime
 from typing import Any, List, Optional
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import and_, null, or_, select
+from sqlalchemy import and_, delete, null, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import MCRNumber, Page, VolunteerDoctor
-from app.features.miscellaneous.misc_models import DoctorPreviewData, DoctorsPaginatedResponse
+from app.db.db_schema import DoctorRating, MCRNumber, Page, PregnantWoman, SavedVolunteerDoctor, VolunteerDoctor
+from app.features.miscellaneous.misc_models import (
+    DoctorPreviewData,
+    DoctorRatingRequest,
+    DoctorRatingResponse,
+    DoctorsPaginatedResponse,
+)
 from app.shared.utils import get_s3_bucket_prefix
 
 misc_router = APIRouter(tags=["Miscellaneous"])
+
+
+@misc_router.get("/doctors/{doctor_id}/rating", response_model=DoctorRatingResponse)
+async def check_doctor_rating(
+    doctor_id: UUID,
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    db: AsyncSession = Depends(get_db),
+) -> DoctorRatingResponse:
+    doctor_stmt = select(VolunteerDoctor).where(VolunteerDoctor.id == doctor_id)  # Check if doctor exists
+    doctor = (await db.execute(doctor_stmt)).scalars().first()
+    if not doctor:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
+
+    rating_stmt = select(DoctorRating).where(  # Check for existing rating
+        and_(DoctorRating.doctor_id == doctor_id, DoctorRating.rater_id == mother.id)
+    )
+    existing_rating = (await db.execute(rating_stmt)).scalars().first()
+
+    return DoctorRatingResponse(has_rating=(existing_rating is not None))
+
+
+@misc_router.post("/doctors/{doctor_id}/rating", status_code=status.HTTP_204_NO_CONTENT)
+async def rate_doctor(
+    doctor_id: UUID,
+    rating_request: DoctorRatingRequest,
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    try:
+        doctor_stmt = select(VolunteerDoctor).where(VolunteerDoctor.id == doctor_id)  # Check if doctor exists
+        doctor = (await db.execute(doctor_stmt)).scalars().first()
+        if not doctor:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
+
+        rating_stmt = select(DoctorRating).where(  # Check for existing rating
+            and_(DoctorRating.doctor_id == doctor_id, DoctorRating.rater_id == mother.id)
+        )
+        existing_rating = (await db.execute(rating_stmt)).scalars().first()
+        if existing_rating:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Rating already exists")
+
+        new_rating = DoctorRating(
+            rater=mother,
+            doctor=doctor,
+            rating=rating_request.rating,
+        )
+        db.add(new_rating)
+        await db.commit()
+    except Exception:
+        await db.rollback()
 
 
 @misc_router.get("/avail-mcr", response_model=list[str])
@@ -39,10 +96,22 @@ def decode_cursor(cursor: str) -> tuple[datetime, str]:
 
 @misc_router.get("/doctors", response_model=DoctorsPaginatedResponse)
 async def list_of_doctors(
-    limit: int = 5, cursor: str | None = None, db: AsyncSession = Depends(get_db)
+    limit: int = 5,
+    cursor: str | None = None,
+    q: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
 ) -> DoctorsPaginatedResponse:
     # Build query with timestamp-based pagination
     stmt = select(VolunteerDoctor).where(VolunteerDoctor.is_active)  # type: ignore
+
+    if q:
+        like = f"%{q.strip()}%"
+        stmt = stmt.where(
+            or_(
+                VolunteerDoctor.first_name.ilike(like),
+            )
+        )
 
     # Apply cursor filter if provided
     if cursor is not None:
@@ -71,17 +140,70 @@ async def list_of_doctors(
         else None
     )
 
+    doctor_ids = [d.id for d in doctors_to_return]
+
+    liked_ids: set[UUID] = set()
+    if doctor_ids:
+        liked_stmt = select(SavedVolunteerDoctor.volunteer_doctor_id).where(
+            SavedVolunteerDoctor.mother_id == mother.id,
+            SavedVolunteerDoctor.volunteer_doctor_id.in_(doctor_ids),
+        )
+        liked_ids = set((await db.execute(liked_stmt)).scalars().all())
+
     doctor_previews = [
         DoctorPreviewData(
             doctor_id=doctor.id,
             profile_img_url=get_s3_bucket_prefix() + doctor.profile_img_key if doctor.profile_img_key else None,
             first_name=doctor.first_name,
-            is_liked=False,  # TODO
+            is_liked=doctor.id in liked_ids,  # TODO
         )
         for doctor in doctors_to_return
     ]
 
     return DoctorsPaginatedResponse(doctors=doctor_previews, next_cursor=next_cursor, has_more=has_more)
+
+
+@misc_router.post("/doctors/{doctor_id}/like")
+async def like_doctor(
+    doctor_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+):
+    doctor = (
+        await db.execute(select(VolunteerDoctor).where(VolunteerDoctor.id == doctor_id, VolunteerDoctor.is_active))
+    ).scalar_one_or_none()
+
+    if doctor is None:
+        return {"doctor_id": str(doctor_id), "is_liked": False, "detail": "Doctor not Found"}
+
+    existing = (
+        await db.execute(
+            select(SavedVolunteerDoctor).where(
+                SavedVolunteerDoctor.mother_id == mother.id, SavedVolunteerDoctor.volunteer_doctor_id == doctor_id
+            )
+        )
+    ).scalar_one_or_none()
+
+    if existing is None:
+        db.add(SavedVolunteerDoctor(mother_id=mother.id, volunteer_doctor_id=doctor.id))
+        await db.commit()
+    return {"doctor_id": str(doctor_id), "is_liked": True}
+
+
+@misc_router.delete("/doctors/{doctor_id}/like")
+async def unlike_doctor(
+    doctor_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+):
+    stmt = delete(SavedVolunteerDoctor).where(
+        SavedVolunteerDoctor.mother_id == mother.id,
+        SavedVolunteerDoctor.volunteer_doctor_id == doctor_id,
+    )
+    await db.execute(stmt)
+    await db.commit()
+
+    return {"doctor_id": str(doctor_id), "is_liked": False}
 
 
 @misc_router.get("/")

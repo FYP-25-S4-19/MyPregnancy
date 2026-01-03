@@ -1,8 +1,11 @@
+from uuid import UUID
+
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import Nutritionist, PregnantWoman, UserRole, VolunteerDoctor
+from app.db.db_schema import Nutritionist, PregnantWoman, User, UserRole, VolunteerDoctor
 from app.features.admin.admin_models import DoctorModel, MotherModel, UserModel
 from app.shared.utils import format_user_fullname
 
@@ -55,3 +58,10 @@ class AdminService:
             )
             for nutritionist in nutritionists
         ]
+
+    async def set_user_is_active(self, user_id: UUID, is_active: bool) -> None:
+        result = await self.db.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        user.is_active = is_active
