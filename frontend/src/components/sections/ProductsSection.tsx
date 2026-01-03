@@ -1,13 +1,12 @@
 import { View, StyleSheet, Text, TextInput, LayoutAnimation, Platform, UIManager } from "react-native";
+import { useProductCategories, useProductPreviews } from "@/src/shared/hooks/useProducts";
 import { ProductCategory, ProductPreview } from "@/src/shared/typesAndInterfaces";
 import { colors, font, sizes } from "@/src/shared/designSystem";
-import { Ionicons } from "@expo/vector-icons";
-import { FC, useState } from "react";
 import { CategoryPills } from "../CategoryPills";
+import { Ionicons } from "@expo/vector-icons";
 import { ProductGrid } from "../ProductGrid";
-import { useProductCategories, useProductPreviews } from "@/src/shared/hooks/useProducts";
+import { FC, useState } from "react";
 
-// Enable LayoutAnimation on Android
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -19,7 +18,7 @@ interface ProductsSectionProps {
   showSearch?: boolean;
   showCategoryFilter?: boolean;
   showAllCategoryOption?: boolean;
-  productDetailRoute?: (productId: number) => string;
+  onProductCardPress: (productId: number) => void;
   onSearch?: (query: string) => void;
 }
 
@@ -34,7 +33,7 @@ export const ProductsSection: FC<ProductsSectionProps> = ({
   showSearch = true,
   showCategoryFilter = true,
   showAllCategoryOption = false,
-  productDetailRoute,
+  onProductCardPress,
   onSearch,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -97,7 +96,7 @@ export const ProductsSection: FC<ProductsSectionProps> = ({
         <ProductGrid
           products={filteredProducts}
           selectedCategory={selectedCategory}
-          productDetailRoute={productDetailRoute}
+          onProductCardPress={onProductCardPress}
         />
       )}
 
@@ -108,22 +107,6 @@ export const ProductsSection: FC<ProductsSectionProps> = ({
         </View>
       )}
     </View>
-  );
-};
-
-/**
- * Merchant-specific wrapper component that uses the merchant's products.
- * This maintains backward compatibility with existing code.
- */
-export const MyProductsSection: FC = () => {
-  return (
-    <ProductsSection
-      title="My Products"
-      showSearch={true}
-      showCategoryFilter={true}
-      showAllCategoryOption={false}
-      productDetailRoute={(id) => `/main/merchant/shop/${id}`}
-    />
   );
 };
 

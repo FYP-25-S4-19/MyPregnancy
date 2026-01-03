@@ -6,8 +6,9 @@ import { CategoryPills } from "@/src/components/CategoryPills";
 import { ProductGrid } from "@/src/components/ProductGrid";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import { router } from "expo-router";
 
-export default function ShopPage() {
+export default function MerchantShopScreen() {
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const { data: productCategories } = useProductCategories();
@@ -49,7 +50,11 @@ export default function ShopPage() {
         {/* Product Grid */}
         <View style={styles.productsContainer}>
           {productPreviews?.products && (
-            <ProductGrid products={productPreviews.products} selectedCategory={selectedCategory} />
+            <ProductGrid
+              products={productPreviews.products}
+              selectedCategory={selectedCategory}
+              onProductCardPress={(productId) => router.push(`/main/merchant/shop/${productId}`)}
+            />
           )}
         </View>
       </ScrollView>

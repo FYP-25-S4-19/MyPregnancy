@@ -4,19 +4,12 @@ import { ProductPreview } from "@/src/shared/typesAndInterfaces";
 import { FC, useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import utils from "@/src/shared/utils";
-import { router } from "expo-router";
 
-interface ProductGridProps {
-  products: ProductPreview[];
-  selectedCategory?: string;
-  productDetailRoute?: (productId: number) => string;
-}
-
-const ProductCard: FC<{ item: ProductPreview; isVisible: boolean; detailRoute: string }> = ({
-  item,
-  isVisible,
-  detailRoute,
-}) => {
+const ProductCard: FC<{
+  item: ProductPreview;
+  isVisible: boolean;
+  onProductCardPress: (productId: number) => void;
+}> = ({ item, isVisible, onProductCardPress }) => {
   const opacity = useRef(new Animated.Value(1)).current;
   const [shouldRender, setShouldRender] = useState(true);
 
@@ -43,13 +36,9 @@ const ProductCard: FC<{ item: ProductPreview; isVisible: boolean; detailRoute: s
     return null;
   }
 
-  const handlePress = () => {
-    router.navigate(detailRoute as any);
-  };
-
   return (
     <Animated.View style={[styles.cardWrapper, { opacity }]}>
-      <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={handlePress}>
+      <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => onProductCardPress(item.id)}>
         {item.img_url ? (
           <Image source={{ uri: item.img_url }} style={styles.productImage} resizeMode="cover" />
         ) : (
@@ -68,18 +57,18 @@ const ProductCard: FC<{ item: ProductPreview; isVisible: boolean; detailRoute: s
   );
 };
 
-export const ProductGrid: FC<ProductGridProps> = ({
-  products,
-  selectedCategory = "",
-  productDetailRoute = (id) => `/main/merchant/shop/${id}`,
-}) => {
+interface ProductGridProps {
+  products: ProductPreview[];
+  selectedCategory?: string;
+  onProductCardPress: (productId: number) => void;
+}
+
+export const ProductGrid: FC<ProductGridProps> = ({ products, selectedCategory = "", onProductCardPress }) => {
   return (
     <View style={styles.grid}>
       {products.map((item) => {
         const isVisible = selectedCategory.length === 0 || item.category === selectedCategory;
-        return (
-          <ProductCard key={item.id} item={item} isVisible={isVisible} detailRoute={productDetailRoute(item.id)} />
-        );
+        return <ProductCard key={item.id} item={item} isVisible={isVisible} onProductCardPress={onProductCardPress} />;
       })}
     </View>
   );
