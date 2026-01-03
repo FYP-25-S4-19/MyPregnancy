@@ -10,7 +10,7 @@ interface DoctorCardProps {
   // rating: number;
   isFavorite?: boolean;
   onChatPress?: () => void;
-  // onFavoritePress?: () => void;
+  onFavoritePress?: () => void;
 }
 
 export default function DoctorCard({
@@ -19,7 +19,7 @@ export default function DoctorCard({
   // rating,
   isFavorite = false,
   onChatPress,
-  // onFavoritePress,
+  onFavoritePress,
 }: DoctorCardProps) {
   return (
     <View style={styles.card}>
@@ -34,8 +34,7 @@ export default function DoctorCard({
       <View style={styles.contentContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.name}>{name}</Text>
-          {/*<TouchableOpacity onPress={onFavoritePress}>*/}
-          <TouchableOpacity>
+          <TouchableOpacity onPress={onFavoritePress}>
             <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={sizes.icon + 4} color={colors.primary} />
           </TouchableOpacity>
         </View>

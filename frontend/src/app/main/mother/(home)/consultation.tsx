@@ -5,13 +5,20 @@ import DoctorCard from "../../../../components/cards/DoctorCard";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import SearchBar from "../../../../components/SearchBar";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { router } from "expo-router";
 import api from "@/src/shared/api";
 
 export default function ConsultationsScreen() {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [submittedQuery, setSubmittedQuery] = useState<string>(""); //search
+
+  const qc= useQueryClient();
+
+  const handleSubmitSearch = () => {
+    setSubmittedQuery(searchQuery.trim());
+  };
 
   const {
     data: doctorsData,
@@ -20,14 +27,47 @@ export default function ConsultationsScreen() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["List of doctors"],
+    queryKey: ["List of doctors", submittedQuery], //search
     queryFn: async ({ pageParam }) => {
       const cursorParam = pageParam ? `&cursor=${pageParam}` : "";
-      const res = await api.get<DoctorsPaginatedResponse>(`/doctors?limit=5${cursorParam}`);
+      const qParam = submittedQuery  ? `&q=${encodeURIComponent(submittedQuery)}`  : "";
+      const res = await api.get<DoctorsPaginatedResponse>(`/doctors?limit=5${cursorParam}${qParam}`);
       return res.data;
     },
     getNextPageParam: (lastPage) => {
       return lastPage.has_more ? lastPage.next_cursor : undefined;
+    },
+  });
+
+  const toggleLikeMutation = useMutation({
+    mutationFn: async (vars: {doctorId: string; nextLike: boolean}) =>{
+      if (vars.nextLike) {
+        await api.post(`/doctors/${vars.doctorId}/like`);
+        return { doctorId: vars.doctorId, is_liked: true};
+      }
+      await api.delete(`/doctors/${vars.doctorId}/like`);
+      return {doctorId: vars.doctorId, is_liked: false};
+    },
+    onMutate: async ({doctorId, nextLike}) =>{
+      const queries = qc.getQueriesData({ queryKey: ["List of doctors"]})
+
+      queries.forEach(([key, oldData]: any)=> {
+        if (!oldData) return;
+        qc.setQueryData(key, {
+          ...oldData,
+          pages: oldData.pages.map((p:any)=> ({
+            ...p,
+            doctors: p.doctors.map((d:any) =>
+              d.doctor_id ===doctorId ?{...d, is_liked: nextLike}: d
+            ),
+          })),
+        });
+      });
+      return {queries};
+    },
+    onError: (_err, _vars, ctx: any) =>{
+      if (!ctx?.queries) return;
+      ctx.queries.forEach(([key, oldData]:any) => qc.setQueryData(key, oldData));
     },
   });
 
@@ -60,10 +100,7 @@ export default function ConsultationsScreen() {
       {/* Subtitle */}
       <Text style={styles.subtitle}>Find the right specialist{"\n"}for your pregnancy journey! 🤰</Text>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
-      </View>
+      
 
       {/* Specialist Section Header */}
       <View style={styles.sectionHeader}>
@@ -86,6 +123,11 @@ export default function ConsultationsScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <SearchBar value={searchQuery} onChangeText={setSearchQuery} onSubmitEditing={handleSubmitSearch} onSearchPress={handleSubmitSearch}/>
+      </View>
+      
       <FlatList
         data={allDoctors}
         keyExtractor={(item) => item.doctor_id}
@@ -100,6 +142,7 @@ export default function ConsultationsScreen() {
             image={item.profile_img_url}
             isFavorite={item.is_liked}
             onChatPress={() => onChatPress(item.doctor_id)}
+            onFavoritePress={()=> toggleLikeMutation.mutate({doctorId: item.doctor_id, nextLike: !item.is_liked})}
           />
         )}
         ListEmptyComponent={

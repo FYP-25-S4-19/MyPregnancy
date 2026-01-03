@@ -13,7 +13,7 @@ export default function ProductDetailPage() {
   const { mutate: likeProduct, isPending: isLiking } = useLikeProductMutation();
   const { mutate: unlikeProduct, isPending: isUnliking } = useUnlikeProductMutation();
 
-  const handleToggleLike = () => {
+  const handleToggleLike = (): void => {
     if (!product) return;
 
     if (product.is_liked) {

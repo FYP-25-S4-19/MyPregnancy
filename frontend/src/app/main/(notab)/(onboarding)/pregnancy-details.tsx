@@ -80,7 +80,7 @@ export default function PregnancyDetailsScreen() {
         baby_date_of_birth: stage === "postpartum" ? babyDob : null,
       };
 
-      //await api.put("/accounts/me/pregnancy-details", pregnancyPayload);
+      await api.put("/accounts/me/pregnancy-details", pregnancyPayload);
 
       // 2) Save health profile
       const healthPayload = {
@@ -90,7 +90,7 @@ export default function PregnancyDetailsScreen() {
         medical_conditions: medicalConditions || null,
       };
 
-      //await api.put("/accounts/me/health-profile", healthPayload);
+      await api.put("/accounts/me/health-profile", healthPayload);
 
       Alert.alert("Saved", "Your profile has been updated.");
       router.replace("/main/mother/(home)");
