@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import useAuthStore from "@/src/shared/authStore";
+import api from "@/src/shared/api";
 import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
 import { getRiskColor, getRiskMessage, predictRisk, RiskPredictionResponse } from "@/src/shared/riskService";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -120,6 +121,12 @@ export default function App() {
   const [kickStartTime, setKickStartTime] = useState<Date | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [kickCount, setKickCount] = useState(0);
+  const [kickSessionId, setKickSessionId] = useState<number | null>(null);
+  const [pastKickCounts, setPastKickCounts] = useState<Array<{ date: string; kick_count: number }>>([]);
+  const [isLoadingKickCounts, setIsLoadingKickCounts] = useState(false);
+  const [isRecordingKick, setIsRecordingKick] = useState(false);
+  const [isStartingKickSession, setIsStartingKickSession] = useState(false);
+  const [isStoppingKickSession, setIsStoppingKickSession] = useState(false);
   const timerRef = React.useRef<number | null>(null);
 
   // Format elapsed seconds into mm:ss
@@ -133,34 +140,87 @@ export default function App() {
     return `${mm}:${ss}`;
   };
 
-  const startKicks = () => {
-    if (isKicksRunning) return;
-    setIsKicksRunning(true);
-    setKickStartTime(new Date());
-    timerRef.current = setInterval(() => {
-      setElapsedSec((prev) => prev + 1);
-    }, 1000) as unknown as number;
+  const fetchPastKickCounts = async (): Promise<void> => {
+    try {
+      setIsLoadingKickCounts(true);
+      const res = await api.get<{ days: Array<{ date: string; kick_count: number }> }>("/kick-tracker/counts");
+      setPastKickCounts(res.data.days || []);
+    } catch (e) {
+      console.error("Failed to fetch kick counts:", e);
+    } finally {
+      setIsLoadingKickCounts(false);
+    }
   };
 
-  const stopKicks = (): void => {
+  const startKicks = async (): Promise<void> => {
+    if (isKicksRunning || isStartingKickSession) return;
+    try {
+      setIsStartingKickSession(true);
+      const res = await api.post<{ session_id: number }>("/kick-tracker/sessions/start");
+      setKickSessionId(res.data.session_id);
+
+      setIsKicksRunning(true);
+      setKickStartTime(new Date());
+      timerRef.current = setInterval(() => {
+        setElapsedSec((prev) => prev + 1);
+      }, 1000) as unknown as number;
+    } catch (e) {
+      Alert.alert("Error", "Failed to start kick session");
+      console.error("Start kick session error:", e);
+    } finally {
+      setIsStartingKickSession(false);
+    }
+  };
+
+  const stopKicks = async (): Promise<void> => {
     setIsKicksRunning(false);
     if (timerRef.current) {
       clearInterval(timerRef.current as unknown as number);
       timerRef.current = null;
     }
+
+    if (kickSessionId == null || isStoppingKickSession) return;
+    try {
+      setIsStoppingKickSession(true);
+      await api.post("/kick-tracker/sessions/stop");
+      setKickSessionId(null);
+      await fetchPastKickCounts();
+    } catch (e) {
+      console.error("Stop kick session error:", e);
+      // Best-effort: local UI has already stopped.
+      setKickSessionId(null);
+    } finally {
+      setIsStoppingKickSession(false);
+    }
   };
 
   const resetKicks = (): void => {
-    stopKicks();
+    void stopKicks();
     setElapsedSec(0);
     setKickCount(0);
     setKickStartTime(null);
   };
 
-  const recordKick = (): void => {
-    // Provide simple visual feedback via count increment
-    setKickCount((c) => c + 1);
+  const recordKick = async (): Promise<void> => {
+    if (!isKicksRunning || isRecordingKick) return;
+    try {
+      setIsRecordingKick(true);
+      const res = await api.post<{ session_kick_count: number }>("/kick-tracker/kicks", {});
+      setKickCount(res.data.session_kick_count);
+      await fetchPastKickCounts();
+    } catch (e) {
+      Alert.alert("Error", "Failed to record kick");
+      console.error("Record kick error:", e);
+    } finally {
+      setIsRecordingKick(false);
+    }
   };
+
+  useEffect(() => {
+    if (activeTab === "Kicks") {
+      void fetchPastKickCounts();
+    }
+  }, [activeTab]);
 
   // ensure timer cleared on unmount
   React.useEffect(() => {
@@ -581,9 +641,21 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity onPress={() => Alert.alert("Past kick counts", "Feature not implemented yet.")}>
-              <Text style={styles.viewPast}>view past kick counts</Text>
-            </TouchableOpacity>
+              <View style={styles.kickHistoryBox}>
+                <Text style={styles.kickHistoryTitle}>Past 14 days</Text>
+                {isLoadingKickCounts ? (
+                  <Text style={styles.kickHistoryItem}>Loading...</Text>
+                ) : pastKickCounts.length === 0 ? (
+                  <Text style={styles.kickHistoryItem}>No kick history yet</Text>
+                ) : (
+                  pastKickCounts.map((d) => (
+                    <View key={d.date} style={styles.kickHistoryRow}>
+                      <Text style={styles.kickHistoryDate}>{d.date}</Text>
+                      <Text style={styles.kickHistoryCount}>{d.kick_count}</Text>
+                    </View>
+                  ))
+                )}
+              </View>
           </View>
         ) : (
           <View style={{ height: 80 }} />
@@ -1019,5 +1091,41 @@ const styles = StyleSheet.create({
     marginTop: sizes.s,
     fontSize: font.m - 2,
     fontWeight: "600",
+  },
+  kickHistoryBox: {
+    marginTop: sizes.m,
+    width: "90%",
+    backgroundColor: colors.white,
+    borderRadius: sizes.s,
+    padding: sizes.s,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+  },
+  kickHistoryTitle: {
+    color: colors.text,
+    fontSize: font.m - 2,
+    fontWeight: "700",
+    marginBottom: sizes.s,
+  },
+  kickHistoryItem: {
+    color: colors.tabIcon,
+    fontSize: font.xs,
+  },
+  kickHistoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: sizes.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.inputFieldBackground,
+  },
+  kickHistoryDate: {
+    color: colors.text,
+    fontSize: font.xs,
+  },
+  kickHistoryCount: {
+    color: colors.primary,
+    fontSize: font.s,
+    fontWeight: "800",
   },
 });
