@@ -44,9 +44,9 @@ export default function AddRecipeScreen() {
   };
 
   /* ---------------- submit ---------------- */
-  const submitRecipe = async () => {
-    if (!name || !image) {
-      Alert.alert("Missing info", "Please fill in everything including the image.");
+  const submitRecipe = async (isDraft: boolean) => {
+    if (!name || !description || !ingredients || !instructions || !image) {
+      Alert.alert("Missing info", "Please fill in all required fields.");
       return;
     }
 
@@ -61,6 +61,7 @@ export default function AddRecipeScreen() {
       formData.append("est_calories", estCalories);
       formData.append("pregnancy_benefit", pregnancyBenefit);
       formData.append("serving_count", servingCount);
+      formData.append("status", isDraft ? "draft" : "published");
 
       formData.append("image_file", {
         uri: image.uri,
@@ -93,77 +94,90 @@ export default function AddRecipeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Add New Recipe</Text>
+        <View style={styles.card}>
+          <Input
+            label="Recipe Name"
+            placeholder="*required"
+            value={name}
+            onChangeText={setName}
+          />
+          <Input
+            label="Description"
+            placeholder="*required"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+          <Input
+            label="Ingredients"
+            placeholder="*required"
+            value={ingredients}
+            onChangeText={setIngredients}
+            multiline
+          />
+          <Input
+            label="Instructions"
+            placeholder="*required"
+            value={instructions}
+            onChangeText={setInstructions}
+            multiline
+          />
+          <Input
+            label="Estimated Calories"
+            placeholder="*required in kcal"
+            value={estCalories}
+            onChangeText={setEstCalories}
+            keyboardType="numeric"
+          />
+          <Input
+            label="Pregnancy Benefit"
+            placeholder="*required"
+            value={pregnancyBenefit}
+            onChangeText={setPregnancyBenefit}
+          />
+          <Input
+            label="Serving Count"
+            placeholder="*required per serving"
+            value={servingCount}
+            onChangeText={setServingCount}
+            keyboardType="numeric"
+          />
 
-        <Input
-          label="Recipe Name"
-          placeholder="*required"
-          value={name}
-          onChangeText={setName}
-        />
-        <Input
-          label="Description"
-          placeholder="*required"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-        />
-        <Input
-          label="Ingredients"
-          placeholder="*required"
-          value={ingredients}
-          onChangeText={setIngredients}
-          multiline
-        />
-        <Input
-          label="Instructions"
-          placeholder="*required"
-          value={instructions}
-          onChangeText={setInstructions}
-          multiline
-        />
-        <Input
-          label="Estimated Calories"
-          placeholder="*required"
-          value={estCalories}
-          onChangeText={setEstCalories}
-          keyboardType="numeric"
-        />
-        <Input
-          label="Pregnancy Benefit"
-          placeholder="*required"
-          value={pregnancyBenefit}
-          onChangeText={setPregnancyBenefit}
-        />
-        <Input
-          label="Serving Count"
-          placeholder="*required"
-          value={servingCount}
-          onChangeText={setServingCount}
-          keyboardType="numeric"
-        />
+          {/* Image upload */}
+          <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
+            {image ? (
+              <Image source={{ uri: image.uri }} style={styles.preview} />
+            ) : (
+              <>
+                <Text style={styles.uploadIcon}>🖼️</Text>
+                <Text style={styles.uploadText}>Choose Files to Upload</Text>
+              </>
+            )}
+          </TouchableOpacity>
 
-        {/* Image picker */}
-        <TouchableOpacity style={styles.imageBtn} onPress={pickImage}>
-          <Text style={styles.imageBtnText}>
-            {image ? "Change Image" : "Pick Recipe Image"}
-          </Text>
-        </TouchableOpacity>
+          {/* Buttons */}
+          <View style={styles.buttonRow}>
+            {/* Submit */}
+            <TouchableOpacity
+              style={styles.submitBtn}
+              onPress={() => submitRecipe(false)}
+              disabled={loading}
+            >
+              <Text style={styles.submitText}>
+                {loading ? "Submitting..." : "Create Recipe"}
+              </Text>
+            </TouchableOpacity>
 
-        {image && (
-          <Image source={{ uri: image.uri }} style={styles.preview} />
-        )}
-
-        {/* Submit */}
-        <TouchableOpacity
-          style={styles.submitBtn}
-          onPress={submitRecipe}
-          disabled={loading}
-        >
-          <Text style={styles.submitText}>
-            {loading ? "Submitting..." : "Create Recipe"}
-          </Text>
-        </TouchableOpacity>
-
+            {/* Draft */}
+            <TouchableOpacity
+              style={styles.draftBtn}
+              onPress={() => submitRecipe(true)}
+              disabled={loading}
+            >
+              <Text style={styles.draftText}>Draft</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <View style={{ height: sizes.xl }} />
       </ScrollView>
     </SafeAreaView>
@@ -200,6 +214,11 @@ const styles = StyleSheet.create({
     marginVertical: sizes.l,
     textAlign: "center",
   },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.l,
+    padding: sizes.l,
+  },
   inputWrapper: {
     marginBottom: sizes.m,
   },
@@ -212,7 +231,8 @@ const styles = StyleSheet.create({
     borderRadius: sizes.m,
     padding: sizes.m,
     fontSize: sizes.m,
-    color: "#000",
+    borderWidth: 2,
+    borderColor: colors.inputFieldBackground,
   },
   imageBtn: {
     backgroundColor: colors.inputFieldBackground,
@@ -231,11 +251,47 @@ const styles = StyleSheet.create({
     marginTop: sizes.m,
   },
   submitBtn: {
+    flex: 1,
     backgroundColor: colors.primary,
     paddingVertical: sizes.m,
-    borderRadius: sizes.l,
+    borderRadius: sizes.m,
     alignItems: "center",
+    marginLeft: sizes.s,
+  },
+  draftBtn: {
+    flex: 1,
+    backgroundColor: colors.inputFieldBackground,
+    paddingVertical: sizes.m,
+    borderRadius: sizes.m,
+    alignItems: "center",
+    marginRight: sizes.s,
+  },
+  uploadBox: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.secondary,
+    borderRadius: sizes.m,
+    height: 160,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: sizes.m,
+  },
+
+  uploadIcon: {
+    fontSize: 28,
+    marginBottom: sizes.xs,
+  },
+
+  uploadText: {
+    color: colors.primary,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: sizes.l,
+  },
+  draftText: {
+    color: colors.primary,
   },
   submitText: {
     color: "white",
