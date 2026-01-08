@@ -22,3 +22,16 @@ class MotherModel(UserModel):
 
 class UserEditRequestModel(CustomBaseModel):
     is_active: bool
+
+
+class DoctorSpecialisationModel(CustomBaseModel):
+    id: int
+    specialisation: str
+
+
+class CreateDoctorSpecialisationRequest(CustomBaseModel):
+    specialisation: str
+
+
+class UpdateDoctorSpecialisationRequest(CustomBaseModel):
+    specialisation: str
