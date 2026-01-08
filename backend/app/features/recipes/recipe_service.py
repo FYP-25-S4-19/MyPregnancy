@@ -68,6 +68,7 @@ class RecipeService:
                 category=recipe.recipe_category_associations[0].category.label,
                 img_url=(get_s3_bucket_prefix() + recipe.img_key) if recipe.img_key else "",
                 description=recipe.description,
+                trimester=recipe.trimester,
                 is_saved=(any(saved.saver_id == user.id for saved in recipe.saved_recipes) if user else False),
             )
             for recipe in recipes
@@ -106,6 +107,7 @@ class RecipeService:
             ingredients=recipe.ingredients,
             instructions=recipe.instructions_markdown,
             category=recipe.recipe_category_associations[0].category.label,
+            trimester=recipe.trimester,
             is_saved=is_saved,
         )
 
@@ -118,6 +120,7 @@ class RecipeService:
         est_calories: str,
         pregnancy_benefit: str,
         serving_count: int,
+        trimester: int,
         image_file: UploadFile,
         nutritionist: Nutritionist,
     ) -> None:
@@ -130,6 +133,9 @@ class RecipeService:
         if instructions.strip() == "":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Instructions cannot be empty")
 
+        if trimester < 1 or trimester > 3:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trimester must be 1, 2, or 3")
+
         new_recipe = Recipe(
             nutritionist=nutritionist,
             name=name,
@@ -140,6 +146,7 @@ class RecipeService:
             serving_count=serving_count,
             ingredients=ingredients,
             instructions_markdown=instructions,
+            trimester=trimester,
         )
         self.db.add(new_recipe)
         await self.db.flush()
@@ -435,6 +442,71 @@ class RecipeService:
             instructions_markdown=draft.instructions_markdown,
             category_id=draft.category_id,
             category_label=category_label,
+            trimester=draft.trimester,
             created_at=draft.created_at,
             updated_at=draft.updated_at,
         )
+
+    async def create_category(self, label: str) -> RecipeCategoryResponse:
+        # Check if category already exists
+        query = select(RecipeCategory).where(RecipeCategory.label == label)
+        result = await self.db.execute(query)
+        existing = result.scalars().first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Category already exists",
+            )
+
+        new_category = RecipeCategory(label=label)
+        self.db.add(new_category)
+        await self.db.flush()
+
+        return RecipeCategoryResponse(id=new_category.id, label=new_category.label)
+
+    async def update_category(self, category_id: int, label: str) -> RecipeCategoryResponse:
+        query = select(RecipeCategory).where(RecipeCategory.id == category_id)
+        result = await self.db.execute(query)
+        category = result.scalars().first()
+        if not category:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Category not found",
+            )
+
+        # Check if new label already exists (and it's not the same category being updated)
+        query = select(RecipeCategory).where(RecipeCategory.label == label)
+        result = await self.db.execute(query)
+        existing = result.scalars().first()
+        if existing and existing.id != category_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Category label already exists",
+            )
+
+        category.label = label
+        await self.db.flush()
+
+        return RecipeCategoryResponse(id=category.id, label=category.label)
+
+    async def delete_category(self, category_id: int) -> None:
+        query = select(RecipeCategory).where(RecipeCategory.id == category_id)
+        result = await self.db.execute(query)
+        category = result.scalars().first()
+        if not category:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Category not found",
+            )
+
+        # Check if any recipes have this category
+        assoc_query = select(RecipeToCategoryAssociation).where(RecipeToCategoryAssociation.category_id == category_id)
+        assoc_result = await self.db.execute(assoc_query)
+        associations = assoc_result.scalars().all()
+        if associations:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot delete category. {len(associations)} recipe(s) have this category.",
+            )
+
+        await self.db.delete(category)

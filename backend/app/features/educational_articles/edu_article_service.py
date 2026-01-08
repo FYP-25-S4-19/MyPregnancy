@@ -76,6 +76,7 @@ class EduArticleService:
                 EduArticle.title,
                 EduArticleCategory.label,
                 EduArticle.content_markdown,
+                EduArticle.trimester,
             )
             .join(EduArticleCategory)
             .where(EduArticle.category_id == cat_obj.id)
@@ -91,6 +92,7 @@ class EduArticleService:
                 title=row["title"],
                 category=row["label"],
                 excerpt=_make_excerpt(row["content_markdown"] or ""),
+                trimester=row["trimester"],
             )
             for row in rows
         ]
@@ -120,10 +122,17 @@ class EduArticleService:
             img_key=article.img_key,
             title=article.title,
             content_markdown=article.content_markdown,
+            trimester=article.trimester,
         )
 
     async def create_article(
-        self, category: str, title: str, content_markdown: str, img_data: UploadFile, doctor: VolunteerDoctor
+        self,
+        category: str,
+        title: str,
+        content_markdown: str,
+        trimester: int,
+        img_data: UploadFile,
+        doctor: VolunteerDoctor,
     ) -> EduArticle:
         # Check if category exists
         cat_query = select(EduArticleCategory).where(EduArticleCategory.label == category)
@@ -136,6 +145,9 @@ class EduArticleService:
         if not cleaned_title:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
+        if trimester < 1 or trimester > 3:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trimester must be 1, 2, or 3")
+
         dup_q = select(EduArticle.id).where(func.lower(EduArticle.title) == func.lower(cleaned_title))
         dup = (await self.db.execute(dup_q)).first()
         if dup is not None:
@@ -147,6 +159,7 @@ class EduArticleService:
             img_key=None,
             title=cleaned_title,
             content_markdown=content_markdown or "",
+            trimester=trimester,
         )
 
         self.db.add(article)
@@ -154,6 +167,7 @@ class EduArticleService:
 
         article_img_key: str | None = S3StorageInterface.put_article_img(article.id, img_data)
         article.img_key = article_img_key
+        await self.db.flush()
         return article
 
     async def delete_article(self, article_id: int, deleter: VolunteerDoctor) -> None:

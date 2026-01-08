@@ -4,14 +4,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import require_role
 from app.core.users_manager import current_active_user, optional_current_active_user
 from app.db.db_config import get_db
-from app.db.db_schema import Nutritionist, User
+from app.db.db_schema import Admin, Nutritionist, User
 from app.features.recipes.recipe_models import (
+    CreateRecipeCategoryRequest,
     RecipeCategoryResponse,
     RecipeDetailedResponse,
     RecipeDraftCreateRequest,
     RecipeDraftResponse,
     RecipeDraftUpdateRequest,
     RecipePreviewsPaginatedResponse,
+    UpdateRecipeCategoryRequest,
 )
 from app.features.recipes.recipe_service import RecipeService
 
@@ -57,6 +59,7 @@ async def create_recipe(
     est_calories: str = Form(...),
     pregnancy_benefit: str = Form(...),
     serving_count: int = Form(...),
+    trimester: int = Form(...),
     image_file: UploadFile = File(),
     nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
     db: AsyncSession = Depends(get_db),
@@ -71,6 +74,7 @@ async def create_recipe(
             est_calories,
             pregnancy_benefit,
             int(serving_count),
+            int(trimester),
             image_file,
             nutritionist,
         )
@@ -223,5 +227,58 @@ async def publish_recipe_draft(
         await db.commit()
         return {"message": "Recipe published successfully", "recipe_id": recipe.id}
     except:
+        await db.rollback()
+        raise
+
+
+# =================================================================
+# ====================== CATEGORY ENDPOINTS =======================
+# =================================================================
+
+
+@recipe_router.post("/admin/categories", response_model=RecipeCategoryResponse, status_code=status.HTTP_201_CREATED)
+async def create_recipe_category(
+    request: CreateRecipeCategoryRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: RecipeService = Depends(get_recipe_service),
+) -> RecipeCategoryResponse:
+    try:
+        result = await service.create_category(request.label.strip())
+        await db.commit()
+        return result
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@recipe_router.patch("/admin/categories/{category_id}", response_model=RecipeCategoryResponse)
+async def update_recipe_category(
+    category_id: int,
+    request: UpdateRecipeCategoryRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: RecipeService = Depends(get_recipe_service),
+) -> RecipeCategoryResponse:
+    try:
+        result = await service.update_category(category_id, request.label.strip())
+        await db.commit()
+        return result
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@recipe_router.delete("/admin/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recipe_category(
+    category_id: int,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: RecipeService = Depends(get_recipe_service),
+) -> None:
+    try:
+        await service.delete_category(category_id)
+        await db.commit()
+    except Exception:
         await db.rollback()
         raise

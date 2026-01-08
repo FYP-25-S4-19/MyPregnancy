@@ -222,6 +222,9 @@ class EduArticle(Base):
     category_id: Mapped[int] = mapped_column(ForeignKey("edu_article_categories.id"))
     category: Mapped["EduArticleCategory"] = relationship(back_populates="articles")
 
+    # Trimester (1-3) - which trimester of pregnancy this article is relevant for
+    trimester: Mapped[int] = mapped_column(CheckConstraint("trimester >= 1 AND trimester <= 3"))
+
     img_key: Mapped[str | None] = mapped_column(String(255))
     title: Mapped[str] = mapped_column(String(255), unique=True)
     content_markdown: Mapped[str] = mapped_column(Text)
@@ -454,6 +457,9 @@ class Recipe(Base):
     est_calories: Mapped[str]
     pregnancy_benefit: Mapped[str]
 
+    # Trimester (1-3) - which trimester of pregnancy this recipe is relevant for
+    trimester: Mapped[int] = mapped_column(CheckConstraint("trimester >= 1 AND trimester <= 3"))
+
     img_key: Mapped[str | None]
     serving_count: Mapped[int]
     ingredients: Mapped[str]
@@ -468,6 +474,11 @@ class Recipe(Base):
 class RecipeDraft(Base):
     __tablename__ = "recipe_drafts"
     id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Trimester (1-3) - nullable since draft may not be complete
+    trimester: Mapped[int | None] = mapped_column(
+        CheckConstraint("trimester IS NULL OR (trimester >= 1 AND trimester <= 3)")
+    )
 
     nutritionist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nutritionists.id"))
     nutritionist: Mapped["Nutritionist"] = relationship(back_populates="recipe_drafts")

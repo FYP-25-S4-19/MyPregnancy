@@ -55,6 +55,7 @@ class EduArticlesGenerator:
             for article_data in articles_data:
                 article = EduArticle(
                     category=random.choice(categories),
+                    trimester=random.randint(1, 3),
                     title=article_data.title,
                     content_markdown=article_data.content,
                 )

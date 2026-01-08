@@ -54,13 +54,14 @@ async def create_article(
     category: str = Form(...),
     title: str = Form(...),
     content_markdown: str = Form(...),
+    trimester: int = Form(...),
     img_data: UploadFile = File(),
     db: AsyncSession = Depends(get_db),
     doctor: VolunteerDoctor = Depends(require_role(VolunteerDoctor)),
     service: EduArticleService = Depends(get_edu_articles_service),
 ) -> None:
     try:
-        await service.create_article(category, title, content_markdown, img_data, doctor)
+        await service.create_article(category, title, content_markdown, trimester, img_data, doctor)
         await db.commit()
     except:
         await db.rollback()
