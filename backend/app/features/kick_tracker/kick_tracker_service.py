@@ -83,7 +83,9 @@ class KickTrackerService:
         self.db.add(kick)
         await self.db.flush()  # assigns kick.id
 
-        session_count_stmt = select(func.count(KickTrackerDataPoint.id)).where(KickTrackerDataPoint.session_id == session.id)
+        session_count_stmt = select(func.count(KickTrackerDataPoint.id)).where(
+            KickTrackerDataPoint.session_id == session.id
+        )
         session_kick_count = (await self.db.execute(session_count_stmt)).scalar_one()
 
         start_of_day = datetime.combine(now.date(), time.min, tzinfo=now.tzinfo)

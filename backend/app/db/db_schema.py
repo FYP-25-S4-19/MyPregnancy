@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from enum import Enum
 
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import JSON, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, func, text
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import JSONB
@@ -105,6 +105,15 @@ class Admin(User):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
 
+class DoctorSpecialisation(Base):
+    __tablename__ = "doctor_specialisations"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    specialisation: Mapped[str] = mapped_column(unique=True)
+
+    # Relationship back to doctors
+    doctors: Mapped[list["VolunteerDoctor"]] = relationship(back_populates="specialisation")
+
+
 class VolunteerDoctor(User):
     __tablename__ = "volunteer_doctors"
     __mapper_args__ = {"polymorphic_identity": "volunteer_doctor"}
@@ -112,6 +121,9 @@ class VolunteerDoctor(User):
 
     mcr_no_id: Mapped[int] = mapped_column(ForeignKey("mcr_numbers.id"))
     mcr_no: Mapped["MCRNumber"] = relationship(back_populates="doctor")
+
+    specialisation_id: Mapped[int] = mapped_column(ForeignKey("doctor_specialisations.id"))
+    specialisation: Mapped["DoctorSpecialisation"] = relationship(back_populates="doctors")
 
     qualification_img_key: Mapped[str | None]
 
