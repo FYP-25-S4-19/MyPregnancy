@@ -7,6 +7,7 @@ from app.db.db_schema import (
     CommunityThread,
     DoctorSpecialisation,
     EduArticle,
+    EduArticleCategory,
     JournalEntry,
     MCRNumber,
     Merchant,
@@ -98,8 +99,11 @@ if __name__ == "__main__":
         print("Finished seeding metric logs (binary, scalar, BP)!\n")
 
         # ------ Generation of educational articles ---------
+        edu_article_categories: list[EduArticleCategory] = EduArticlesGenerator.generate_edu_article_categories(
+            db_session
+        )
         edu_articles: list[EduArticle] = EduArticlesGenerator.generate_edu_articles(
-            db_session, "./seed_data/edu_articles.json"
+            db_session, "./seed_data/edu_articles.json", edu_article_categories
         )
         EduArticlesGenerator.generate_saved_edu_articles(db_session, edu_articles, preg_women)
         print("Finished seeding educational article content!\n")

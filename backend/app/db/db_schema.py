@@ -47,16 +47,13 @@ class BinaryMetricCategory(Enum):
     OTHERS = "OTHERS"
 
 
-class EduArticleCategory(Enum):
-    NUTRITION = "NUTRITION"
-    BODY = "BODY"
-    BABY = "BABY"
-    FEEL_GOOD = "FEEL_GOOD"
-    MEDICAL = "MEDICAL"
-    EXERCISE = "EXERCISE"
-    LABOUR = "LABOUR"
-    LIFESTYLE = "LIFESTYLE"
-    RELATIONSHIPS = "RELATIONSHIPS"
+class EduArticleCategory(Base):
+    __tablename__ = "edu_article_categories"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    label: Mapped[str] = mapped_column(unique=True)
+
+    # Relationship back to articles
+    articles: Mapped[list["EduArticle"]] = relationship(back_populates="category")
 
 
 class NotificationType(Enum):
@@ -222,7 +219,8 @@ class EduArticle(Base):
     author: Mapped["VolunteerDoctor"] = relationship(back_populates="articles_written")
 
     # Each article has exactly 1 category (for now)
-    category: Mapped["EduArticleCategory"] = mapped_column(SQLAlchemyEnum(EduArticleCategory))
+    category_id: Mapped[int] = mapped_column(ForeignKey("edu_article_categories.id"))
+    category: Mapped["EduArticleCategory"] = relationship(back_populates="articles")
 
     img_key: Mapped[str | None] = mapped_column(String(255))
     title: Mapped[str] = mapped_column(String(255), unique=True)

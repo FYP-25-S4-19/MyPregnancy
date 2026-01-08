@@ -24,3 +24,16 @@ class ArticleDetailedResponse(CustomBaseModel):
     img_key: str | None
     title: str
     content_markdown: str
+
+
+class EduArticleCategoryModel(CustomBaseModel):
+    id: int
+    label: str
+
+
+class CreateEduArticleCategoryRequest(CustomBaseModel):
+    label: str
+
+
+class UpdateEduArticleCategoryRequest(CustomBaseModel):
+    label: str
