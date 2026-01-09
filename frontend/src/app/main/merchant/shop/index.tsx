@@ -53,7 +53,7 @@ export default function MerchantShopScreen() {
             <ProductGrid
               products={productPreviews.products}
               selectedCategory={selectedCategory}
-              onProductCardPress={(productId) => router.push(`/main/merchant/shop/${productId}`)}
+              onProductCardPress={(productId) => router.replace(`/main/merchant/shop/${productId}`)}
             />
           )}
         </View>

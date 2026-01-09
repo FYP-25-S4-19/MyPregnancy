@@ -4,14 +4,23 @@ import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useRef } from "react";
 
 export default function ProductDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const productId = parseInt(id || "0");
+  const isFirstLoad = useRef(true);
 
   const { data: product, isLoading, error } = useProductDetail(productId);
   const { mutate: likeProduct, isPending: isLiking } = useLikeProductMutation();
   const { mutate: unlikeProduct, isPending: isUnliking } = useUnlikeProductMutation();
+
+  // Track if this is the first product detail page in the navigation
+  useEffect(() => {
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+    }
+  }, []);
 
   const handleToggleLike = (): void => {
     if (!product) return;
@@ -53,7 +62,12 @@ export default function ProductDetailPage() {
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backIconButton}>
+          <TouchableOpacity
+            onPress={() => {
+              router.navigate("/main/merchant/(home)");
+            }}
+            style={styles.backIconButton}
+          >
             <Ionicons name="chevron-back" size={28} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{product.name}</Text>
