@@ -14,7 +14,7 @@ export default function ConsultationsScreen() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [submittedQuery, setSubmittedQuery] = useState<string>(""); //search
 
-  const qc= useQueryClient();
+  const qc = useQueryClient();
 
   const handleSubmitSearch = () => {
     setSubmittedQuery(searchQuery.trim());
@@ -30,7 +30,7 @@ export default function ConsultationsScreen() {
     queryKey: ["List of doctors", submittedQuery], //search
     queryFn: async ({ pageParam }) => {
       const cursorParam = pageParam ? `&cursor=${pageParam}` : "";
-      const qParam = submittedQuery  ? `&q=${encodeURIComponent(submittedQuery)}`  : "";
+      const qParam = submittedQuery ? `&q=${encodeURIComponent(submittedQuery)}` : "";
       const res = await api.get<DoctorsPaginatedResponse>(`/doctors?limit=5${cursorParam}${qParam}`);
       return res.data;
     },
@@ -40,34 +40,32 @@ export default function ConsultationsScreen() {
   });
 
   const toggleLikeMutation = useMutation({
-    mutationFn: async (vars: {doctorId: string; nextLike: boolean}) =>{
+    mutationFn: async (vars: { doctorId: string; nextLike: boolean }) => {
       if (vars.nextLike) {
         await api.post(`/doctors/${vars.doctorId}/like`);
-        return { doctorId: vars.doctorId, is_liked: true};
+        return { doctorId: vars.doctorId, is_liked: true };
       }
       await api.delete(`/doctors/${vars.doctorId}/like`);
-      return {doctorId: vars.doctorId, is_liked: false};
+      return { doctorId: vars.doctorId, is_liked: false };
     },
-    onMutate: async ({doctorId, nextLike}) =>{
-      const queries = qc.getQueriesData({ queryKey: ["List of doctors"]})
+    onMutate: async ({ doctorId, nextLike }) => {
+      const queries = qc.getQueriesData({ queryKey: ["List of doctors"] });
 
-      queries.forEach(([key, oldData]: any)=> {
+      queries.forEach(([key, oldData]: any) => {
         if (!oldData) return;
         qc.setQueryData(key, {
           ...oldData,
-          pages: oldData.pages.map((p:any)=> ({
+          pages: oldData.pages.map((p: any) => ({
             ...p,
-            doctors: p.doctors.map((d:any) =>
-              d.doctor_id ===doctorId ?{...d, is_liked: nextLike}: d
-            ),
+            doctors: p.doctors.map((d: any) => (d.doctor_id === doctorId ? { ...d, is_liked: nextLike } : d)),
           })),
         });
       });
-      return {queries};
+      return { queries };
     },
-    onError: (_err, _vars, ctx: any) =>{
+    onError: (_err, _vars, ctx: any) => {
       if (!ctx?.queries) return;
-      ctx.queries.forEach(([key, oldData]:any) => qc.setQueryData(key, oldData));
+      ctx.queries.forEach(([key, oldData]: any) => qc.setQueryData(key, oldData));
     },
   });
 
@@ -100,8 +98,6 @@ export default function ConsultationsScreen() {
       {/* Subtitle */}
       <Text style={styles.subtitle}>Find the right specialist{"\n"}for your pregnancy journey! 🤰</Text>
 
-      
-
       {/* Specialist Section Header */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Specialist</Text>
@@ -125,9 +121,14 @@ export default function ConsultationsScreen() {
     <SafeAreaView edges={["top"]} style={styles.container}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} onSubmitEditing={handleSubmitSearch} onSearchPress={handleSubmitSearch}/>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={handleSubmitSearch}
+          onSearchPress={handleSubmitSearch}
+        />
       </View>
-      
+
       <FlatList
         data={allDoctors}
         keyExtractor={(item) => item.doctor_id}
@@ -142,7 +143,7 @@ export default function ConsultationsScreen() {
             image={item.profile_img_url}
             isFavorite={item.is_liked}
             onChatPress={() => onChatPress(item.doctor_id)}
-            onFavoritePress={()=> toggleLikeMutation.mutate({doctorId: item.doctor_id, nextLike: !item.is_liked})}
+            onFavoritePress={() => toggleLikeMutation.mutate({ doctorId: item.doctor_id, nextLike: !item.is_liked })}
           />
         )}
         ListEmptyComponent={

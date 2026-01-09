@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.db.db_schema import (
     Admin,
+    DoctorSpecialisation,
     MCRNumber,
     Merchant,
     Nutritionist,
@@ -72,6 +73,7 @@ class UsersGenerator:
         profile_img_folder: str,
         qualifications_img_folder: str,
         mcr_pool: list[MCRNumber],
+        specialisations: list[DoctorSpecialisation],
     ) -> list[VolunteerDoctor]:
         if not os.path.exists(profile_img_folder):
             raise ValueError(f"Profile image folder does not exist: {profile_img_folder}")
@@ -103,6 +105,7 @@ class UsersGenerator:
                 email=f"{fullname}@gmail.com",
                 hashed_password=password_hasher.hash(fullname),
                 mcr_no=mcr_pool.pop(),
+                specialisation=random.choice(specialisations),
                 created_at=faker.date_time_between(start_date="-3y", end_date="now"),
             )
             db.add(doctor)

@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from enum import Enum
 
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import JSON, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, func, text
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import JSONB
@@ -47,16 +47,13 @@ class BinaryMetricCategory(Enum):
     OTHERS = "OTHERS"
 
 
-class EduArticleCategory(Enum):
-    NUTRITION = "NUTRITION"
-    BODY = "BODY"
-    BABY = "BABY"
-    FEEL_GOOD = "FEEL_GOOD"
-    MEDICAL = "MEDICAL"
-    EXERCISE = "EXERCISE"
-    LABOUR = "LABOUR"
-    LIFESTYLE = "LIFESTYLE"
-    RELATIONSHIPS = "RELATIONSHIPS"
+class EduArticleCategory(Base):
+    __tablename__ = "edu_article_categories"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    label: Mapped[str] = mapped_column(unique=True)
+
+    # Relationship back to articles
+    articles: Mapped[list["EduArticle"]] = relationship(back_populates="category")
 
 
 class NotificationType(Enum):
@@ -105,6 +102,15 @@ class Admin(User):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
 
+class DoctorSpecialisation(Base):
+    __tablename__ = "doctor_specialisations"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    specialisation: Mapped[str] = mapped_column(unique=True)
+
+    # Relationship back to doctors
+    doctors: Mapped[list["VolunteerDoctor"]] = relationship(back_populates="specialisation")
+
+
 class VolunteerDoctor(User):
     __tablename__ = "volunteer_doctors"
     __mapper_args__ = {"polymorphic_identity": "volunteer_doctor"}
@@ -112,6 +118,9 @@ class VolunteerDoctor(User):
 
     mcr_no_id: Mapped[int] = mapped_column(ForeignKey("mcr_numbers.id"))
     mcr_no: Mapped["MCRNumber"] = relationship(back_populates="doctor")
+
+    specialisation_id: Mapped[int] = mapped_column(ForeignKey("doctor_specialisations.id"))
+    specialisation: Mapped["DoctorSpecialisation"] = relationship(back_populates="doctors")
 
     qualification_img_key: Mapped[str | None]
 
@@ -210,7 +219,11 @@ class EduArticle(Base):
     author: Mapped["VolunteerDoctor"] = relationship(back_populates="articles_written")
 
     # Each article has exactly 1 category (for now)
-    category: Mapped["EduArticleCategory"] = mapped_column(SQLAlchemyEnum(EduArticleCategory))
+    category_id: Mapped[int] = mapped_column(ForeignKey("edu_article_categories.id"))
+    category: Mapped["EduArticleCategory"] = relationship(back_populates="articles")
+
+    # Trimester (1-3) - which trimester of pregnancy this article is relevant for
+    trimester: Mapped[int] = mapped_column(CheckConstraint("trimester >= 1 AND trimester <= 3"))
 
     img_key: Mapped[str | None] = mapped_column(String(255))
     title: Mapped[str] = mapped_column(String(255), unique=True)
@@ -444,6 +457,9 @@ class Recipe(Base):
     est_calories: Mapped[str]
     pregnancy_benefit: Mapped[str]
 
+    # Trimester (1-3) - which trimester of pregnancy this recipe is relevant for
+    trimester: Mapped[int] = mapped_column(CheckConstraint("trimester >= 1 AND trimester <= 3"))
+
     img_key: Mapped[str | None]
     serving_count: Mapped[int]
     ingredients: Mapped[str]
@@ -458,6 +474,11 @@ class Recipe(Base):
 class RecipeDraft(Base):
     __tablename__ = "recipe_drafts"
     id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Trimester (1-3) - nullable since draft may not be complete
+    trimester: Mapped[int | None] = mapped_column(
+        CheckConstraint("trimester IS NULL OR (trimester >= 1 AND trimester <= 3)")
+    )
 
     nutritionist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nutritionists.id"))
     nutritionist: Mapped["Nutritionist"] = relationship(back_populates="recipe_drafts")

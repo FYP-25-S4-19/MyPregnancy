@@ -8,10 +8,19 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import and_, delete, null, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import DoctorRating, MCRNumber, Page, PregnantWoman, SavedVolunteerDoctor, VolunteerDoctor
+from app.db.db_schema import (
+    DoctorRating,
+    DoctorSpecialisation,
+    MCRNumber,
+    Page,
+    PregnantWoman,
+    SavedVolunteerDoctor,
+    VolunteerDoctor,
+)
 from app.features.miscellaneous.misc_models import (
     DoctorPreviewData,
     DoctorRatingRequest,
@@ -103,13 +112,17 @@ async def list_of_doctors(
     mother: PregnantWoman = Depends(require_role(PregnantWoman)),
 ) -> DoctorsPaginatedResponse:
     # Build query with timestamp-based pagination
-    stmt = select(VolunteerDoctor).where(VolunteerDoctor.is_active)  # type: ignore
+    stmt = (
+        select(VolunteerDoctor).options(selectinload(VolunteerDoctor.specialisation)).where(VolunteerDoctor.is_active)
+    )  # type: ignore
 
     if q:
         like = f"%{q.strip()}%"
-        stmt = stmt.where(
+
+        stmt = stmt.join(DoctorSpecialisation).where(
             or_(
                 VolunteerDoctor.first_name.ilike(like),
+                DoctorSpecialisation.specialisation.ilike(like),
             )
         )
 
@@ -155,7 +168,8 @@ async def list_of_doctors(
             doctor_id=doctor.id,
             profile_img_url=get_s3_bucket_prefix() + doctor.profile_img_key if doctor.profile_img_key else None,
             first_name=doctor.first_name,
-            is_liked=doctor.id in liked_ids,  # TODO
+            specialisation=doctor.specialisation.specialisation,
+            is_liked=doctor.id in liked_ids,
         )
         for doctor in doctors_to_return
     ]

@@ -14,6 +14,7 @@ class RecipePreviewResponse(CustomBaseModel):
     img_url: str
     description: str
     category: str | None
+    trimester: int
     is_saved: bool
 
 
@@ -34,6 +35,7 @@ class RecipeDetailedResponse(CustomBaseModel):
     ingredients: str
     instructions: str
     category: str | None
+    trimester: int
     is_saved: bool
 
 
@@ -49,6 +51,7 @@ class RecipeDraftResponse(CustomBaseModel):
     instructions_markdown: str | None
     category_id: int | None
     category_label: str | None
+    trimester: int | None
     created_at: datetime
     updated_at: datetime
 
@@ -62,6 +65,7 @@ class RecipeDraftCreateRequest(CustomBaseModel):
     ingredients: str | None = None
     instructions_markdown: str | None = None
     category_id: int | None = None
+    trimester: int | None = None
 
 
 class RecipeDraftUpdateRequest(CustomBaseModel):
@@ -73,3 +77,12 @@ class RecipeDraftUpdateRequest(CustomBaseModel):
     ingredients: str | None = None
     instructions_markdown: str | None = None
     category_id: int | None = None
+    trimester: int | None = None
+
+
+class CreateRecipeCategoryRequest(CustomBaseModel):
+    label: str
+
+
+class UpdateRecipeCategoryRequest(CustomBaseModel):
+    label: str

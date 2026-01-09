@@ -11,6 +11,7 @@ from app.db.db_schema import (
     Appointment,
     AppointmentStatus,
     DoctorRating,
+    DoctorSpecialisation,
     KickTrackerDataPoint,
     KickTrackerSession,
     MCRNumber,
@@ -37,6 +38,28 @@ class ProductModel(CustomBaseModel):
 
 
 class MiscGenerator:
+    @staticmethod
+    def generate_doctor_specialisations(db: Session) -> list[DoctorSpecialisation]:
+        print("Generating doctor specialisations....")
+
+        specialisations = [
+            "Obstetrics and Gynaecology",
+            "Maternal-Fetal Medicine",
+            "High-Risk Pregnancy",
+            "Reproductive Endocrinology",
+            "Prenatal Care",
+            "Perinatal Medicine",
+            "General Practitioner",
+            "Family Medicine",
+            "Internal Medicine",
+            "Midwifery",
+        ]
+
+        specialisation_objs = [DoctorSpecialisation(specialisation=spec) for spec in specialisations]
+        db.add_all(specialisation_objs)
+        db.flush()
+        return specialisation_objs
+
     @staticmethod
     def generate_user_app_feedback(db: Session, faker: Faker, all_users: list[User], fraction_of_mothers: float):
         print("Generating user app feedback....")

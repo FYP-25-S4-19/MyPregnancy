@@ -17,6 +17,7 @@ class DoctorPreviewData(CustomBaseModel):
     doctor_id: UUID
     profile_img_url: str | None
     first_name: str
+    specialisation: str
     is_liked: bool
 
 

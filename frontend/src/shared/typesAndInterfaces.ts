@@ -173,6 +173,7 @@ export interface DoctorPreviewData {
   doctor_id: string;
   profile_img_url: string | null;
   first_name: string;
+  specialisation: string;
   is_liked: boolean;
 }
 
