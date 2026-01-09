@@ -5,8 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import Nutritionist, PregnantWoman, User, UserRole, VolunteerDoctor
-from app.features.admin.admin_models import DoctorModel, MotherModel, UserModel
+from app.db.db_schema import Merchant, Nutritionist, PregnantWoman, User, UserRole, VolunteerDoctor
+from app.features.admin.admin_models import DoctorModel, MerchantModel, MotherModel, UserModel
 from app.shared.utils import format_user_fullname
 
 
@@ -57,6 +57,19 @@ class AdminService:
                 is_active=nutritionist.is_active,
             )
             for nutritionist in nutritionists
+        ]
+
+    async def get_all_merchants(self) -> list[MerchantModel]:
+        result = await self.db.execute(select(Merchant))
+        merchants = result.scalars().all()
+        return [
+            MerchantModel(
+                id=merchant.id,
+                name=format_user_fullname(merchant),
+                created_at=merchant.created_at,
+                is_active=merchant.is_active,
+            )
+            for merchant in merchants
         ]
 
     async def set_user_is_active(self, user_id: UUID, is_active: bool) -> None:

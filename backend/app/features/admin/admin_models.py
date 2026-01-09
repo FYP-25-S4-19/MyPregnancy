@@ -20,5 +20,9 @@ class MotherModel(UserModel):
     date_of_birth: date
 
 
+class MerchantModel(UserModel):
+    pass
+
+
 class UserEditRequestModel(CustomBaseModel):
     is_active: bool

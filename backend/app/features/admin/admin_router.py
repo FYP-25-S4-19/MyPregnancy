@@ -7,7 +7,7 @@ from starlette import status
 from app.core.security import require_role
 from app.db.db_config import get_db
 from app.db.db_schema import Admin
-from app.features.admin.admin_models import DoctorModel, MotherModel, UserModel
+from app.features.admin.admin_models import DoctorModel, MerchantModel, MotherModel, UserModel
 from app.features.admin.admin_service import AdminService
 
 admin_router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -46,6 +46,14 @@ async def get_all_nutritionists(
     return await service.get_all_nutritionists()
 
 
+@admin_router.get("/users/merchants", response_model=list[MerchantModel])
+async def get_all_merchants(
+    _: Admin = Depends(require_role(Admin)),
+    service: AdminService = Depends(get_admin_service),
+) -> list[MerchantModel]:
+    return await service.get_all_merchants()
+
+
 @admin_router.post("/users/{user_id}/suspend", status_code=status.HTTP_204_NO_CONTENT)
 async def suspend_user(
     user_id: UUID,
@@ -55,6 +63,7 @@ async def suspend_user(
 ) -> None:
     try:
         await service.set_user_is_active(user_id, False)
+        await db.commit()
     except Exception:
         await db.rollback()
         raise
@@ -69,6 +78,7 @@ async def unsuspend_user(
 ) -> None:
     try:
         await service.set_user_is_active(user_id, True)
+        await db.commit()
     except Exception:
         await db.rollback()
         raise
