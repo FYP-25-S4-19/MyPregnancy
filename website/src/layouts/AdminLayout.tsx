@@ -1,19 +1,25 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  Globe, 
+import {
   BookOpen,
+  Globe,
   LogOut,
   Menu,
-  X
+  MessageSquare,
+  Stethoscope,
+  Tags,
+  UtensilsCrossed,
+  Users,
+  X,
 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Users', href: '/admin/manage-account', icon: Users },
   { name: 'Website Builder', href: '/admin/website-builder', icon: Globe },
+  { name: 'Users', href: '/admin/manage-account', icon: Users },
+  { name: 'Recipe Categories', href: '/admin/recipe-categories', icon: UtensilsCrossed },
+  { name: 'Article Categories', href: '/admin/article-categories', icon: BookOpen },
+  { name: 'Doctor Specialization', href: '/admin/doctor-specialization', icon: Stethoscope },
+  { name: 'Feedback', href: '/admin/feedback', icon: MessageSquare },
 ];
 
 export default function AdminLayout() {

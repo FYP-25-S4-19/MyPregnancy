@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../../lib/api';
 import { 
   Bell, 
   Home, 
@@ -10,10 +12,74 @@ import {
   HeartPulse, 
   MessageSquare, 
   Sparkles, 
-  ClipboardList 
+  ClipboardList,
+  LogIn,
+  X,
+  AlertCircle,
+  Mail,
+  Lock,
+  Loader,
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const loginResponse = await authAPI.login(email, password);
+      const token = loginResponse.data.access_token;
+      localStorage.setItem('auth_token', token);
+
+      const userResponse = await authAPI.getMe();
+      const userData = userResponse.data;
+      let userRole = userData.role;
+      if (typeof userRole === 'object' && userRole !== null) {
+        userRole = userRole.value || String(userRole);
+      }
+      userRole = String(userRole).trim().toUpperCase();
+      const isAdmin = userRole === 'ADMIN';
+      if (!isAdmin) {
+        setError(`Access Denied: Your role is "${userRole}". Only users with ADMIN role can access this dashboard.`);
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_role');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('user_email');
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('user_role', userRole);
+      localStorage.setItem('user_id', userData.id);
+      localStorage.setItem('user_email', userData.email);
+
+      setShowLoginModal(false);
+      setEmail('');
+      setPassword('');
+      setError('');
+      navigate('/admin/manage-account', { replace: true });
+    } catch (err: any) {
+      if (err.response?.status === 401 || err.response?.status === 400) {
+        setError('Invalid email or password');
+      } else if (err.response?.status === 422) {
+        setError('Invalid email format');
+      } else if (err.message === 'Network Error') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError(err.response?.data?.detail || err.message || 'Login failed. Please try again.');
+      }
+      setLoading(false);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen flex flex-col font-sans overflow-x-hidden"
@@ -55,7 +121,10 @@ const LandingPage: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-6">
-            <button className="font-sans-brand font-bold text-[#592E2E] hover:opacity-70 text-sm lg:text-base">
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="font-sans-brand font-bold text-[#592E2E] hover:opacity-70 text-sm lg:text-base"
+            >
               Log In
             </button>
             <button className="bg-[#f0a3a3] hover:bg-[#e08e8e] text-white font-sans-brand font-bold px-6 py-2.5 rounded-lg shadow-md transition-all">
@@ -114,6 +183,94 @@ const LandingPage: React.FC = () => {
 
                 <div className="space-y-6 mt-8">
                   <div>
+
+                  {/* Login Modal */}
+                  {showLoginModal && (
+                    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
+                      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative">
+                        <button
+                          onClick={() => {
+                            setShowLoginModal(false);
+                            setEmail('');
+                            setPassword('');
+                            setError('');
+                          }}
+                          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                        >
+                          <X size={24} />
+                        </button>
+
+                        <div className="text-center mb-8">
+                          <h1 className="text-3xl font-bold text-gray-900 mb-2">MyPregnancy</h1>
+                          <p className="text-gray-600 font-medium">Admin Dashboard</p>
+                          <p className="text-sm text-gray-500 mt-1">Admins only</p>
+                        </div>
+
+                        {error && (
+                          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
+                            <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-red-700 text-sm font-medium">Login Failed</p>
+                              <p className="text-red-600 text-sm mt-1">{error}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        <form onSubmit={handleLogin} className="space-y-5">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                              <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
+                                placeholder="admin@example.com"
+                                required
+                                disabled={loading}
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                              <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition"
+                                placeholder="••••••••"
+                                required
+                                disabled={loading}
+                              />
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300 text-white py-3 rounded-lg font-semibold transition disabled:cursor-not-allowed mt-2"
+                          >
+                            {loading ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <Loader size={20} className="animate-spin" />
+                                Logging in...
+                              </span>
+                            ) : (
+                              'Log In'
+                            )}
+                          </button>
+                        </form>
+
+                        <div className="mt-6 pt-6 border-t border-gray-200">
+                          <p className="text-center text-xs text-gray-500">Admin access only. Only ADMIN users can log in here.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                     <h3 className="font-serif-brand font-bold text-2xl mb-2">Our Vision</h3>
                     <p className="font-sans-brand text-lg opacity-90">
                       To create a trusted space where mothers feel confident and supported — every step of the way.
