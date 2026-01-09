@@ -57,6 +57,9 @@ export const adminAPI = {
   getAllDoctors: () => api.get('/admin/users/doctors'),
   getAllMothers: () => api.get('/admin/users/mothers'),
   getAllNutritionists: () => api.get('/admin/users/nutrionists'),
+  getAllMerchants: () => api.get('/admin/users/merchants'),
+  suspendUser: (userId: string) => api.post(`/admin/users/${userId}/suspend`),
+  unsuspendUser: (userId: string) => api.post(`/admin/users/${userId}/unsuspend`),
 };
 
 export const appointmentsAPI = {
