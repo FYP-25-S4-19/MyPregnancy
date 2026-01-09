@@ -1,289 +1,199 @@
 import React, { useMemo, useState } from "react";
 import {
-  SafeAreaView,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Ionicons, FontAwesome, AntDesign } from "@expo/vector-icons";
-import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
+import { useRouter } from "expo-router";
+import api from "@/src/shared/api";
 
-type RoleParam = "mom" | "specialist" | undefined;
+// Use designSystem if present, fallback if not (won’t crash)
+import * as DS from "@/src/shared/designSystem";
+const COLORS = (DS as any).COLORS ?? (DS as any).colors ?? {};
+const PINK = COLORS.PINK ?? "#FADADD";
+const MAROON = COLORS.MAROON ?? "#6d2828";
+const LIGHT = COLORS.LIGHT ?? "#FFF8F8";
+
+type RegisterRole = "ADMIN" | "DOCTOR" | "NUTRITIONIST" | "PREGNANT_WOMAN" | "MERCHANT";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ role?: RoleParam }>();
-  const role = params.role;
 
-  const [name, setName] = useState("");
-  const [dob, setDob] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dob, setDob] = useState(""); // backend doesn’t accept DOB in /auth/register (keep UI, don’t send)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const passwordsMatch = password.length === 0 || confirmPassword.length === 0 || password === confirmPassword;
+  // If you need role selection later, plug it in here.
+  // For now (safe default), register as PREGNANT_WOMAN unless your flow says otherwise.
+  const role: RegisterRole = "PREGNANT_WOMAN";
 
-  const canRegister = useMemo(() => {
-    if (!name.trim() || !dob.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) return false;
-    if (password !== confirmPassword) return false;
-    return true;
-  }, [name, dob, email, password, confirmPassword]);
+  const [loading, setLoading] = useState(false);
 
-  const onRegister = () => {
-    // TODO: connect to real register API
-    // role is available if you need it:
-    // console.log("Register role:", role);
+  const nameParts = useMemo(() => {
+    const trimmed = fullName.trim();
+    if (!trimmed) return { first_name: "", last_name: "" };
+    const parts = trimmed.split(/\s+/);
+    const first_name = parts[0] ?? "";
+    const last_name = parts.length > 1 ? parts.slice(1).join(" ") : "";
+    return { first_name, last_name };
+  }, [fullName]);
 
-    router.push("/main");
-  };
+  async function onSubmit() {
+    if (!email.trim()) return Alert.alert("Registration Failed", "Email is required.");
+    if (!password) return Alert.alert("Registration Failed", "Password is required.");
+    if (password !== confirmPassword)
+      return Alert.alert("Registration Failed", "Passwords do not match.");
+    if (!nameParts.first_name)
+      return Alert.alert("Registration Failed", "Name is required.");
+
+    setLoading(true);
+
+    try {
+      // Swagger shows these fields exist; keep minimal required.
+      // If your backend makes some optional, it will ignore extras.
+      const payload = {
+        email: email.trim().toLowerCase(),
+        password,
+        is_active: true,
+        is_superuser: false,
+        is_verified: false,
+        first_name: nameParts.first_name,
+        middle_name: "",
+        last_name: nameParts.last_name,
+        role,
+      };
+
+      await api.post("/auth/register", payload);
+
+      // Registration successful screen (your design)
+      // If you don’t have this screen yet, route to login instead.
+      router.push("/(intro)/registrationSuccess");
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.detail ||
+        e?.message ||
+        "Registration failed. Please try again.";
+      Alert.alert("Registration Failed", String(msg));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        style={styles.kav}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          {/* Back */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.85}>
-            <Ionicons name="chevron-back" size={sizes.icon} color={colors.text} />
-          </TouchableOpacity>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
+        {/* Back */}
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: PINK,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 18 }}>←</Text>
+        </TouchableOpacity>
 
-          {/* Title */}
-          <Text style={styles.title}>
-            hello!{"\n"}register now
+        <Text
+          style={{
+            fontSize: 36,
+            color: MAROON,
+            marginBottom: 30,
+            letterSpacing: 1,
+          }}
+        >
+          HELLO!{"\n"}REGISTER NOW
+        </Text>
+
+        <Label text="Name" />
+        <Input value={fullName} onChangeText={setFullName} placeholder="" />
+
+        <Label text="Date of Birth" />
+        <Input value={dob} onChangeText={setDob} placeholder="" />
+
+        <Label text="Email" />
+        <Input value={email} onChangeText={setEmail} placeholder="" autoCapitalize="none" />
+
+        <Label text="Password" />
+        <Input value={password} onChangeText={setPassword} placeholder="" secureTextEntry />
+
+        <Label text="Confirm Password" />
+        <Input
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder=""
+          secureTextEntry
+        />
+
+        <TouchableOpacity
+          onPress={onSubmit}
+          disabled={loading}
+          style={{
+            marginTop: 20,
+            backgroundColor: PINK,
+            borderRadius: 999,
+            paddingVertical: 14,
+            alignItems: "center",
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          <Text style={{ color: MAROON, fontWeight: "600" }}>
+            {loading ? "Registering..." : "Register"}
           </Text>
+        </TouchableOpacity>
 
-          {/* Optional role indicator (subtle) */}
-          {role ? (
-            <Text style={styles.roleHint}>
-              Registering as: <Text style={styles.roleHintStrong}>{role === "mom" ? "Mom-to-be" : "Specialist"}</Text>
-            </Text>
-          ) : null}
-
-          {/* Name */}
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            style={styles.input}
-          />
-
-          {/* DOB */}
-          <Text style={[styles.label, { marginTop: sizes.m }]}>Date of Birth</Text>
-          <TextInput
-            value={dob}
-            onChangeText={setDob}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            style={styles.input}
-          />
-
-          {/* Email */}
-          <Text style={[styles.label, { marginTop: sizes.m }]}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            style={styles.input}
-          />
-
-          {/* Password */}
-          <Text style={[styles.label, { marginTop: sizes.m }]}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            secureTextEntry
-            style={styles.input}
-          />
-
-          {/* Confirm */}
-          <Text style={[styles.label, { marginTop: sizes.m }]}>Confirm Password</Text>
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            secureTextEntry
-            style={styles.input}
-          />
-
-          {!passwordsMatch ? <Text style={styles.error}>Passwords do not match.</Text> : null}
-
-          {/* Register button */}
-          <TouchableOpacity
-            style={[styles.primaryBtn, !canRegister && styles.disabledBtn]}
-            onPress={onRegister}
-            disabled={!canRegister}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.primaryBtnText}>Register</Text>
+        <View style={{ marginTop: 16, alignItems: "center" }}>
+          <Text style={{ color: "#999" }}>Already have an account?</Text>
+          <TouchableOpacity onPress={() => router.push("/(intro)/login")}>
+            <Text style={{ color: "#2d6cdf", marginTop: 6 }}>Login Now</Text>
           </TouchableOpacity>
+        </View>
 
-          {/* Login link */}
-          <View style={styles.inlineRow}>
-            <Text style={styles.inlineText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/(intro)/login")} activeOpacity={0.8}>
-              <Text style={styles.inlineLink}>Login Now</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Divider */}
+        <View style={{ marginTop: 20, alignItems: "center" }}>
+          <Text style={{ color: "#bbb" }}>or continue with</Text>
+        </View>
 
-          {/* Divider */}
-          <Text style={styles.divider}>or continue with</Text>
+        {/* Social icons can be added later */}
+        <View style={{ height: 40 }} />
 
-          {/* Social */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={[styles.socialBtn, styles.fb]} onPress={() => {}} activeOpacity={0.85}>
-              <FontAwesome name="facebook-f" size={sizes.icon} color={colors.white} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.socialBtn, styles.apple]} onPress={() => {}} activeOpacity={0.85}>
-              <AntDesign name="apple1" size={sizes.icon} color={colors.white} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.socialBtn, styles.google]} onPress={() => {}} activeOpacity={0.85}>
-              <AntDesign name="google" size={sizes.icon} color={colors.white} />
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.white },
-  kav: { flex: 1 },
-  container: {
-    paddingHorizontal: sizes.xl,
-    paddingTop: sizes.l,
-    paddingBottom: sizes.xxl,
-  },
+function Label({ text }: { text: string }) {
+  return <Text style={{ fontWeight: "600", marginBottom: 6 }}>{text}</Text>;
+}
 
-  backBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: sizes.l,
-  },
-
-  title: {
-    textAlign: "center",
-    color: colors.text,
-    fontSize: font.xxl,
-    fontWeight: "700",
-    lineHeight: font.xxl + 6,
-    marginBottom: sizes.m,
-    textTransform: "uppercase",
-  },
-
-  roleHint: {
-    textAlign: "center",
-    color: colors.tabIcon,
-    fontSize: font.xs,
-    marginBottom: sizes.l,
-  },
-  roleHintStrong: {
-    color: colors.text,
-    fontWeight: "700",
-  },
-
-  label: {
-    color: colors.black,
-    fontSize: font.xs,
-    fontWeight: "600",
-    marginBottom: sizes.s,
-  },
-
-  input: {
-    height: 46,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: sizes.borderRadius,
-    paddingHorizontal: sizes.m,
-    fontSize: font.xs,
-    color: colors.black,
-    backgroundColor: colors.white,
-  },
-
-  error: {
-    marginTop: sizes.s,
-    color: colors.fail,
-    fontSize: font.xs,
-    fontWeight: "600",
-  },
-
-  primaryBtn: {
-    marginTop: sizes.xl,
-    backgroundColor: colors.secondary,
-    borderRadius: 999,
-    paddingVertical: sizes.m,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.small,
-  },
-  primaryBtnText: {
-    color: colors.text,
-    fontSize: font.s,
-    fontWeight: "700",
-  },
-  disabledBtn: { opacity: 0.55 },
-
-  inlineRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: sizes.m,
-  },
-  inlineText: {
-    color: colors.black,
-    fontSize: font.xs,
-  },
-  inlineLink: {
-    color: colors.primary,
-    fontSize: font.xs,
-    fontWeight: "700",
-    textDecorationLine: "underline",
-  },
-
-  divider: {
-    textAlign: "center",
-    marginTop: sizes.xl,
-    color: colors.tabIcon,
-    fontSize: font.xs,
-  },
-
-  socialRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: sizes.l,
-    gap: sizes.l,
-  },
-  socialBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.small,
-  },
-  fb: { backgroundColor: colors.primary },
-  apple: { backgroundColor: colors.black },
-  google: { backgroundColor: colors.orange },
-});
+function Input(props: any) {
+  return (
+    <TextInput
+      {...props}
+      style={{
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        marginBottom: 14,
+        backgroundColor: "#fff",
+      }}
+    />
+  );
+}
