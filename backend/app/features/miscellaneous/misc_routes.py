@@ -27,8 +27,8 @@ from app.features.miscellaneous.misc_models import (
     DoctorPreviewData,
     DoctorRatingRequest,
     DoctorRatingResponse,
-    DoctorSpecializationModel,
     DoctorsPaginatedResponse,
+    DoctorSpecializationModel,
     UpdateDoctorSpecializationRequest,
 )
 from app.shared.utils import get_s3_bucket_prefix
@@ -37,6 +37,7 @@ misc_router = APIRouter(tags=["Miscellaneous"])
 
 
 # ===================== DOCTOR SPECIALIZATION ENDPOINTS =====================
+
 
 @misc_router.get("/doctor-specializations", response_model=list[DoctorSpecializationModel])
 async def get_doctor_specializations(
@@ -48,7 +49,9 @@ async def get_doctor_specializations(
     return [DoctorSpecializationModel(id=s.id, specialisation=s.specialisation) for s in specializations]
 
 
-@misc_router.post("/doctor-specializations", response_model=DoctorSpecializationModel, status_code=status.HTTP_201_CREATED)
+@misc_router.post(
+    "/doctor-specializations", response_model=DoctorSpecializationModel, status_code=status.HTTP_201_CREATED
+)
 async def create_doctor_specialization(
     request: CreateDoctorSpecializationRequest,
     _: Admin = Depends(require_role(Admin)),
@@ -60,7 +63,7 @@ async def create_doctor_specialization(
         existing = (await db.execute(stmt)).scalars().first()
         if existing:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Specialization already exists")
-        
+
         new_spec = DoctorSpecialisation(specialisation=request.specialisation.strip())
         db.add(new_spec)
         await db.flush()
@@ -83,13 +86,13 @@ async def update_doctor_specialization(
         specialization = (await db.execute(stmt)).scalars().first()
         if not specialization:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specialization not found")
-        
+
         # Check if new specialization already exists (and it's not the same one being updated)
         stmt = select(DoctorSpecialisation).where(DoctorSpecialisation.specialisation == request.specialisation.strip())
         existing = (await db.execute(stmt)).scalars().first()
         if existing and existing.id != specialization_id:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Specialization already exists")
-        
+
         specialization.specialisation = request.specialisation.strip()
         await db.flush()
         await db.commit()
@@ -110,16 +113,16 @@ async def delete_doctor_specialization(
         specialization = (await db.execute(stmt)).scalars().first()
         if not specialization:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specialization not found")
-        
+
         # Check if any doctors have this specialization
         doctor_stmt = select(VolunteerDoctor).where(VolunteerDoctor.specialisation_id == specialization_id)
         doctors = (await db.execute(doctor_stmt)).scalars().all()
         if doctors:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Cannot delete specialization. {len(doctors)} doctor(s) have this specialization."
+                detail=f"Cannot delete specialization. {len(doctors)} doctor(s) have this specialization.",
             )
-        
+
         await db.delete(specialization)
         await db.commit()
     except Exception:
