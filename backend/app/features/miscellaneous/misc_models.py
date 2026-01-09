@@ -5,6 +5,19 @@ from pydantic import Field
 from app.core.custom_base_model import CustomBaseModel
 
 
+class DoctorSpecializationModel(CustomBaseModel):
+    id: int
+    specialisation: str
+
+
+class CreateDoctorSpecializationRequest(CustomBaseModel):
+    specialisation: str
+
+
+class UpdateDoctorSpecializationRequest(CustomBaseModel):
+    specialisation: str
+
+
 class DoctorRatingRequest(CustomBaseModel):
     rating: int = Field(..., ge=1, le=5, description="Rating value between 1 and 5")
 

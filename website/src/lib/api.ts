@@ -62,6 +62,24 @@ export const adminAPI = {
   unsuspendUser: (userId: string) => api.post(`/admin/users/${userId}/unsuspend`),
 };
 
+export const recipesAPI = {
+  getCategories: () => api.get('/recipes/categories'),
+  createCategory: (label: string) => api.post('/recipes/admin/categories', { label }),
+  updateCategory: (id: number, label: string) => api.patch(`/recipes/admin/categories/${id}`, { label }),
+};
+
+export const articleCategoriesAPI = {
+  getCategories: () => api.get('/articles/categories'),
+  createCategory: (label: string) => api.post('/articles/categories', { label }),
+  updateCategory: (id: number, label: string) => api.patch(`/articles/admin/categories/${id}`, { label }),
+};
+
+export const doctorSpecializationAPI = {
+  getSpecializations: () => api.get('/doctor-specializations'),
+  createSpecialization: (specialisation: string) => api.post('/doctor-specializations', { specialisation }),
+  updateSpecialization: (id: number, specialisation: string) => api.patch(`/admin/doctor-specializations/${id}`, { specialisation }),
+};
+
 export const appointmentsAPI = {
   getAllAppointments: () => api.get('/appointments'),
   getAppointment: (id: number) => api.get(`/appointments/${id}`),
