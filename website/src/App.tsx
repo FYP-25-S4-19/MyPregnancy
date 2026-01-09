@@ -3,6 +3,10 @@ import './App.css'
 import AdminLayout from './layouts/AdminLayout'
 import ManageAccount from './pages/admin/manageAccount'
 import WebsiteBuilder from './pages/admin/WebsiteBuilder'
+import ArticleCategories from './pages/admin/ArticleCategories'
+import DoctorSpecialization from './pages/admin/DoctorSpecialization'
+import RecipeCategories from './pages/admin/RecipeCategories'
+import Feedback from './pages/admin/Feedback'
 import PublicPage from "./pages/public/PublicPage";
 import Home from './pages/public/Home'
 
@@ -15,9 +19,13 @@ function App() {
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Navigate to="/admin/manage-account" replace />} />
+        <Route index element={<Navigate to="/admin/website-builder" replace />} />
         <Route path="manage-account" element={<ManageAccount />} />
         <Route path="website-builder" element={<WebsiteBuilder />} />
+        <Route path="recipe-categories" element={<RecipeCategories />} />
+        <Route path="article-categories" element={<ArticleCategories />} />
+        <Route path="doctor-specialization" element={<DoctorSpecialization />} />
+        <Route path="feedback" element={<Feedback />} />
       </Route>
 
       {/* Dynamic Page Route - LAST */}

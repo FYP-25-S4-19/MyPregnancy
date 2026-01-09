@@ -5,6 +5,7 @@ from pathlib import Path
 
 from faker import Faker
 from sqlalchemy.orm import Session
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from app.core.custom_base_model import CustomBaseModel
 from app.db.db_schema import (
@@ -64,11 +65,24 @@ class MiscGenerator:
     def generate_user_app_feedback(db: Session, faker: Faker, all_users: list[User], fraction_of_mothers: float):
         print("Generating user app feedback....")
 
+        sia = SentimentIntensityAnalyzer()
+
         sample_size: int = int(len(all_users) * max(min(fraction_of_mothers, 1), 0))
         rand_users: list[User] = random.sample(population=all_users, k=sample_size)
         for user in rand_users:
+            feedback_content = faker.sentence(random.randint(1, 5))
+
+            # Analyze sentiment using VADER
+            sentiment_scores = sia.polarity_scores(feedback_content)
+
             user_feedback = UserAppFeedback(
-                author=user, rating=random.randint(1, 5), content=faker.sentence(random.randint(1, 5))
+                author=user,
+                rating=random.randint(1, 5),
+                content=feedback_content,
+                positive_score=sentiment_scores["pos"],
+                neutral_score=sentiment_scores["neu"],
+                negative_score=sentiment_scores["neg"],
+                compound_score=sentiment_scores["compound"],
             )
             db.add(user_feedback)
 

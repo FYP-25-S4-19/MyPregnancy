@@ -21,11 +21,11 @@ def get_edu_articles_service(db: AsyncSession = Depends(get_db)) -> EduArticleSe
     return EduArticleService(db)
 
 
-@edu_articles_router.get("/categories", response_model=list[str])
+@edu_articles_router.get("/categories", response_model=list[EduArticleCategoryModel])
 async def get_article_categories(
     service: EduArticleService = Depends(get_edu_articles_service),
-) -> list[str]:
-    return await service.get_article_categories()
+) -> list[EduArticleCategoryModel]:
+    return await service.get_all_categories()
 
 
 @edu_articles_router.get("/previews", response_model=list[ArticlePreviewData])
@@ -81,13 +81,6 @@ async def delete_article(
     except:
         await db.rollback()
         raise
-
-
-@edu_articles_router.get("/categories", response_model=list[EduArticleCategoryModel])
-async def get_all_categories(
-    service: EduArticleService = Depends(get_edu_articles_service),
-) -> list[EduArticleCategoryModel]:
-    return await service.get_all_categories()
 
 
 @edu_articles_router.post("/categories", response_model=EduArticleCategoryModel, status_code=status.HTTP_201_CREATED)

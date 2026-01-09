@@ -156,6 +156,7 @@ class PregnantWoman(User):
     kick_tracker_sessions: Mapped[list["KickTrackerSession"]] = relationship(back_populates="mother")
     doctor_ratings: Mapped[list["DoctorRating"]] = relationship(back_populates="rater")
     liked_products: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="mother")
+    menstrual_periods: Mapped[list["MenstrualPeriod"]] = relationship(back_populates="mother")
 
 
 class Nutritionist(User):
@@ -284,6 +285,8 @@ class Appointment(Base):
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     status: Mapped[AppointmentStatus] = mapped_column(SQLAlchemyEnum(AppointmentStatus))
 
+    chat_id: Mapped[uuid.UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True)
+
 
 # ===========================================================
 # ========== JOURNAL | METRICS (MOOD, SYMPTOM) ==============
@@ -360,6 +363,17 @@ class JournalScalarMetricLog(Base):
     scalar_metric: Mapped["ScalarMetric"] = relationship(back_populates="journal_scalar_metric_logs")
 
     value: Mapped[float]
+
+
+class MenstrualPeriod(Base):
+    __tablename__ = "menstrual_periods"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"))
+    mother: Mapped["PregnantWoman"] = relationship(back_populates="menstrual_periods")
+
+    start_date: Mapped[date] = mapped_column(index=True)
+    end_date: Mapped[date | None]
 
 
 # ===========================================================
@@ -650,6 +664,11 @@ class UserAppFeedback(Base):
 
     rating: Mapped[int]
     content: Mapped[str]
+
+    positive_score: Mapped[float]
+    neutral_score: Mapped[float]
+    negative_score: Mapped[float]
+    compound_score: Mapped[float]
 
 
 class Notification(Base):

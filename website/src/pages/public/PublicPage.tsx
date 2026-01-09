@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { websiteAPI, authAPI } from '../../lib/api';
 import { LogIn, X, AlertCircle, Mail, Lock, Loader } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DynamicPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -115,7 +115,15 @@ export default function DynamicPage() {
     enabled: !!pageSlug,
   });
 
+  // If root (/) has no website-builder data, fall back to static /home
+  useEffect(() => {
+    if (!slug && pageError) {
+      navigate('/home', { replace: true });
+    }
+  }, [slug, pageError, navigate]);
+
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
+  if (!slug && pageError) return null;
   if (pageError) return <div className="p-8 text-center text-red-600">Page not found</div>;
 
   const page = pageData?.page;
