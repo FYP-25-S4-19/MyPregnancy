@@ -3,24 +3,24 @@ import {
   Modal,
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
   Pressable,
 } from "react-native";
 import { router } from "expo-router";
 import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
-import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
+import { sizes, shadows } from "@/src/shared/designSystem";
 
 export default function GuestGateModal() {
-  const { isOpen, close, attemptedPath } = useGuestGate();
+  const { isOpen, close } = useGuestGate();
 
-  const onLogin = () => {
+  const onSignIn = () => {
     close();
-    router.replace("/(intro)"); // keep your mechanics exactly
+    router.replace("/(intro)"); // your login/register area
   };
 
-  const onStayGuest = () => {
-    close(); // close and stay on guest home
+  const onCancel = () => {
+    close();
   };
 
   return (
@@ -29,39 +29,45 @@ export default function GuestGateModal() {
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={onStayGuest}
+      onRequestClose={onCancel}
     >
       <View style={styles.backdrop}>
-        {/* Tap outside to close */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={onStayGuest} />
+        {/* Tap outside closes modal */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} />
 
         <View style={styles.card}>
-          {/* Close (X) */}
-          <TouchableOpacity onPress={onStayGuest} style={styles.closeBtn} activeOpacity={0.7}>
+          {/* X button (must be ABOVE the Pressable overlay, so it's inside the card) */}
+          <Pressable
+            onPress={onCancel}
+            hitSlop={12}
+            style={styles.closeBtn}
+          >
             <Text style={styles.closeText}>×</Text>
-          </TouchableOpacity>
+          </Pressable>
 
           <Text style={styles.title}>Oops..</Text>
 
-          <Text style={styles.subtitle}>
+          <Text style={styles.body}>
             You need an account to use{"\n"}
             this feature. Sign in or create{"\n"}
             one for free!
           </Text>
 
-          {/* {!!attemptedPath && (
-            <Text style={styles.attempted} numberOfLines={1}>
-              Attempted: {attemptedPath}
-            </Text>
-          )} */}
-
           <View style={styles.actions}>
-            <TouchableOpacity style={[styles.btn, styles.btnSecondary]} onPress={onStayGuest} activeOpacity={0.85}>
-              <Text style={[styles.btnText, styles.btnSecondaryText]}>Cancel</Text>
+            <TouchableOpacity
+              onPress={onCancel}
+              style={[styles.button, styles.cancelBtn]}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={onLogin} activeOpacity={0.85}>
-              <Text style={[styles.btnText, styles.btnPrimaryText]}>Sign In</Text>
+            <TouchableOpacity
+              onPress={onSignIn}
+              style={[styles.button, styles.signInBtn]}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.signInText}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -73,33 +79,36 @@ export default function GuestGateModal() {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.12)", // softer dim like Figma
-    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.12)",
     alignItems: "center",
+    justifyContent: "center",
     padding: sizes.lg,
   },
-
   card: {
     width: "100%",
-    maxWidth: 320,
-    backgroundColor: "#F6CFCF", // Figma-like pink
+    maxWidth: 340,
+    backgroundColor: "#F6CFCF",
     borderRadius: 16,
     paddingVertical: sizes.lg,
     paddingHorizontal: sizes.lg,
     borderWidth: 1,
     borderColor: "rgba(91,43,43,0.18)",
     ...shadows.small,
-  },
 
+    // important so the X stays tappable and not clipped weirdly
+    overflow: "visible",
+  },
   closeBtn: {
     position: "absolute",
     right: 10,
     top: 8,
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
+    borderRadius: 16,
+    zIndex: 10,
+    elevation: 10, // Android
   },
   closeText: {
     fontSize: 22,
@@ -108,7 +117,6 @@ const styles = StyleSheet.create({
     opacity: 0.85,
     fontWeight: "700",
   },
-
   title: {
     fontSize: 20,
     fontWeight: "700",
@@ -116,8 +124,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: sizes.sm,
   },
-
-  subtitle: {
+  body: {
     fontSize: 14,
     color: "#5B2B2B",
     opacity: 0.8,
@@ -125,22 +132,12 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: sizes.lg,
   },
-
-  attempted: {
-    fontSize: 12,
-    color: "#5B2B2B",
-    opacity: 0.6,
-    textAlign: "center",
-    marginBottom: sizes.md,
-  },
-
   actions: {
     flexDirection: "row",
     gap: sizes.sm,
     justifyContent: "center",
   },
-
-  btn: {
+  button: {
     flex: 1,
     paddingVertical: 10,
     borderRadius: 999,
@@ -149,24 +146,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(91,43,43,0.25)",
   },
-
-  btnText: {
+  cancelBtn: {
+    backgroundColor: "rgba(255,255,255,0.45)",
+  },
+  cancelText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#5B2B2B",
+    opacity: 0.9,
+  },
+  signInBtn: {
+    backgroundColor: "rgba(255,255,255,0.75)",
+  },
+  signInText: {
     fontSize: 14,
     fontWeight: "700",
     color: "#5B2B2B",
-  },
-
-  btnSecondary: {
-    backgroundColor: "rgba(255,255,255,0.45)",
-  },
-  btnSecondaryText: {
-    opacity: 0.9,
-  },
-
-  btnPrimary: {
-    backgroundColor: "rgba(255,255,255,0.75)",
-  },
-  btnPrimaryText: {
-    opacity: 1,
   },
 });
