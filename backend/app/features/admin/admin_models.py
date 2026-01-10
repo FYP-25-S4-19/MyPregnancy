@@ -20,5 +20,22 @@ class MotherModel(UserModel):
     date_of_birth: date
 
 
+class MerchantModel(UserModel):
+    pass
+
+
 class UserEditRequestModel(CustomBaseModel):
     is_active: bool
+
+
+class DoctorSpecialisationModel(CustomBaseModel):
+    id: int
+    specialisation: str
+
+
+class CreateDoctorSpecialisationRequest(CustomBaseModel):
+    specialisation: str
+
+
+class UpdateDoctorSpecialisationRequest(CustomBaseModel):
+    specialisation: str

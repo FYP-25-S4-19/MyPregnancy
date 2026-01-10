@@ -14,6 +14,7 @@ class ArticleOverviewResponse(CustomBaseModel):
     title: str
     category: str
     excerpt: str
+    trimester: int
 
 
 class ArticleDetailedResponse(CustomBaseModel):
@@ -24,3 +25,17 @@ class ArticleDetailedResponse(CustomBaseModel):
     img_key: str | None
     title: str
     content_markdown: str
+    trimester: int
+
+
+class EduArticleCategoryModel(CustomBaseModel):
+    id: int
+    label: str
+
+
+class CreateEduArticleCategoryRequest(CustomBaseModel):
+    label: str
+
+
+class UpdateEduArticleCategoryRequest(CustomBaseModel):
+    label: str

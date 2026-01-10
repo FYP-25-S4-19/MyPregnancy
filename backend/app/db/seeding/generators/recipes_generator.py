@@ -81,6 +81,7 @@ class RecipesGenerator:
                 description=recipe_json.description,
                 est_calories=recipe_json.est_calories,
                 pregnancy_benefit=recipe_json.pregnancy_benefit,
+                trimester=random.randint(1, 3),
                 img_key=recipe_json.photo_url,
                 serving_count=recipe_json.serving,
                 ingredients=recipe_json.ingredients,

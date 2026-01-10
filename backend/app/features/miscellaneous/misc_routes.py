@@ -8,19 +8,126 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import and_, delete, null, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import DoctorRating, MCRNumber, Page, PregnantWoman, SavedVolunteerDoctor, VolunteerDoctor
+from app.db.db_schema import (
+    Admin,
+    DoctorRating,
+    DoctorSpecialisation,
+    MCRNumber,
+    Page,
+    PregnantWoman,
+    SavedVolunteerDoctor,
+    VolunteerDoctor,
+)
 from app.features.miscellaneous.misc_models import (
+    CreateDoctorSpecializationRequest,
     DoctorPreviewData,
     DoctorRatingRequest,
     DoctorRatingResponse,
     DoctorsPaginatedResponse,
+    DoctorSpecializationModel,
+    UpdateDoctorSpecializationRequest,
 )
 from app.shared.utils import get_s3_bucket_prefix
 
 misc_router = APIRouter(tags=["Miscellaneous"])
+
+
+# ===================== DOCTOR SPECIALIZATION ENDPOINTS =====================
+
+
+@misc_router.get("/doctor-specializations", response_model=list[DoctorSpecializationModel])
+async def get_doctor_specializations(
+    db: AsyncSession = Depends(get_db),
+) -> list[DoctorSpecializationModel]:
+    stmt = select(DoctorSpecialisation).order_by(DoctorSpecialisation.specialisation)
+    result = await db.execute(stmt)
+    specializations = result.scalars().all()
+    return [DoctorSpecializationModel(id=s.id, specialisation=s.specialisation) for s in specializations]
+
+
+@misc_router.post(
+    "/doctor-specializations", response_model=DoctorSpecializationModel, status_code=status.HTTP_201_CREATED
+)
+async def create_doctor_specialization(
+    request: CreateDoctorSpecializationRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+) -> DoctorSpecializationModel:
+    try:
+        # Check if specialization already exists
+        stmt = select(DoctorSpecialisation).where(DoctorSpecialisation.specialisation == request.specialisation.strip())
+        existing = (await db.execute(stmt)).scalars().first()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Specialization already exists")
+
+        new_spec = DoctorSpecialisation(specialisation=request.specialisation.strip())
+        db.add(new_spec)
+        await db.flush()
+        await db.commit()
+        return DoctorSpecializationModel(id=new_spec.id, specialisation=new_spec.specialisation)
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@misc_router.patch("/admin/doctor-specializations/{specialization_id}", response_model=DoctorSpecializationModel)
+async def update_doctor_specialization(
+    specialization_id: int,
+    request: UpdateDoctorSpecializationRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+) -> DoctorSpecializationModel:
+    try:
+        stmt = select(DoctorSpecialisation).where(DoctorSpecialisation.id == specialization_id)
+        specialization = (await db.execute(stmt)).scalars().first()
+        if not specialization:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specialization not found")
+
+        # Check if new specialization already exists (and it's not the same one being updated)
+        stmt = select(DoctorSpecialisation).where(DoctorSpecialisation.specialisation == request.specialisation.strip())
+        existing = (await db.execute(stmt)).scalars().first()
+        if existing and existing.id != specialization_id:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Specialization already exists")
+
+        specialization.specialisation = request.specialisation.strip()
+        await db.flush()
+        await db.commit()
+        return DoctorSpecializationModel(id=specialization.id, specialisation=specialization.specialisation)
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@misc_router.delete("/admin/doctor-specializations/{specialization_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_doctor_specialization(
+    specialization_id: int,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    try:
+        stmt = select(DoctorSpecialisation).where(DoctorSpecialisation.id == specialization_id)
+        specialization = (await db.execute(stmt)).scalars().first()
+        if not specialization:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specialization not found")
+
+        # Check if any doctors have this specialization
+        doctor_stmt = select(VolunteerDoctor).where(VolunteerDoctor.specialisation_id == specialization_id)
+        doctors = (await db.execute(doctor_stmt)).scalars().all()
+        if doctors:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot delete specialization. {len(doctors)} doctor(s) have this specialization.",
+            )
+
+        await db.delete(specialization)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
 
 @misc_router.get("/doctors/{doctor_id}/rating", response_model=DoctorRatingResponse)
@@ -103,13 +210,17 @@ async def list_of_doctors(
     mother: PregnantWoman = Depends(require_role(PregnantWoman)),
 ) -> DoctorsPaginatedResponse:
     # Build query with timestamp-based pagination
-    stmt = select(VolunteerDoctor).where(VolunteerDoctor.is_active)  # type: ignore
+    stmt = (
+        select(VolunteerDoctor).options(selectinload(VolunteerDoctor.specialisation)).where(VolunteerDoctor.is_active)
+    )  # type: ignore
 
     if q:
         like = f"%{q.strip()}%"
-        stmt = stmt.where(
+
+        stmt = stmt.join(DoctorSpecialisation).where(
             or_(
                 VolunteerDoctor.first_name.ilike(like),
+                DoctorSpecialisation.specialisation.ilike(like),
             )
         )
 
@@ -155,7 +266,8 @@ async def list_of_doctors(
             doctor_id=doctor.id,
             profile_img_url=get_s3_bucket_prefix() + doctor.profile_img_key if doctor.profile_img_key else None,
             first_name=doctor.first_name,
-            is_liked=doctor.id in liked_ids,  # TODO
+            specialisation=doctor.specialisation.specialisation,
+            is_liked=doctor.id in liked_ids,
         )
         for doctor in doctors_to_return
     ]

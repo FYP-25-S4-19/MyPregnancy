@@ -3,11 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import VolunteerDoctor
+from app.db.db_schema import Admin, VolunteerDoctor
 from app.features.educational_articles.edu_article_models import (
     ArticleDetailedResponse,
     ArticleOverviewResponse,
     ArticlePreviewData,
+    CreateEduArticleCategoryRequest,
+    EduArticleCategoryModel,
+    UpdateEduArticleCategoryRequest,
 )
 from app.features.educational_articles.edu_article_service import EduArticleService
 
@@ -18,11 +21,11 @@ def get_edu_articles_service(db: AsyncSession = Depends(get_db)) -> EduArticleSe
     return EduArticleService(db)
 
 
-@edu_articles_router.get("/categories", response_model=list[str])
+@edu_articles_router.get("/categories", response_model=list[EduArticleCategoryModel])
 async def get_article_categories(
     service: EduArticleService = Depends(get_edu_articles_service),
-) -> list[str]:
-    return await service.get_article_categories()
+) -> list[EduArticleCategoryModel]:
+    return await service.get_all_categories()
 
 
 @edu_articles_router.get("/previews", response_model=list[ArticlePreviewData])
@@ -51,13 +54,14 @@ async def create_article(
     category: str = Form(...),
     title: str = Form(...),
     content_markdown: str = Form(...),
+    trimester: int = Form(...),
     img_data: UploadFile = File(),
     db: AsyncSession = Depends(get_db),
     doctor: VolunteerDoctor = Depends(require_role(VolunteerDoctor)),
     service: EduArticleService = Depends(get_edu_articles_service),
 ) -> None:
     try:
-        await service.create_article(category, title, content_markdown, img_data, doctor)
+        await service.create_article(category, title, content_markdown, trimester, img_data, doctor)
         await db.commit()
     except:
         await db.rollback()
@@ -75,5 +79,53 @@ async def delete_article(
         await service.delete_article(article_id, deleter)
         await db.commit()
     except:
+        await db.rollback()
+        raise
+
+
+@edu_articles_router.post("/categories", response_model=EduArticleCategoryModel, status_code=status.HTTP_201_CREATED)
+async def create_category(
+    request: CreateEduArticleCategoryRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> EduArticleCategoryModel:
+    try:
+        result = await service.create_category(request.label.strip())
+        await db.commit()
+        return result
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@edu_articles_router.patch("/admin/categories/{category_id}", response_model=EduArticleCategoryModel)
+async def update_category(
+    category_id: int,
+    request: UpdateEduArticleCategoryRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> EduArticleCategoryModel:
+    try:
+        result = await service.update_category(category_id, request.label.strip())
+        await db.commit()
+        return result
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@edu_articles_router.delete("/admin/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_category(
+    category_id: int,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> None:
+    try:
+        await service.delete_category(category_id)
+        await db.commit()
+    except Exception:
         await db.rollback()
         raise

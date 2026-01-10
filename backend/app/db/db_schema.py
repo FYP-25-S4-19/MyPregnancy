@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from enum import Enum
 
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import JSON, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, func, text
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import JSONB
@@ -45,18 +45,6 @@ class BinaryMetricCategory(Enum):
     SWELLING = "SWELLING"
     PHYSICAL_ACTIVITY = "PHYSICAL_ACTIVITY"
     OTHERS = "OTHERS"
-
-
-class EduArticleCategory(Enum):
-    NUTRITION = "NUTRITION"
-    BODY = "BODY"
-    BABY = "BABY"
-    FEEL_GOOD = "FEEL_GOOD"
-    MEDICAL = "MEDICAL"
-    EXERCISE = "EXERCISE"
-    LABOUR = "LABOUR"
-    LIFESTYLE = "LIFESTYLE"
-    RELATIONSHIPS = "RELATIONSHIPS"
 
 
 class NotificationType(Enum):
@@ -105,6 +93,15 @@ class Admin(User):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
 
+class DoctorSpecialisation(Base):
+    __tablename__ = "doctor_specialisations"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    specialisation: Mapped[str] = mapped_column(unique=True)
+
+    # Relationship back to doctors
+    doctors: Mapped[list["VolunteerDoctor"]] = relationship(back_populates="specialisation")
+
+
 class VolunteerDoctor(User):
     __tablename__ = "volunteer_doctors"
     __mapper_args__ = {"polymorphic_identity": "volunteer_doctor"}
@@ -112,6 +109,9 @@ class VolunteerDoctor(User):
 
     mcr_no_id: Mapped[int] = mapped_column(ForeignKey("mcr_numbers.id"))
     mcr_no: Mapped["MCRNumber"] = relationship(back_populates="doctor")
+
+    specialisation_id: Mapped[int] = mapped_column(ForeignKey("doctor_specialisations.id"))
+    specialisation: Mapped["DoctorSpecialisation"] = relationship(back_populates="doctors")
 
     qualification_img_key: Mapped[str | None]
 
@@ -147,6 +147,8 @@ class PregnantWoman(User):
     kick_tracker_sessions: Mapped[list["KickTrackerSession"]] = relationship(back_populates="mother")
     doctor_ratings: Mapped[list["DoctorRating"]] = relationship(back_populates="rater")
     liked_products: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="mother")
+    menstrual_periods: Mapped[list["MenstrualPeriod"]] = relationship(back_populates="mother")
+    shopping_cart: Mapped["ShoppingCart"] = relationship(back_populates="mother")
 
 
 class Nutritionist(User):
@@ -199,6 +201,15 @@ class Merchant(User):
 # ===========================================================
 # ================== EDUCATIONAL CONTENT ====================
 # ===========================================================
+class EduArticleCategory(Base):
+    __tablename__ = "edu_article_categories"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    label: Mapped[str] = mapped_column(unique=True)
+
+    # Relationship back to articles
+    articles: Mapped[list["EduArticle"]] = relationship(back_populates="category")
+
+
 class EduArticle(Base):
     __tablename__ = "edu_articles"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -210,7 +221,11 @@ class EduArticle(Base):
     author: Mapped["VolunteerDoctor"] = relationship(back_populates="articles_written")
 
     # Each article has exactly 1 category (for now)
-    category: Mapped["EduArticleCategory"] = mapped_column(SQLAlchemyEnum(EduArticleCategory))
+    category_id: Mapped[int] = mapped_column(ForeignKey("edu_article_categories.id"))
+    category: Mapped["EduArticleCategory"] = relationship(back_populates="articles")
+
+    # Trimester (1-3) - which trimester of pregnancy this article is relevant for
+    trimester: Mapped[int] = mapped_column(CheckConstraint("trimester >= 1 AND trimester <= 3"))
 
     img_key: Mapped[str | None] = mapped_column(String(255))
     title: Mapped[str] = mapped_column(String(255), unique=True)
@@ -270,6 +285,8 @@ class Appointment(Base):
 
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     status: Mapped[AppointmentStatus] = mapped_column(SQLAlchemyEnum(AppointmentStatus))
+
+    chat_id: Mapped[uuid.UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True)
 
 
 # ===========================================================
@@ -347,6 +364,17 @@ class JournalScalarMetricLog(Base):
     scalar_metric: Mapped["ScalarMetric"] = relationship(back_populates="journal_scalar_metric_logs")
 
     value: Mapped[float]
+
+
+class MenstrualPeriod(Base):
+    __tablename__ = "menstrual_periods"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"))
+    mother: Mapped["PregnantWoman"] = relationship(back_populates="menstrual_periods")
+
+    start_date: Mapped[date] = mapped_column(index=True)
+    end_date: Mapped[date | None]
 
 
 # ===========================================================
@@ -444,6 +472,9 @@ class Recipe(Base):
     est_calories: Mapped[str]
     pregnancy_benefit: Mapped[str]
 
+    # Trimester (1-3) - which trimester of pregnancy this recipe is relevant for
+    trimester: Mapped[int] = mapped_column(CheckConstraint("trimester >= 1 AND trimester <= 3"))
+
     img_key: Mapped[str | None]
     serving_count: Mapped[int]
     ingredients: Mapped[str]
@@ -458,6 +489,11 @@ class Recipe(Base):
 class RecipeDraft(Base):
     __tablename__ = "recipe_drafts"
     id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Trimester (1-3) - nullable since draft may not be complete
+    trimester: Mapped[int | None] = mapped_column(
+        CheckConstraint("trimester IS NULL OR (trimester >= 1 AND trimester <= 3)")
+    )
 
     nutritionist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("nutritionists.id"))
     nutritionist: Mapped["Nutritionist"] = relationship(back_populates="recipe_drafts")
@@ -579,13 +615,14 @@ class Product(Base):
     listed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     liked_by_mothers: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="product")
+    cart_items: Mapped[list["ShoppingCartItem"]] = relationship(back_populates="product")
 
 
 class ProductCategory(Base):
     __tablename__ = "product_categories"
     id: Mapped[int] = mapped_column(primary_key=True)
     label: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    products: Mapped[list[Product]] = relationship(back_populates="category")
+    products: Mapped[list["Product"]] = relationship(back_populates="category")
 
 
 class ProductDraft(Base):
@@ -593,7 +630,7 @@ class ProductDraft(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id"))
-    merchant: Mapped[Merchant] = relationship(back_populates="product_drafts")
+    merchant: Mapped["Merchant"] = relationship(back_populates="product_drafts")
 
     # All content fields are nullable since drafts can be incomplete
     name: Mapped[str | None] = mapped_column(String(255))
@@ -611,10 +648,35 @@ class ProductDraft(Base):
 class MotherLikeProduct(Base):
     __tablename__ = "mother_like_products"
     mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"), primary_key=True)
-    mother: Mapped[PregnantWoman] = relationship(back_populates="liked_products")
+    mother: Mapped["PregnantWoman"] = relationship(back_populates="liked_products")
 
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), primary_key=True)
-    product: Mapped[Product] = relationship(back_populates="liked_by_mothers")
+    product: Mapped["Product"] = relationship(back_populates="liked_by_mothers")
+
+
+# Each user has exactly 1 shopping cart....(cont'd below)
+class ShoppingCart(Base):
+    __tablename__ = "shopping_carts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"))
+    mother: Mapped["PregnantWoman"] = relationship(back_populates="shopping_cart")
+
+    items: Mapped[list["ShoppingCartItem"]] = relationship(back_populates="cart", cascade="all, delete-orphan")
+
+
+# ....But each shopping cart can have multiple items
+class ShoppingCartItem(Base):
+    __tablename__ = "shopping_cart_items"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    cart_id: Mapped[int] = mapped_column(ForeignKey("shopping_carts.id"))
+    cart: Mapped["ShoppingCart"] = relationship(back_populates="items")
+
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    product: Mapped[Product] = relationship(back_populates="cart_items")
+
+    quantity: Mapped[int] = mapped_column(CheckConstraint("quantity > 0"))
 
 
 # ===========================================
@@ -629,6 +691,11 @@ class UserAppFeedback(Base):
 
     rating: Mapped[int]
     content: Mapped[str]
+
+    positive_score: Mapped[float]
+    neutral_score: Mapped[float]
+    negative_score: Mapped[float]
+    compound_score: Mapped[float]
 
 
 class Notification(Base):

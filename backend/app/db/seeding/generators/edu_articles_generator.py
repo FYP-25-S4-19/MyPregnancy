@@ -21,7 +21,30 @@ class ArticleDataModel:
 
 class EduArticlesGenerator:
     @staticmethod
-    def generate_edu_articles(db: Session, articles_json_path: str) -> list[EduArticle]:
+    def generate_edu_article_categories(db: Session) -> list[EduArticleCategory]:
+        print("Generating educational article categories.....")
+
+        category_labels = [
+            "NUTRITION",
+            "BODY",
+            "BABY",
+            "FEEL_GOOD",
+            "MEDICAL",
+            "EXERCISE",
+            "LABOUR",
+            "LIFESTYLE",
+            "RELATIONSHIPS",
+        ]
+
+        category_objs = [EduArticleCategory(label=label) for label in category_labels]
+        db.add_all(category_objs)
+        db.flush()
+        return category_objs
+
+    @staticmethod
+    def generate_edu_articles(
+        db: Session, articles_json_path: str, categories: list[EduArticleCategory]
+    ) -> list[EduArticle]:
         print("Generating educational articles.....")
 
         all_edu_articles: list[EduArticle] = []
@@ -31,7 +54,8 @@ class EduArticlesGenerator:
 
             for article_data in articles_data:
                 article = EduArticle(
-                    category=random.choice(list(EduArticleCategory)),
+                    category=random.choice(categories),
+                    trimester=random.randint(1, 3),
                     title=article_data.title,
                     content_markdown=article_data.content,
                 )

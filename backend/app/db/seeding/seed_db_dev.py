@@ -5,7 +5,9 @@ from app.core.password_hasher import get_password_hasher
 from app.db.db_config import SessionLocal
 from app.db.db_schema import (
     CommunityThread,
+    DoctorSpecialisation,
     EduArticle,
+    EduArticleCategory,
     JournalEntry,
     MCRNumber,
     Merchant,
@@ -44,6 +46,9 @@ if __name__ == "__main__":
         # for future use in the API endpoints for validating whether an MCR number is valid or not
         available_mcr_numbers: list[MCRNumber] = MiscGenerator.generate_mcr_numbers(db_session, 1500)
 
+        # --------- Generate doctor specialisations ---------
+        doctor_specialisations: list[DoctorSpecialisation] = MiscGenerator.generate_doctor_specialisations(db_session)
+
         # --------- Generate users ---------
         QUALIFICATION_FILEPATH = "./seed_data/qualifications"
         preg_women: list[PregnantWoman] = UsersGenerator.generate_pregnant_women(
@@ -56,6 +61,7 @@ if __name__ == "__main__":
             "./seed_data/profiles/doctors",
             QUALIFICATION_FILEPATH,
             available_mcr_numbers,
+            doctor_specialisations,
         )
         nutritionists: list[Nutritionist] = UsersGenerator.generate_nutritionists(
             db_session,
@@ -93,8 +99,11 @@ if __name__ == "__main__":
         print("Finished seeding metric logs (binary, scalar, BP)!\n")
 
         # ------ Generation of educational articles ---------
+        edu_article_categories: list[EduArticleCategory] = EduArticlesGenerator.generate_edu_article_categories(
+            db_session
+        )
         edu_articles: list[EduArticle] = EduArticlesGenerator.generate_edu_articles(
-            db_session, "./seed_data/edu_articles.json"
+            db_session, "./seed_data/edu_articles.json", edu_article_categories
         )
         EduArticlesGenerator.generate_saved_edu_articles(db_session, edu_articles, preg_women)
         print("Finished seeding educational article content!\n")
