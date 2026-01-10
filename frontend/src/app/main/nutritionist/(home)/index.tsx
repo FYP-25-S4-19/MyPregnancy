@@ -35,10 +35,22 @@ export default function MotherHomeScreen() {
             style={styles.addRecipeBtn}
             onPress={() => {
               // router.replace("/main/nutritionist/recipe")
-              router.push("/main/nutritionist/recipe/add");
+              router.push("/main/nutritionist/recipe/addRecipe");
             }}
           >
             <Text style={styles.addRecipeText}>＋ Add Recipe</Text>
+            
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.draftBadge}
+            onPress={() => {
+              // router.replace("/main/nutritionist/recipe")
+              router.push("/main/nutritionist/recipe/drafts");
+            }}
+          >
+            <Text style={styles.draftText}>Draft</Text>
+            
           </TouchableOpacity>
 
           <View style={{ height: sizes.xl }} />
@@ -68,4 +80,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: sizes.m * 1.2,
   },
+  draftBadge: {
+    position: "absolute",
+    right: sizes.m,
+    bottom: sizes.m,
+    backgroundColor: colors.veryLightPink,
+    paddingHorizontal: sizes.s,
+    paddingVertical: sizes.xs,
+    borderRadius: sizes.l,
+  },
+
+  draftText: {
+    color: colors.primary,
+    fontSize: sizes.l,
+    fontWeight: "600",
+  },
+
 });
