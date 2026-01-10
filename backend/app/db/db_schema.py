@@ -47,15 +47,6 @@ class BinaryMetricCategory(Enum):
     OTHERS = "OTHERS"
 
 
-class EduArticleCategory(Base):
-    __tablename__ = "edu_article_categories"
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    label: Mapped[str] = mapped_column(unique=True)
-
-    # Relationship back to articles
-    articles: Mapped[list["EduArticle"]] = relationship(back_populates="category")
-
-
 class NotificationType(Enum):
     THREAD_LIKE = "THREAD_LIKE"  # Someone liked a thread you made
     THREAD_COMMENT = "THREAD_COMMENT"  # Someone commented on a thread you made
@@ -157,6 +148,7 @@ class PregnantWoman(User):
     doctor_ratings: Mapped[list["DoctorRating"]] = relationship(back_populates="rater")
     liked_products: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="mother")
     menstrual_periods: Mapped[list["MenstrualPeriod"]] = relationship(back_populates="mother")
+    shopping_cart: Mapped["ShoppingCart"] = relationship(back_populates="mother")
 
 
 class Nutritionist(User):
@@ -209,6 +201,15 @@ class Merchant(User):
 # ===========================================================
 # ================== EDUCATIONAL CONTENT ====================
 # ===========================================================
+class EduArticleCategory(Base):
+    __tablename__ = "edu_article_categories"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    label: Mapped[str] = mapped_column(unique=True)
+
+    # Relationship back to articles
+    articles: Mapped[list["EduArticle"]] = relationship(back_populates="category")
+
+
 class EduArticle(Base):
     __tablename__ = "edu_articles"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -614,13 +615,14 @@ class Product(Base):
     listed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     liked_by_mothers: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="product")
+    cart_items: Mapped[list["ShoppingCartItem"]] = relationship(back_populates="product")
 
 
 class ProductCategory(Base):
     __tablename__ = "product_categories"
     id: Mapped[int] = mapped_column(primary_key=True)
     label: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    products: Mapped[list[Product]] = relationship(back_populates="category")
+    products: Mapped[list["Product"]] = relationship(back_populates="category")
 
 
 class ProductDraft(Base):
@@ -628,7 +630,7 @@ class ProductDraft(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id"))
-    merchant: Mapped[Merchant] = relationship(back_populates="product_drafts")
+    merchant: Mapped["Merchant"] = relationship(back_populates="product_drafts")
 
     # All content fields are nullable since drafts can be incomplete
     name: Mapped[str | None] = mapped_column(String(255))
@@ -646,10 +648,35 @@ class ProductDraft(Base):
 class MotherLikeProduct(Base):
     __tablename__ = "mother_like_products"
     mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"), primary_key=True)
-    mother: Mapped[PregnantWoman] = relationship(back_populates="liked_products")
+    mother: Mapped["PregnantWoman"] = relationship(back_populates="liked_products")
 
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), primary_key=True)
-    product: Mapped[Product] = relationship(back_populates="liked_by_mothers")
+    product: Mapped["Product"] = relationship(back_populates="liked_by_mothers")
+
+
+# Each user has exactly 1 shopping cart....(cont'd below)
+class ShoppingCart(Base):
+    __tablename__ = "shopping_carts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    mother_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("pregnant_women.id"))
+    mother: Mapped["PregnantWoman"] = relationship(back_populates="shopping_cart")
+
+    items: Mapped[list["ShoppingCartItem"]] = relationship(back_populates="cart", cascade="all, delete-orphan")
+
+
+# ....But each shopping cart can have multiple items
+class ShoppingCartItem(Base):
+    __tablename__ = "shopping_cart_items"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    cart_id: Mapped[int] = mapped_column(ForeignKey("shopping_carts.id"))
+    cart: Mapped["ShoppingCart"] = relationship(back_populates="items")
+
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    product: Mapped[Product] = relationship(back_populates="cart_items")
+
+    quantity: Mapped[int] = mapped_column(CheckConstraint("quantity > 0"))
 
 
 # ===========================================

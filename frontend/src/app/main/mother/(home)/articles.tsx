@@ -16,13 +16,14 @@ type ArticleOverview = {
   excerpt: string;
 };
 
-function categoryLabelToValue(label: string) {
-  return label;
-}
+type ArticleCategory = {
+  id: number;
+  label: string;
+};
 
 const goBackSafe = () => {
   router.replace("/main/mother/(home)");
-}
+};
 
 export default function ArticlesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,26 +35,26 @@ export default function ArticlesScreen() {
   const categoriesQuery = useQuery({
     queryKey: ["articleCategories"],
     queryFn: async () => {
-      const res = await api.get<string[]>("/articles/categories");
+      const res = await api.get<ArticleCategory[]>("/articles/categories");
       return res.data;
     },
   });
 
   const chips = useMemo(() => {
     const apiCats = categoriesQuery.data ?? [];
-    return ["All", ...apiCats];
+    return [{ id: -1, label: "All" } satisfies ArticleCategory, ...apiCats];
   }, [categoriesQuery.data]);
 
   const articlesQuery = useQuery({
     queryKey: ["articles", selectedChip],
     queryFn: async () => {
       if (selectedChip === "All") {
-        const apiCats = (categoriesQuery.data ?? []).map(categoryLabelToValue);
+        const apiCats = (categoriesQuery.data ?? []).map((c) => c.label);
         const results = await Promise.all(
           apiCats.map(async (cat) => {
             const res = await api.get<ArticleOverview[]>(`/articles/?category=${encodeURIComponent(cat)}`);
             return res.data;
-          })
+          }),
         );
         const merged = results.flat();
         const map = new Map<number, ArticleOverview>();
@@ -63,8 +64,7 @@ export default function ArticlesScreen() {
         return Array.from(map.values());
       }
 
-      const catValue = categoryLabelToValue(selectedChip);
-      const res = await api.get<ArticleOverview[]>(`/articles/?category=${encodeURIComponent(catValue)}`);
+      const res = await api.get<ArticleOverview[]>(`/articles/?category=${encodeURIComponent(selectedChip)}`);
       return res.data;
     },
     enabled: selectedChip === "All" ? !!categoriesQuery.data?.length : true,
@@ -75,9 +75,12 @@ export default function ArticlesScreen() {
     const q = submittedQuery.trim().toLowerCase();
     if (!q) return list;
 
-    return list.filter((a) => String(a?.title ?? "").toLowerCase().includes(q));
+    return list.filter((a) =>
+      String(a?.title ?? "")
+        .toLowerCase()
+        .includes(q),
+    );
   }, [articlesQuery.data, submittedQuery]);
-
 
   const isLoading = categoriesQuery.isLoading || articlesQuery.isLoading;
 
@@ -107,13 +110,18 @@ export default function ArticlesScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           data={chips}
-          keyExtractor={(item) => item}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.chipsContent}
           renderItem={({ item }) => {
-            const active = item === selectedChip;
+            const active = item.label === selectedChip;
             return (
-              <TouchableOpacity style={[styles.chip, active && styles.chipActive]} onPress={() => setSelectedChip(item)}>
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{String(item).toUpperCase()}</Text>
+              <TouchableOpacity
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setSelectedChip(item.label)}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                  {String(item.label).toUpperCase()}
+                </Text>
               </TouchableOpacity>
             );
           }}
