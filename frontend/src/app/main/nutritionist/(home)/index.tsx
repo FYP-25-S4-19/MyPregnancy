@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: sizes.m,
     bottom: sizes.m,
-    backgroundColor: colors.veryLightPink,
+    backgroundColor: colors.white,
     paddingHorizontal: sizes.s,
     paddingVertical: sizes.xs,
     borderRadius: sizes.l,
