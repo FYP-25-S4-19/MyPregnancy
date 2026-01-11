@@ -20,6 +20,7 @@ import {
   Lock,
   Loader,
 } from 'lucide-react';
+import TestimonialsWidget from '../../components/TestimonialsWidget';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -490,6 +491,31 @@ const LandingPage: React.FC = () => {
             </div>
 
           </div>
+        </div>
+      </section>
+      {/* --- Reviews Section --- */}
+      <section className="w-full px-6 py-20 relative overflow-hidden bg-white/30 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h3 className="font-sans-brand font-bold text-[#8B4545] uppercase tracking-widest text-sm mb-4">
+              Reviews
+            </h3>
+            <br/>
+            <h2 className="font-serif-brand font-bold text-3xl md:text-5xl text-[#592E2E]">
+              What Our Users Say
+            </h2>
+            <br/>
+          </div>
+
+          <TestimonialsWidget
+            minRating={4}
+            maxRating={5}
+            sortBy="highest"
+            limit={5}
+            showStats={true}
+            autoRotate={true}
+            rotateInterval={5000}
+          />
         </div>
       </section>
       {/* --- FAQ Section --- */}
