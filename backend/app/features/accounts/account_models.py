@@ -42,3 +42,13 @@ class AccountCreationRequestView(CustomBaseModel):
 
 class RejectAccountCreationRequestReason(CustomBaseModel):
     reject_reason: str
+
+
+class AccountUpdate(CustomBaseModel):
+    email: str | None = None
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str | None = None
+    date_of_birth: date | None = None
+
+

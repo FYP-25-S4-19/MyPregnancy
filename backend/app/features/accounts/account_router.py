@@ -5,13 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.password_hasher import get_password_hasher
 from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import Admin, PregnantWoman, UserRole
+from app.db.db_schema import Admin, PregnantWoman, VolunteerDoctor, Nutritionist, UserRole
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
     HealthProfileUpdateRequest,
     MyProfileResponse,
     PregnancyDetailsUpdateRequest,
     RejectAccountCreationRequestReason,
+    AccountUpdate,
 )
 from app.features.accounts.account_service import AccountService
 
@@ -180,6 +181,22 @@ async def reject_nutritionist_account_creation_request(
 ):
     try:
         await service.reject_nutritionist_account_creation_request(request_id, request.reject_reason)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@account_router.put("/me/account")
+async def update_my_account(
+    payload: AccountUpdate,
+    user: PregnantWoman | VolunteerDoctor | Nutritionist = Depends(UserRole),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+    password_hasher: PasswordHasher = Depends(get_password_hasher)
+) -> None:
+    try:
+        await service.update_account_info(user, payload, password_hasher)
         await db.commit()
     except:
         await db.rollback()

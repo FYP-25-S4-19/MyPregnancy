@@ -2,6 +2,7 @@ from argon2 import PasswordHasher
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from app.db.db_schema import (
     AccountCreationRequestStatus,
@@ -9,6 +10,8 @@ from app.db.db_schema import (
     Nutritionist,
     NutritionistAccountCreationRequest,
     PregnantWoman,
+    Nutritionist,
+    VolunteerDoctor,
     UserRole,
     VolunteerDoctor,
 )
@@ -17,6 +20,7 @@ from app.features.accounts.account_models import (
     HealthProfileUpdateRequest,
     MyProfileResponse,
     PregnancyDetailsUpdateRequest,
+    AccountUpdate,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import is_valid_image
@@ -246,3 +250,29 @@ class AccountService:
             )
         acc_creation_req.account_status = AccountCreationRequestStatus.REJECTED
         acc_creation_req.reject_reason = reject_reason
+
+    async def update_account_info(
+        self, user: PregnantWoman | VolunteerDoctor | Nutritionist, payload: AccountUpdate, password_hasher: PasswordHasher | None = None
+    ) -> None:
+        # Check for email uniqueness
+        if payload.email and payload.email != getattr(user, "email", None):
+            stmt = select(type(user)).where(type(user).email == payload.email)
+            existing_user = (await self.db.execute(stmt)).scalar_one_or_none()
+            if existing_user:
+                raise HTTPException(status_code=409, detail="Email already in use")
+            user.email = payload.email
+
+        # Update other fields
+        user.first_name = payload.first_name or user.first_name
+        user.middle_name = payload.middle_name or user.middle_name
+        user.last_name = payload.last_name or user.last_name
+        user.date_of_birth = payload.date_of_birth or getattr(user, "date_of_birth", None)
+
+        # Optional: update password
+        if payload.password and password_hasher:
+            user.hashed_password = password_hasher.hash(payload.password)
+
+        try:
+            await self.db.flush()
+        except IntegrityError:
+            raise HTTPException(status_code=400, detail="Failed to update account")
