@@ -7,7 +7,8 @@ interface DoctorCardProps {
   id: string;
   name: string;
   image: string | null;
-  // rating: number;
+  rating?: number | null;
+  ratingCount?: number;
   isFavorite?: boolean;
   onChatPress?: () => void;
   onFavoritePress?: () => void;
@@ -16,7 +17,8 @@ interface DoctorCardProps {
 export default function DoctorCard({
   name,
   image,
-  // rating,
+  rating,
+  ratingCount,
   isFavorite = false,
   onChatPress,
   onFavoritePress,
@@ -46,7 +48,11 @@ export default function DoctorCard({
 
           <View style={styles.ratingContainer}>
             <Ionicons name="star" size={25} color={colors.warning} />
-            {/*<Text style={styles.ratingText}>{rating.toFixed(1)}</Text>*/}
+            <Text style={styles.ratingText}>
+              {typeof rating === "number" ? rating.toFixed(1) : "-"}
+            </Text>
+
+          
           </View>
         </View>
       </View>

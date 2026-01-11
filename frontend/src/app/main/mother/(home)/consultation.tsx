@@ -142,6 +142,8 @@ export default function ConsultationsScreen() {
             name={"Dr. " + item.first_name}
             image={item.profile_img_url}
             isFavorite={item.is_liked}
+            rating={item.avg_rating ?? null}
+            ratingCount={item.ratings_count ?? 0}
             onChatPress={() => onChatPress(item.doctor_id)}
             onFavoritePress={() => toggleLikeMutation.mutate({ doctorId: item.doctor_id, nextLike: !item.is_liked })}
           />

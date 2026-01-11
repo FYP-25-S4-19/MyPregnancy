@@ -175,10 +175,13 @@ export interface DoctorPreviewData {
   first_name: string;
   specialisation: string;
   is_liked: boolean;
+  avg_rating?: number | null;
+  ratings_count?: number;
 }
 
 export interface DoctorsPaginatedResponse {
   doctors: DoctorPreviewData[];
   next_cursor: string | null;
   has_more: boolean;
+  
 }
