@@ -302,6 +302,8 @@ class S3StorageInterface:
     @staticmethod
     def _upload_file_stream(prefix: str, file_name: str, file_obj: BinaryIO, content_type: str) -> str | None:
         try:
+            file_obj.seek(0)
+
             extension = mimetypes.guess_extension(content_type)
             if not extension:
                 if "jpeg" in content_type:
