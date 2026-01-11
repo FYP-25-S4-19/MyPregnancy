@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import and_, delete, null, or_, select
+from sqlalchemy import and_, delete, func, null, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -30,6 +30,7 @@ from app.features.miscellaneous.misc_models import (
     DoctorsPaginatedResponse,
     DoctorSpecializationModel,
     UpdateDoctorSpecializationRequest,
+    DoctorRatingSummaryResponse,
 )
 from app.shared.utils import get_s3_bucket_prefix
 
@@ -180,6 +181,34 @@ async def rate_doctor(
         await db.rollback()
 
 
+@misc_router.get("/doctors/{doctor_id}/rating/summary", response_model=DoctorRatingSummaryResponse)
+async def get_doctor_rating_summary(
+    doctor_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> DoctorRatingSummaryResponse:
+    doctor_stmt = select(VolunteerDoctor.id).where(VolunteerDoctor.id == doctor_id)
+    doctor_exists = (await db.execute(doctor_stmt)).scalar_one_or_none()
+    if not doctor_exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor not found")
+    # Calculate average + count
+    stmt = select(
+        func.avg(DoctorRating.rating),
+        func.count(DoctorRating.id),
+    ).where(DoctorRating.doctor_id == doctor_id)
+
+    avg_rating, count_rating = (await db.execute(stmt)).one()
+
+    avg_value = round(float(avg_rating), 1) if avg_rating is not None else None
+    count_value = int(count_rating or 0)
+
+    return DoctorRatingSummaryResponse(
+        doctor_id=doctor_id,
+        average_rating=avg_value,
+        ratings_count=count_value,
+    )
+
+
+
 @misc_router.get("/avail-mcr", response_model=list[str])
 async def get_available_mcr_numbers(db: AsyncSession = Depends(get_db)) -> list[str]:
     stmt = select(MCRNumber).where(MCRNumber.doctor == null)
@@ -261,16 +290,37 @@ async def list_of_doctors(
         )
         liked_ids = set((await db.execute(liked_stmt)).scalars().all())
 
-    doctor_previews = [
-        DoctorPreviewData(
-            doctor_id=doctor.id,
-            profile_img_url=get_s3_bucket_prefix() + doctor.profile_img_key if doctor.profile_img_key else None,
-            first_name=doctor.first_name,
-            specialisation=doctor.specialisation.specialisation,
-            is_liked=doctor.id in liked_ids,
+    rating_map: dict[UUID, tuple[float | None, int]] = {}
+    if doctor_ids:
+        rating_stmt = (
+            select(
+                DoctorRating.doctor_id,
+                func.avg(DoctorRating.rating),
+                func.count(DoctorRating.rater_id),
+            )
+            .where(DoctorRating.doctor_id.in_(doctor_ids))
+            .group_by(DoctorRating.doctor_id)
         )
-        for doctor in doctors_to_return
-    ]
+        rows = (await db.execute(rating_stmt)).all()
+        for doctor_id, avg_rating, cnt in rows:
+            rating_map[doctor_id] = (round(float(avg_rating), 1) if avg_rating is not None else None, int(cnt or 0))
+
+    doctor_previews = []
+    for doctor in doctors_to_return:
+        avg_rating, cnt = rating_map.get(doctor.id, (None, 0))
+
+        doctor_previews.append(
+            DoctorPreviewData(
+                doctor_id=doctor.id,
+                profile_img_url=get_s3_bucket_prefix() + doctor.profile_img_key if doctor.profile_img_key else None,
+                first_name=doctor.first_name,
+                specialisation=doctor.specialisation.specialisation,
+                is_liked=doctor.id in liked_ids,
+                avg_rating=avg_rating if isinstance(avg_rating, float) else None,
+                ratings_count=cnt,
+            )
+        )
+
 
     return DoctorsPaginatedResponse(doctors=doctor_previews, next_cursor=next_cursor, has_more=has_more)
 

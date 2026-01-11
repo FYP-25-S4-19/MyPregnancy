@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import require_role
 from app.core.users_manager import current_active_user, optional_current_active_user
 from app.db.db_config import get_db
-from app.db.db_schema import Admin, Nutritionist, User
+from app.db.db_schema import Admin, Nutritionist, Recipe, User
 from app.features.recipes.recipe_models import (
     CreateRecipeCategoryRequest,
     RecipeCategoryResponse,
@@ -29,6 +30,14 @@ async def get_recipe_categories(
     service: RecipeService = Depends(get_recipe_service),
 ) -> list[RecipeCategoryResponse]:
     return await service.get_recipe_categories()
+
+
+@recipe_router.get("/all", response_model=list[str])
+async def get_all_recipes(db: AsyncSession = Depends(get_db)) -> list[str]:
+    stmt = select(Recipe)
+    results = await db.execute(stmt)
+    recipes = results.scalars().all()
+    return [recipe.name for recipe in recipes]
 
 
 @recipe_router.get("/previews", response_model=RecipePreviewsPaginatedResponse)
@@ -60,6 +69,7 @@ async def create_recipe(
     pregnancy_benefit: str = Form(...),
     serving_count: int = Form(...),
     trimester: int = Form(...),
+    category_id: int = Form(...),
     image_file: UploadFile = File(),
     nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
     db: AsyncSession = Depends(get_db),
@@ -75,6 +85,7 @@ async def create_recipe(
             pregnancy_benefit,
             int(serving_count),
             int(trimester),
+            int(category_id),
             image_file,
             nutritionist,
         )
@@ -150,7 +161,7 @@ async def create_recipe_draft(
         raise
 
 
-@recipe_router.get("/drafts", response_model=list[RecipeDraftResponse])
+@recipe_router.get("/drafts/", response_model=list[RecipeDraftResponse])
 async def list_recipe_drafts(
     nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
     service: RecipeService = Depends(get_recipe_service),
