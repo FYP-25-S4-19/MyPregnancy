@@ -105,6 +105,19 @@ export default function WebsiteBuilder() {
     }
   }, [editor, currentPage]);
 
+  // Load saved sections and background from the database
+  useEffect(() => {
+    if (currentPage && currentPage.sections) {
+      setSections(currentPage.sections);
+      if (currentPage.sections.length > 0) {
+        setSelectedSection(currentPage.sections[0].id);
+      }
+    }
+    if (currentPage && currentPage.background_image) {
+      setBackgroundImage(currentPage.background_image);
+    }
+  }, [currentPage]);
+
   const handleSave = () => {
     if (!editor) return;
 
