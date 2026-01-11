@@ -39,7 +39,6 @@ export default function MotherHomeScreen() {
             }}
           >
             <Text style={styles.addRecipeText}>＋ Add Recipe</Text>
-            
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -50,7 +49,6 @@ export default function MotherHomeScreen() {
             }}
           >
             <Text style={styles.draftText}>Draft</Text>
-            
           </TouchableOpacity>
 
           <View style={{ height: sizes.xl }} />
@@ -84,16 +82,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: sizes.m,
     bottom: sizes.m,
-    backgroundColor: colors.white,
-    paddingHorizontal: sizes.s,
+    marginTop: sizes.s,
+    backgroundColor: colors.secondary,
+    paddingHorizontal: sizes.m,
     paddingVertical: sizes.xs,
     borderRadius: sizes.l,
   },
-
   draftText: {
-    color: colors.primary,
-    fontSize: sizes.l,
+    color: colors.text,
+    fontSize: sizes.m,
     fontWeight: "600",
   },
-
 });

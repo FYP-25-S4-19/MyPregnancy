@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -16,7 +7,7 @@ import { router } from "expo-router";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
 import api from "@/src/shared/api"; // axios instance
-import axios from "axios"
+import axios from "axios";
 
 export default function AddRecipeScreen() {
   const token = useAuthStore((state) => state.accessToken);
@@ -81,10 +72,10 @@ export default function AddRecipeScreen() {
       Alert.alert("Success", "Recipe created successfully");
       router.back();
     } catch (err) {
-      const error = err as any
+      const error = err as any;
       Alert.alert("Error", "Failed to create recipe");
-      console.log("Status", error.response.status)
-      console.log("Data", error.response.data)
+      console.log("Status", error.response.status);
+      console.log("Data", error.response.data);
     } finally {
       setLoading(false);
     }
@@ -95,12 +86,7 @@ export default function AddRecipeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Add New Recipe</Text>
         <View style={styles.card}>
-          <Input
-            label="Recipe Name"
-            placeholder="*required"
-            value={name}
-            onChangeText={setName}
-          />
+          <Input label="Recipe Name" placeholder="*required" value={name} onChangeText={setName} />
           <Input
             label="Description"
             placeholder="*required"
@@ -158,22 +144,12 @@ export default function AddRecipeScreen() {
           {/* Buttons */}
           <View style={styles.buttonRow}>
             {/* Submit */}
-            <TouchableOpacity
-              style={styles.submitBtn}
-              onPress={() => submitRecipe(false)}
-              disabled={loading}
-            >
-              <Text style={styles.submitText}>
-                {loading ? "Submitting..." : "Create Recipe"}
-              </Text>
+            <TouchableOpacity style={styles.submitBtn} onPress={() => submitRecipe(false)} disabled={loading}>
+              <Text style={styles.submitText}>{loading ? "Submitting..." : "Create Recipe"}</Text>
             </TouchableOpacity>
 
             {/* Draft */}
-            <TouchableOpacity
-              style={styles.draftBtn}
-              onPress={() => submitRecipe(true)}
-              disabled={loading}
-            >
+            <TouchableOpacity style={styles.draftBtn} onPress={() => submitRecipe(true)} disabled={loading}>
               <Text style={styles.draftText}>Draft</Text>
             </TouchableOpacity>
           </View>
@@ -191,10 +167,7 @@ function Input({ label, ...props }: any) {
       <Text style={styles.label}>{label}</Text>
       <TextInput
         {...props}
-        style={[
-          styles.input,
-          props.multiline && { height: 100, textAlignVertical: "top" },
-        ]}
+        style={[styles.input, props.multiline && { height: 100, textAlignVertical: "top" }]}
         placeholderTextColor={colors.secondary}
         textAlignVertical={props.multiline ? "top" : "center"}
       />

@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -26,19 +18,18 @@ export default function NutritionistRecipeDraftsScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchDrafts = async (): Promise<void> => {
+      try {
+        const res = await api.get("/recipes/drafts/");
+        setDrafts(res.data);
+      } catch (err) {
+        console.log("Failed to fetch drafts", err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchDrafts();
   }, []);
-
-  const fetchDrafts = async () => {
-    try {
-      const res = await api.get("/recipes/?status=draft");
-      setDrafts(res.data);
-    } catch (err) {
-      console.log("Failed to fetch drafts", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const renderItem = ({ item }: { item: DraftRecipe }) => (
     <TouchableOpacity
@@ -72,9 +63,7 @@ export default function NutritionistRecipeDraftsScreen() {
       ) : drafts.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No draft recipes</Text>
-          <Text style={styles.emptyText}>
-            Recipes saved as draft will appear here.
-          </Text>
+          <Text style={styles.emptyText}>Recipes saved as draft will appear here.</Text>
         </View>
       ) : (
         <FlatList
