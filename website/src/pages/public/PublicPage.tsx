@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { websiteAPI, authAPI } from '../../lib/api';
+import TestimonialsWidget from '../../components/TestimonialsWidget';
 import { LogIn, X, AlertCircle, Mail, Lock, Loader } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -360,19 +361,33 @@ function SectionDisplay({ section, onLoginClick }: any) {
       return (
         <div className="bg-gray-50 p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
-          <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {section.content.items.map((item: any, idx: number) => (
-              <div key={idx} className="bg-white p-6 rounded-lg border border-gray-200">
-                <div className="flex gap-1 mb-2">
-                  {[...Array(item.rating)].map((_, i) => (
-                    <span key={i} className="text-yellow-400">★</span>
-                  ))}
+          {section.content.useBackend ? (
+            <div className="max-w-5xl mx-auto">
+              <TestimonialsWidget
+                minRating={section.content.minRating}
+                maxRating={section.content.maxRating}
+                sortBy={section.content.sortBy}
+                limit={section.content.limit}
+                showStats={section.content.showStats}
+                autoRotate={section.content.autoRotate}
+                rotateInterval={section.content.rotateInterval}
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {section.content.items.map((item: any, idx: number) => (
+                <div key={idx} className="bg-white p-6 rounded-lg border border-gray-200">
+                  <div className="flex gap-1 mb-2">
+                    {[...Array(item.rating)].map((_, i) => (
+                      <span key={i} className="text-yellow-400">★</span>
+                    ))}
+                  </div>
+                  <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
+                  <p className="font-semibold text-gray-900">— {item.name}</p>
                 </div>
-                <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
-                <p className="font-semibold text-gray-900">— {item.name}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     default:

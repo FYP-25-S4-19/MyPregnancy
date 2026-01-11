@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { websiteAPI } from '../../lib/api';
 import { Save, Eye, ArrowLeft, Plus, Trash2, Copy, Settings, GripVertical, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import TestimonialsWidget from '../../components/TestimonialsWidget';
 
 interface Section {
   id: string;
@@ -193,6 +194,15 @@ export default function WebsiteBuilder() {
       },
       testimonials: {
         title: 'What Users Say',
+        useBackend: true,
+        minRating: 4,
+        maxRating: 5,
+        sortBy: 'highest',
+        limit: 10,
+        showStats: true,
+        autoRotate: true,
+        rotateInterval: 5000,
+        // Fallback/manual items when not using backend
         items: [
           { name: 'User 1', text: 'Great product!', rating: 5 },
           { name: 'User 2', text: 'Highly recommend!', rating: 5 },
@@ -861,33 +871,124 @@ export default function WebsiteBuilder() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-gray-900">Testimonials</h4>
-                      <button
-                        onClick={() => {
-                          const newItems = [...currentSection.content.items, { name: 'New User', text: 'User testimonial', rating: 5 }];
-                          updateSection({ items: newItems });
-                        }}
-                        className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-                      >
-                        + Add Testimonial
-                      </button>
-                    </div>
-                    <div className="space-y-4">
-                      {currentSection.content.items.map((item: any, idx: number) => (
-                        <div key={idx} className="bg-white p-4 rounded-lg border border-gray-200">
-                          <div className="flex gap-1 mb-2">
-                            {[...Array(item.rating)].map((_, i) => (
-                              <span key={i} className="text-yellow-400">★</span>
-                            ))}
-                          </div>
-                          <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
-                          <p className="font-semibold text-gray-900">— {item.name}</p>
-                        </div>
-                      ))}
-                    </div>
+
+                  {/* Toggle Backend Source */}
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm font-medium text-gray-700">Use backend feedback</label>
+                    <input
+                      type="checkbox"
+                      checked={!!currentSection.content.useBackend}
+                      onChange={(e) => updateSection({ useBackend: e.target.checked })}
+                    />
                   </div>
+
+                  {currentSection.content.useBackend ? (
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                      <h4 className="font-medium text-gray-900">Backend Settings</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Min Rating</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={5}
+                            value={currentSection.content.minRating}
+                            onChange={(e) => updateSection({ minRating: Number(e.target.value) })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Max Rating</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={5}
+                            value={currentSection.content.maxRating}
+                            onChange={(e) => updateSection({ maxRating: Number(e.target.value) })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Limit</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={currentSection.content.limit}
+                            onChange={(e) => updateSection({ limit: Number(e.target.value) })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                          <select
+                            value={currentSection.content.sortBy}
+                            onChange={(e) => updateSection({ sortBy: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          >
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="highest">Highest</option>
+                            <option value="lowest">Lowest</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={!!currentSection.content.showStats}
+                            onChange={(e) => updateSection({ showStats: e.target.checked })}
+                          />
+                          <label className="text-sm text-gray-700">Show statistics</label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={!!currentSection.content.autoRotate}
+                            onChange={(e) => updateSection({ autoRotate: e.target.checked })}
+                          />
+                          <label className="text-sm text-gray-700">Auto-rotate carousel</label>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Rotate Interval (ms)</label>
+                          <input
+                            type="number"
+                            min={1000}
+                            step={500}
+                            value={currentSection.content.rotateInterval}
+                            onChange={(e) => updateSection({ rotateInterval: Number(e.target.value) })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-gray-900">Testimonials</h4>
+                        <button
+                          onClick={() => {
+                            const newItems = [...currentSection.content.items, { name: 'New User', text: 'User testimonial', rating: 5 }];
+                            updateSection({ items: newItems });
+                          }}
+                          className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+                        >
+                          + Add Testimonial
+                        </button>
+                      </div>
+                      <div className="space-y-4">
+                        {currentSection.content.items.map((item: any, idx: number) => (
+                          <div key={idx} className="bg-white p-4 rounded-lg border border-gray-200">
+                            <div className="flex gap-1 mb-2">
+                              {[...Array(item.rating)].map((_, i) => (
+                                <span key={i} className="text-yellow-400">★</span>
+                              ))}
+                            </div>
+                            <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
+                            <p className="font-semibold text-gray-900">— {item.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -899,37 +1000,43 @@ export default function WebsiteBuilder() {
 }
 
 function SectionRenderer({ section, isSelected, onSelect }: any) {
-  const baseClasses = `p-8 rounded-lg cursor-pointer transition border-2 ${
-    isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300 hover:border-gray-400'
-  }`;
+  const baseClasses = section.type === 'navbar'
+    ? `rounded-none cursor-pointer transition border-0 ${
+        isSelected ? 'ring-2 ring-blue-200' : ''
+      } sticky top-0 z-40 w-full`
+    : `p-8 rounded-lg cursor-pointer transition border-2 ${
+        isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300 hover:border-gray-400'
+      }`;
 
   const renderContent = () => {
     switch (section.type) {
       case 'navbar': {
         const [menuOpen, setMenuOpen] = useState(false);
         return (
-          <nav style={{ backgroundColor: section.content.bgColor, color: section.content.textColor }} className="px-8 py-4 flex items-center justify-between rounded-lg">
-            <div className="font-bold text-lg">{section.content.logo}</div>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="flex flex-col gap-1 md:hidden"
-            >
-              <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
-              <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
-              <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
-            </button>
-            <div className={`hidden md:flex gap-6`}>
-              {section.content.links.map((link: any, idx: number) => (
-                <a key={idx} href={link.url} className="text-sm hover:opacity-75 transition">
-                  {link.label}
-                </a>
-              ))}
-            </div>
-            <button style={{ backgroundColor: section.content.buttonColor }} className="hidden md:block text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
-              {section.content.buttonText}
-            </button>
+          <div style={{ backgroundColor: section.content.bgColor, color: section.content.textColor }} className="w-full border-b border-gray-200/70 bg-white/90 backdrop-blur">
+            <nav className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
+              <div className="font-bold text-lg">{section.content.logo}</div>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex flex-col gap-1 md:hidden"
+              >
+                <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
+                <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
+                <span className="block w-6 h-0.5" style={{ backgroundColor: section.content.textColor }}></span>
+              </button>
+              <div className={`hidden md:flex gap-6`}>
+                {section.content.links.map((link: any, idx: number) => (
+                  <a key={idx} href={link.url} className="text-sm hover:opacity-75 transition">
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+              <button style={{ backgroundColor: section.content.buttonColor }} className="hidden md:block text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
+                {section.content.buttonText}
+              </button>
+            </nav>
             {menuOpen && (
-              <div className="absolute top-16 left-0 right-0 md:hidden p-4 flex flex-col gap-4" style={{ backgroundColor: section.content.bgColor }}>
+              <div className="max-w-6xl mx-auto px-8 pb-4 md:hidden flex flex-col gap-4" style={{ backgroundColor: section.content.bgColor }}>
                 {section.content.links.map((link: any, idx: number) => (
                   <a key={idx} href={link.url} className="text-sm hover:opacity-75 transition block">
                     {link.label}
@@ -940,7 +1047,7 @@ function SectionRenderer({ section, isSelected, onSelect }: any) {
                 </button>
               </div>
             )}
-          </nav>
+          </div>
         );
       }
       case 'hero':
@@ -1017,19 +1124,33 @@ function SectionRenderer({ section, isSelected, onSelect }: any) {
         return (
           <div className="bg-gray-50 p-12 rounded-lg">
             <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
-            <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {section.content.items.map((item: any, idx: number) => (
-                <div key={idx} className="bg-white p-6 rounded-lg border border-gray-200">
-                  <div className="flex gap-1 mb-2">
-                    {[...Array(item.rating)].map((_, i) => (
-                      <span key={i} className="text-yellow-400">★</span>
-                    ))}
+            {section.content.useBackend ? (
+              <div className="max-w-5xl mx-auto">
+                <TestimonialsWidget
+                  minRating={section.content.minRating}
+                  maxRating={section.content.maxRating}
+                  sortBy={section.content.sortBy}
+                  limit={section.content.limit}
+                  showStats={section.content.showStats}
+                  autoRotate={section.content.autoRotate}
+                  rotateInterval={section.content.rotateInterval}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                {section.content.items.map((item: any, idx: number) => (
+                  <div key={idx} className="bg-white p-6 rounded-lg border border-gray-200">
+                    <div className="flex gap-1 mb-2">
+                      {[...Array(item.rating)].map((_, i) => (
+                        <span key={i} className="text-yellow-400">★</span>
+                      ))}
+                    </div>
+                    <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
+                    <p className="font-semibold text-gray-900">— {item.name}</p>
                   </div>
-                  <p className="text-gray-700 mb-4 italic">"{item.text}"</p>
-                  <p className="font-semibold text-gray-900">— {item.name}</p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       default:
