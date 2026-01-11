@@ -150,7 +150,7 @@ async def create_recipe_draft(
         raise
 
 
-@recipe_router.get("/drafts", response_model=list[RecipeDraftResponse])
+@recipe_router.get("/drafts/", response_model=list[RecipeDraftResponse])
 async def list_recipe_drafts(
     nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
     service: RecipeService = Depends(get_recipe_service),
