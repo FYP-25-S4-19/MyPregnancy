@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, status, HTTPExce
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.password_hasher import get_password_hasher
-from app.core.security import require_role
+from app.core.security import require_role, get_current_user
 from app.db.db_config import get_db
+
 from app.db.db_schema import Admin, PregnantWoman, VolunteerDoctor, Nutritionist, Merchant, UserRole
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
@@ -227,7 +228,7 @@ def get_update_model(user: PregnantWoman | VolunteerDoctor | Nutritionist | Merc
 @account_router.put("/me/account")
 async def update_my_account(
     payload: AccountUpdateType,
-    user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant = Depends(UserRole),
+    user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant = Depends(get_current_user),
     service: AccountService = Depends(get_account_service),
     db: AsyncSession = Depends(get_db),
     password_hasher: PasswordHasher = Depends(get_password_hasher)
