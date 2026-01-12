@@ -23,7 +23,9 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.frontend",
+      "minSdkVersion": 26,
       "permissions": [
+        "android.permission.health.READ_HEART_RATE",
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_CONNECT",
         "android.permission.BLUETOOTH_ADMIN",
@@ -54,14 +56,6 @@
           }
         }
       ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "minSdkVersion": 24
-          }
-        }
-      ],
       "@stream-io/video-react-native-sdk",
       [
         "@config-plugins/react-native-webrtc",
@@ -88,6 +82,17 @@
         "expo-web-browser",
         {
           "experimentalLauncherActivity": true
+        }
+      ],
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 26
+          }
         }
       ]
     ],

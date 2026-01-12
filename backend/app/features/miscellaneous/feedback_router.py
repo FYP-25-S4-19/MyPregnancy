@@ -1,11 +1,11 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy import desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func, desc
 from typing_extensions import Annotated
 
 from app.db.db_config import get_db
@@ -68,13 +68,13 @@ async def get_all_feedback(
     db: AsyncSession = Depends(get_db),
 ):
     query = select(UserAppFeedback)
-    
+
     # Apply rating filters
     if min_rating is not None:
         query = query.where(UserAppFeedback.rating >= min_rating)
     if max_rating is not None:
         query = query.where(UserAppFeedback.rating <= max_rating)
-    
+
     # Apply sorting
     if sort_by == "newest":
         query = query.order_by(desc(UserAppFeedback.id))
@@ -84,11 +84,11 @@ async def get_all_feedback(
         query = query.order_by(desc(UserAppFeedback.rating))
     elif sort_by == "lowest":
         query = query.order_by(UserAppFeedback.rating)
-    
+
     # Apply limit
     if limit is not None:
         query = query.limit(limit)
-    
+
     result = await db.execute(query)
     feedbacks = result.scalars().all()
     return feedbacks
@@ -100,24 +100,22 @@ async def get_feedback_stats(db: AsyncSession = Depends(get_db)):
     # Get total count
     count_result = await db.execute(select(func.count(UserAppFeedback.id)))
     total_count = count_result.scalar() or 0
-    
+
     # Get average rating
     avg_result = await db.execute(select(func.avg(UserAppFeedback.rating)))
     average_rating = float(avg_result.scalar() or 0)
-    
+
     # Get rating distribution
     result = await db.execute(select(UserAppFeedback))
     feedbacks = result.scalars().all()
-    
+
     rating_dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
     for feedback in feedbacks:
         if feedback.rating in rating_dist:
             rating_dist[feedback.rating] += 1
-    
+
     return FeedbackStatsResponse(
-        total_count=total_count,
-        average_rating=round(average_rating, 2),
-        rating_distribution=rating_dist
+        total_count=total_count, average_rating=round(average_rating, 2), rating_distribution=rating_dist
     )
 
 

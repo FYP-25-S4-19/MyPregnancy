@@ -18,7 +18,7 @@ export const AddProductSection: FC = () => {
       </TouchableOpacity>
 
       <View style={styles.draftContainer}>
-        <TouchableOpacity style={styles.draftBadge}>
+        <TouchableOpacity onPress={() => router.push("/main/merchant/shop/drafts/")} style={styles.draftBadge}>
           <Text style={styles.draftText}>Draft</Text>
         </TouchableOpacity>
       </View>
