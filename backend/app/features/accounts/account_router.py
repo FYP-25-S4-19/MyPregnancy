@@ -1,11 +1,11 @@
 from argon2 import PasswordHasher
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.password_hasher import get_password_hasher
 from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import Admin, PregnantWoman, VolunteerDoctor, Nutritionist, UserRole
+from app.db.db_schema import Admin, PregnantWoman, VolunteerDoctor, Nutritionist, Merchant, UserRole
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
     HealthProfileUpdateRequest,
@@ -13,6 +13,11 @@ from app.features.accounts.account_models import (
     PregnancyDetailsUpdateRequest,
     RejectAccountCreationRequestReason,
     AccountUpdate,
+    PregnantWomanUpdate, 
+    VolunteerDoctorUpdate, 
+    NutritionistUpdate, 
+    MerchantUpdate,
+    AccountUpdateType,
 )
 from app.features.accounts.account_service import AccountService
 
@@ -187,17 +192,55 @@ async def reject_nutritionist_account_creation_request(
         raise
 
 
+# @account_router.put("/me/account")
+# async def update_my_account(
+#     payload: AccountUpdate,
+#     user: PregnantWoman | VolunteerDoctor | Nutritionist = Depends(UserRole),
+#     service: AccountService = Depends(get_account_service),
+#     db: AsyncSession = Depends(get_db),
+#     password_hasher: PasswordHasher = Depends(get_password_hasher)
+# ) -> None:
+#     try:
+#         await service.update_account_info(user, payload, password_hasher)
+#         await db.commit()
+#     except:
+#         await db.rollback()
+#         raise
+
+
+
+
+# Helper function to determine the correct update model based on user type
+def get_update_model(user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant):
+    """Return the appropriate update model based on user type"""
+    if isinstance(user, PregnantWoman):
+        return PregnantWomanUpdate
+    elif isinstance(user, VolunteerDoctor):
+        return VolunteerDoctorUpdate
+    elif isinstance(user, Nutritionist):
+        return NutritionistUpdate
+    elif isinstance(user, Merchant):
+        return MerchantUpdate
+    else:
+        raise HTTPException(status_code=400, detail="Unknown user type")
+
 @account_router.put("/me/account")
 async def update_my_account(
-    payload: AccountUpdate,
-    user: PregnantWoman | VolunteerDoctor | Nutritionist = Depends(UserRole),
+    payload: AccountUpdateType,
+    user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant = Depends(UserRole),
     service: AccountService = Depends(get_account_service),
     db: AsyncSession = Depends(get_db),
     password_hasher: PasswordHasher = Depends(get_password_hasher)
-) -> None:
+) -> dict:
+    """
+    Update account information for the current user.
+    Automatically uses the correct update model based on user type.
+    """
     try:
         await service.update_account_info(user, payload, password_hasher)
         await db.commit()
-    except:
+        return {"message": "Account updated successfully"}
+    except Exception as e:
         await db.rollback()
-        raise
+        raise HTTPException(status_code=400, detail=str(e))
+
