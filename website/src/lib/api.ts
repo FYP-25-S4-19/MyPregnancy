@@ -85,3 +85,24 @@ export const appointmentsAPI = {
   getAppointment: (id: number) => api.get(`/appointments/${id}`),
   updateAppointment: (id: number, data: any) => api.patch(`/appointments/${id}`, data),
 };
+
+export const feedbackAPI = {
+  getAllFeedback: (options?: {
+    min_rating?: number;
+    max_rating?: number;
+    sort_by?: 'newest' | 'oldest' | 'highest' | 'lowest';
+    limit?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (options?.min_rating) params.append('min_rating', String(options.min_rating));
+    if (options?.max_rating) params.append('max_rating', String(options.max_rating));
+    if (options?.sort_by) params.append('sort_by', options.sort_by);
+    if (options?.limit) params.append('limit', String(options.limit));
+    
+    const queryString = params.toString();
+    return api.get(`/feedback${queryString ? '?' + queryString : ''}`);
+  },
+  getStats: () => api.get('/feedback/stats'),
+  getFeedbackByUser: (userId: string) => api.get(`/feedback/user/${userId}`),
+  createFeedback: (data: any) => api.post('/feedback', data),
+};

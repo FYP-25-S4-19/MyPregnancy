@@ -26,12 +26,20 @@ class DoctorRatingResponse(CustomBaseModel):
     has_rating: bool
 
 
+class DoctorRatingSummaryResponse(CustomBaseModel):
+    doctor_id: UUID
+    average_rating: float | None
+    ratings_count: int
+
+
 class DoctorPreviewData(CustomBaseModel):
     doctor_id: UUID
     profile_img_url: str | None
     first_name: str
     specialisation: str
     is_liked: bool
+    avg_rating: float | None = None
+    ratings_count: int = 0
 
 
 class DoctorsPaginatedResponse(CustomBaseModel):

@@ -19,6 +19,7 @@ from app.features.getstream.stream_router import stream_router
 from app.features.journal.journal_router import journal_router
 from app.features.kick_tracker.kick_tracker_router import kick_tracker_router
 from app.features.miscellaneous.misc_routes import misc_router, router
+from app.features.miscellaneous.feedback_router import router as feedback_router
 from app.features.products.product_router import product_router
 from app.features.recipes.recipe_router import recipe_router
 from app.features.risk.risk_router import router as risk_router
@@ -73,6 +74,7 @@ app.include_router(product_router)
 app.include_router(kick_tracker_router)
 app.include_router(misc_router)
 app.include_router(router)
+app.include_router(feedback_router)
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 

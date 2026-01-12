@@ -1,22 +1,23 @@
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router, useLocalSearchParams } from "expo-router";
+import { colors, sizes } from "@/src/shared/designSystem";
+import { Dropdown } from "react-native-element-dropdown";
 import React, { useEffect, useState } from "react";
+import useAuthStore from "@/src/shared/authStore";
+import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
+import api from "@/src/shared/api";
 import {
+  ActivityIndicator,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  Alert,
+  Image,
   View,
   Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  Alert,
-  ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import * as ImagePicker from "expo-image-picker";
-import { router, useLocalSearchParams } from "expo-router";
-
-import { colors, sizes } from "@/src/shared/designSystem";
-import useAuthStore from "@/src/shared/authStore";
-import api from "@/src/shared/api";
 
 export default function AddRecipeScreen() {
   const { draftId: draftIdParam, mode } = useLocalSearchParams();
@@ -31,9 +32,40 @@ export default function AddRecipeScreen() {
   const [estCalories, setEstCalories] = useState("");
   const [pregnancyBenefit, setPregnancyBenefit] = useState("");
   const [servingCount, setServingCount] = useState("");
+  const [trimester, setTrimester] = useState<string>("1");
+  const [category, setCategory] = useState<string>("");
+  const [categories, setCategories] = useState<Array<{ label: string; value: string }>>([]);
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingDraft, setLoadingDraft] = useState(false);
+  const [isFocus, setIsFocus] = useState(false);
+  const [isCategoryFocus, setIsCategoryFocus] = useState(false);
+
+  const trimesterData = [
+    { label: "Trimester 1", value: "1" },
+    { label: "Trimester 2", value: "2" },
+    { label: "Trimester 3", value: "3" },
+  ];
+
+  /* ---------------- fetch categories on mount ---------------- */
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/recipes/categories");
+        const categoryList = res.data.map((cat: any) => ({
+          label: cat.label,
+          value: cat.id.toString(),
+        }));
+        setCategories(categoryList);
+        if (categoryList.length > 0) {
+          setCategory(categoryList[0].value);
+        }
+      } catch (err) {
+        console.log("Failed to fetch categories", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   /* ---------------- fetch draft if editing ---------------- */
   useEffect(() => {
@@ -50,6 +82,7 @@ export default function AddRecipeScreen() {
           setEstCalories(draft.est_calories ?? "");
           setPregnancyBenefit(draft.pregnancy_benefit ?? "");
           setServingCount(draft.serving_count?.toString() ?? "");
+          setTrimester(draft.trimester?.toString() ?? "1");
           if (draft.img_key) {
             setImage({ uri: `${process.env.EXPO_PUBLIC_API_URL}/files/${draft.img_key}` } as any);
           }
@@ -89,10 +122,12 @@ export default function AddRecipeScreen() {
       formData.append("name", name);
       formData.append("description", description);
       formData.append("ingredients", ingredients);
-      formData.append("instructions_markdown", instructions);
+      formData.append("instructions", instructions);
       formData.append("est_calories", estCalories);
       formData.append("pregnancy_benefit", pregnancyBenefit);
       formData.append("serving_count", servingCount);
+      formData.append("trimester", trimester);
+      formData.append("category_id", category);
       if (image) {
         formData.append("image_file", {
           uri: image.uri,
@@ -153,15 +188,85 @@ export default function AddRecipeScreen() {
         <Text style={styles.title}>{draftId ? "Edit Recipe Draft" : "Add New Recipe"}</Text>
         <View style={styles.card}>
           <Input label="Recipe Name" placeholder="*required" value={name} onChangeText={setName} />
-          <Input label="Description" placeholder="*required" value={description} onChangeText={setDescription} multiline />
-          <Input label="Ingredients" placeholder="*required" value={ingredients} onChangeText={setIngredients} multiline />
-          <Input label="Instructions" placeholder="*required" value={instructions} onChangeText={setInstructions} multiline />
-          <Input label="Estimated Calories" placeholder="*required in kcal" value={estCalories} onChangeText={setEstCalories} keyboardType="numeric" />
-          <Input label="Pregnancy Benefit" placeholder="*required" value={pregnancyBenefit} onChangeText={setPregnancyBenefit} />
-          <Input label="Serving Count" placeholder="*required per serving" value={servingCount} onChangeText={setServingCount} keyboardType="numeric" />
+          <Input
+            label="Description"
+            placeholder="*required"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+          <Input
+            label="Ingredients"
+            placeholder="*required"
+            value={ingredients}
+            onChangeText={setIngredients}
+            multiline
+          />
+          <Input
+            label="Instructions"
+            placeholder="*required"
+            value={instructions}
+            onChangeText={setInstructions}
+            multiline
+          />
+          <Input
+            label="Estimated Calories"
+            placeholder="*required in kcal"
+            value={estCalories}
+            onChangeText={setEstCalories}
+            keyboardType="numeric"
+          />
+          <Input
+            label="Pregnancy Benefit"
+            placeholder="*required"
+            value={pregnancyBenefit}
+            onChangeText={setPregnancyBenefit}
+          />
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Trimester</Text>
+            <Dropdown
+              style={[styles.input, isFocus && { borderColor: colors.primary }]}
+              data={trimesterData}
+              maxHeight={300}
+              labelField="label"
+              valueField="value"
+              placeholder={!isFocus ? "Select trimester" : "..."}
+              value={trimester}
+              onFocus={() => setIsFocus(true)}
+              onBlur={() => setIsFocus(false)}
+              onChange={(item) => setTrimester(item.value)}
+              renderRightIcon={() => <Ionicons name="chevron-down" size={20} color={colors.text} />}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Category</Text>
+            <Dropdown
+              style={[styles.input, isCategoryFocus && { borderColor: colors.primary }]}
+              data={categories}
+              maxHeight={300}
+              labelField="label"
+              valueField="value"
+              placeholder={!isCategoryFocus ? "Select category" : "..."}
+              value={category}
+              onFocus={() => setIsCategoryFocus(true)}
+              onBlur={() => setIsCategoryFocus(false)}
+              onChange={(item) => setCategory(item.value)}
+              renderRightIcon={() => <Ionicons name="chevron-down" size={20} color={colors.text} />}
+            />
+          </View>
+
+          <Input
+            label="Serving Count"
+            placeholder="*required per serving"
+            value={servingCount}
+            onChangeText={setServingCount}
+            keyboardType="numeric"
+          />
 
           <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
-            {image ? <Image source={{ uri: image.uri }} style={styles.preview} /> : (
+            {image ? (
+              <Image source={{ uri: image.uri }} style={styles.preview} />
+            ) : (
               <>
                 <Text style={styles.uploadIcon}>🖼️</Text>
                 <Text style={styles.uploadText}>Choose Files to Upload</Text>
@@ -171,7 +276,9 @@ export default function AddRecipeScreen() {
 
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.submitBtn} onPress={() => submitRecipe(false)} disabled={loading}>
-              <Text style={styles.submitText}>{loading ? "Submitting..." : draftId ? "Publish Recipe" : "Create Recipe"}</Text>
+              <Text style={styles.submitText}>
+                {loading ? "Submitting..." : draftId ? "Publish Recipe" : "Create Recipe"}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.draftBtn} onPress={() => submitRecipe(true)} disabled={loading}>
               <Text style={styles.draftText}>{loading ? "Saving..." : draftId ? "Update Draft" : "Save as Draft"}</Text>
@@ -189,7 +296,12 @@ function Input({ label, ...props }: any) {
   return (
     <View style={styles.inputWrapper}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput {...props} style={[styles.input, props.multiline && { height: 100, textAlignVertical: "top" }]} placeholderTextColor={colors.secondary} textAlignVertical={props.multiline ? "top" : "center"} />
+      <TextInput
+        {...props}
+        style={[styles.input, props.multiline && { height: 100, textAlignVertical: "top" }]}
+        placeholderTextColor={colors.secondary}
+        textAlignVertical={props.multiline ? "top" : "center"}
+      />
     </View>
   );
 }
@@ -201,11 +313,49 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: sizes.l, padding: sizes.l },
   inputWrapper: { marginBottom: sizes.m },
   label: { marginBottom: sizes.xs, color: "#000" },
-  input: { backgroundColor: colors.white, borderRadius: sizes.m, padding: sizes.m, fontSize: sizes.m, borderWidth: 2, borderColor: colors.inputFieldBackground },
+  input: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.m,
+    fontSize: sizes.m,
+    borderWidth: 2,
+    borderColor: colors.inputFieldBackground,
+  },
+  pickerContainer: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    borderWidth: 2,
+    borderColor: colors.inputFieldBackground,
+    overflow: "hidden",
+  },
+  picker: { height: 50 },
   preview: { width: "100%", height: 180, borderRadius: sizes.m, marginTop: sizes.m },
-  submitBtn: { flex: 1, backgroundColor: colors.primary, paddingVertical: sizes.m, borderRadius: sizes.m, alignItems: "center", marginLeft: sizes.s },
-  draftBtn: { flex: 1, backgroundColor: colors.inputFieldBackground, paddingVertical: sizes.m, borderRadius: sizes.m, alignItems: "center", marginRight: sizes.s },
-  uploadBox: { borderWidth: 1, borderStyle: "dashed", borderColor: colors.secondary, borderRadius: sizes.m, height: 160, justifyContent: "center", alignItems: "center", marginTop: sizes.m },
+  submitBtn: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    paddingVertical: sizes.m,
+    borderRadius: sizes.m,
+    alignItems: "center",
+    marginLeft: sizes.s,
+  },
+  draftBtn: {
+    flex: 1,
+    backgroundColor: colors.inputFieldBackground,
+    paddingVertical: sizes.m,
+    borderRadius: sizes.m,
+    alignItems: "center",
+    marginRight: sizes.s,
+  },
+  uploadBox: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.secondary,
+    borderRadius: sizes.m,
+    height: 160,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: sizes.m,
+  },
   uploadIcon: { fontSize: 28, marginBottom: sizes.xs },
   uploadText: { color: colors.primary },
   buttonRow: { flexDirection: "row", justifyContent: "space-between", marginTop: sizes.l },

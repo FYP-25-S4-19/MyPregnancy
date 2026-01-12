@@ -121,6 +121,7 @@ class RecipeService:
         pregnancy_benefit: str,
         serving_count: int,
         trimester: int,
+        category_id: int,
         image_file: UploadFile,
         nutritionist: Nutritionist,
     ) -> None:
@@ -156,9 +157,16 @@ class RecipeService:
         if recipe_img_key is None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to upload qualification image. Please try again.",
+                detail="Failed to upload recipe image. Please try again.",
             )
         new_recipe.img_key = recipe_img_key
+
+        # Associate the recipe with the selected category
+        category_association = RecipeToCategoryAssociation(
+            recipe_id=new_recipe.id,
+            category_id=category_id,
+        )
+        self.db.add(category_association)
 
     async def delete_recipe(self, recipe_id: int, nutritionist_id: UUID):
         query_stmt = select(Recipe).where(Recipe.id == recipe_id)
