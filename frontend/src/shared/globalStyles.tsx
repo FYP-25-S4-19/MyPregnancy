@@ -183,16 +183,28 @@ export const globalStreamTheme: DeepPartial<Theme> = {
           color: colors.white,
           fontWeight: "400",
         },
-        // heading1: {
-        //   color: "pink",
-        // },
-        // inlineCode: {
-        //   fontSize: 10,
-        // },
       },
     },
   },
+  channelListMessenger: {
+    flatListContent: {
+      backgroundColor: colors.white,
+    },
+  },
+  channelPreview: {
+    title: { color: colors.text },
+    container: {
+      backgroundColor: colors.white,
+    },
+  },
 };
+
+export const channelListStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: sizes.l,
+  },
+});
 
 // Thread-related reusable styles
 export const threadStyles = StyleSheet.create({
