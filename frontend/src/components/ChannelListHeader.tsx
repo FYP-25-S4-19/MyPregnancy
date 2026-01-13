@@ -1,8 +1,9 @@
 import { TextInput } from "react-native-gesture-handler";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { FC } from "react";
 import { colors, font, sizes } from "../shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
+import { ChatFilter } from "../shared/typesAndInterfaces";
 
 interface ChannelListSearchBarProps {
   searchQuery: string;
@@ -36,13 +37,15 @@ const clSearchBarStyles = StyleSheet.create({
 //==============================================================
 interface ChannelFilterPillProps {
   text: string;
+  isActive: boolean;
+  onPress: () => void;
 }
 
-const ChannelFilterPill: FC<ChannelFilterPillProps> = ({ text }) => {
+const ChannelFilterPill: FC<ChannelFilterPillProps> = ({ text, isActive, onPress }) => {
   return (
-    <View style={clPillStyles.container}>
-      <Text style={clPillStyles.pillText}>{text}</Text>
-    </View>
+    <TouchableOpacity onPress={onPress} style={[clPillStyles.container, isActive && clPillStyles.containerActive]}>
+      <Text style={[clPillStyles.pillText, isActive && clPillStyles.pillTextActive]}>{text}</Text>
+    </TouchableOpacity>
   );
 };
 
@@ -53,22 +56,36 @@ const clPillStyles = StyleSheet.create({
     backgroundColor: colors.secondary,
     borderRadius: sizes.borderRadius * 5,
   },
-  pillText: {},
+  containerActive: {
+    backgroundColor: colors.primary,
+  },
+  pillText: {
+    color: colors.text,
+    fontSize: font.s,
+    fontWeight: "500",
+  },
+  pillTextActive: {
+    color: colors.white,
+    fontWeight: "bold",
+  },
 });
 //==============================================================
 interface ChannelListProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  //---------------------------------------
+  filterType: ChatFilter;
+  setFilterType: (type: ChatFilter) => void;
 }
 
-const ChannelListHeader: FC<ChannelListProps> = ({ searchQuery, setSearchQuery }) => {
+const ChannelListHeader: FC<ChannelListProps> = ({ searchQuery, setSearchQuery, filterType, setFilterType }) => {
   return (
     <View style={clStyles.container}>
       <Text style={clStyles.headerText}>Chats</Text>
       <ChannelListSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       <View style={clStyles.pillContainer}>
-        <ChannelFilterPill text="All" />
-        <ChannelFilterPill text="Unread" />
+        <ChannelFilterPill text="All" isActive={filterType === "all"} onPress={() => setFilterType("all")} />
+        <ChannelFilterPill text="Unread" isActive={filterType === "unread"} onPress={() => setFilterType("unread")} />
       </View>
     </View>
   );
