@@ -1,8 +1,4 @@
-import {
-  useAddNewProductMutation,
-  useProductCategories,
-  useCreateProductDraftMutation,
-} from "@/src/shared/hooks/useProducts";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,23 +12,74 @@ import {
 } from "react-native";
 import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Dropdown } from "react-native-element-dropdown";
+import { useLocalSearchParams, router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { router } from "expo-router";
+import { Dropdown } from "react-native-element-dropdown";
+import api from "@/src/shared/api";
+import {
+  useProductCategories,
+  useUpdateProductDraftMutation,
+  useUploadProductDraftImageMutation,
+  usePublishProductDraftMutation,
+} from "@/src/shared/hooks/useProducts";
 
-export default function AddProductScreen() {
-  const [productName, setProductName] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
+interface ProductDraft {
+  id: number;
+  name: string | null;
+  category_id: number | null;
+  category_label: string | null;
+  price_cents: number | null;
+  description: string | null;
+  img_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export default function EditProductDraftScreen() {
+  const { draftId } = useLocalSearchParams<{ draftId: string }>();
+  const [draftName, setDraftName] = useState("");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-  const [isFocus, setIsFocus] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isFocus, setIsFocus] = useState(false);
 
   const { data: productCategories } = useProductCategories();
-  const { mutate: addNewProduct, isPending } = useAddNewProductMutation();
-  const { mutate: createProductDraftMutate, isPending: isDraftPending } = useCreateProductDraftMutation();
+  const updateDraftMutation = useUpdateProductDraftMutation();
+  const uploadImageMutation = useUploadProductDraftImageMutation();
+  const publishDraftMutation = usePublishProductDraftMutation();
+
+  useEffect(() => {
+    const fetchDraft = async () => {
+      if (!draftId) {
+        Alert.alert("Error", "Draft ID not provided");
+        router.back();
+        return;
+      }
+
+      try {
+        const response = await api.get<ProductDraft>(`/products/drafts/${draftId}/`);
+        const draft = response.data;
+        setDraftName(draft.name || "");
+        setCategoryId(draft.category_id ? draft.category_id.toString() : null);
+        setPrice(draft.price_cents ? (draft.price_cents / 100).toFixed(2) : "");
+        setDescription(draft.description || "");
+        setExistingImageUrl(draft.img_url || null);
+      } catch (error) {
+        console.log("Failed to fetch draft", error);
+        Alert.alert("Error", "Failed to load draft");
+        router.back();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDraft();
+  }, [draftId]);
 
   const pickImage = async () => {
     try {
@@ -51,98 +98,109 @@ export default function AddProductScreen() {
     }
   };
 
-  const validateForm = (requireImage: boolean = true): boolean => {
-    if (!productName.trim()) {
-      Alert.alert("Validation Error", "Please enter a product name");
-      return false;
-    }
-    if (!category) {
-      Alert.alert("Validation Error", "Please select a category");
-      return false;
-    }
-    if (!price.trim() || isNaN(Number(price)) || Number(price) <= 0) {
-      Alert.alert("Validation Error", "Please enter a valid price");
-      return false;
-    }
-    if (!description.trim()) {
-      Alert.alert("Validation Error", "Please enter a description");
-      return false;
-    }
-    if (requireImage && !imageUri) {
-      Alert.alert("Validation Error", "Please upload a product image");
-      return false;
-    }
-    return true;
-  };
+  const handleSaveDraft = async (): Promise<void> => {
+    if (!draftId) return;
 
-  const createProductDraftHandler = (): void => {
-    // For drafts, we don't require an image
-    if (!productName.trim() && !category && !price.trim() && !description.trim()) {
+    if (!draftName.trim() && !categoryId && !price.trim() && !description.trim() && !imageUri && !existingImageUrl) {
       Alert.alert("Validation Error", "Please fill in at least one field");
       return;
     }
 
-    const priceCents = price.trim() ? Math.round(Number(price) * 100) : null;
+    setSaving(true);
 
-    createProductDraftMutate(
-      {
-        name: productName.trim() || null,
-        category_id: category ? parseInt(category) : null,
+    try {
+      // Update draft metadata
+      const priceCents = price.trim() ? Math.round(Number(price) * 100) : null;
+      const draftIdNum = parseInt(draftId);
+
+      await updateDraftMutation.mutateAsync({
+        draftId: draftIdNum,
+        name: draftName.trim() || null,
+        category_id: categoryId ? parseInt(categoryId) : null,
         price_cents: priceCents,
         description: description.trim() || null,
-      },
-      {
-        onSuccess: () => {
-          Alert.alert("Success", "Product draft saved successfully!", [{ text: "OK", onPress: () => router.back() }]);
-        },
-        onError: (error: any) => {
-          Alert.alert("Error", error.response?.data?.detail || "Failed to save product draft");
-        },
-      },
-    );
+      });
+
+      // Upload image if new one is selected
+      if (imageUri) {
+        await uploadImageMutation.mutateAsync({
+          draftId: draftIdNum,
+          imageUri,
+        });
+      }
+
+      Alert.alert("Success", "Draft saved successfully!", [{ text: "OK", onPress: () => router.back() }]);
+    } catch (error: any) {
+      console.log("Failed to save draft", error);
+      Alert.alert("Error", error.response?.data?.detail || "Failed to save draft");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleAddNewProduct = async (): Promise<void> => {
-    if (!validateForm()) return;
+  const handlePublish = async (): Promise<void> => {
+    if (!draftId) return;
 
-    // Convert price to cents
-    const priceCents = Math.round(Number(price) * 100);
+    if (!draftName.trim()) {
+      Alert.alert("Validation Error", "Please enter a product name");
+      return;
+    }
 
-    // Get filename and type from URI
-    const filename = imageUri!.split("/").pop() || "image.jpg";
-    const match = /\.(\w+)$/.exec(filename);
-    const type = match ? `image/${match[1]}` : "image/jpeg";
+    if (!categoryId) {
+      Alert.alert("Validation Error", "Please select a category");
+      return;
+    }
 
-    // Create file object for upload
-    const imageFile = {
-      uri: imageUri!,
-      name: filename,
-      type,
-    };
+    if (!price.trim() || isNaN(Number(price)) || Number(price) <= 0) {
+      Alert.alert("Validation Error", "Please enter a valid price");
+      return;
+    }
 
-    addNewProduct(
-      {
-        name: productName,
-        category: category!,
-        price_cents: priceCents,
-        description: description,
-        img_file: imageFile as any,
-      },
-      {
-        onSuccess: () => {
-          Alert.alert("Success", "Product added successfully!", [{ text: "OK", onPress: () => router.back() }]);
-        },
-        onError: (error: any) => {
-          Alert.alert("Error", error.response?.data?.detail || "Failed to add product");
-        },
-      },
-    );
+    if (!description.trim()) {
+      Alert.alert("Validation Error", "Please enter a description");
+      return;
+    }
+
+    if (!imageUri && !existingImageUrl) {
+      Alert.alert("Validation Error", "Please upload a product image");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const draftIdNum = parseInt(draftId);
+      await publishDraftMutation.mutateAsync(draftIdNum);
+      Alert.alert("Success", "Product published successfully!", [{ text: "OK", onPress: () => router.back() }]);
+    } catch (error: any) {
+      console.log("Failed to publish draft", error);
+      Alert.alert("Error", error.response?.data?.detail || "Failed to publish product");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const displayImageUri = imageUri || existingImageUrl;
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.title}>Add New Product</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backIconButton}>
+            <Ionicons name="chevron-back" size={28} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Edit Product Draft</Text>
+        </View>
 
         <View style={styles.formContainer}>
           {/* Product Name */}
@@ -152,8 +210,8 @@ export default function AddProductScreen() {
               style={styles.inputContainer}
               placeholder="Enter product name"
               placeholderTextColor={colors.tabIcon}
-              value={productName}
-              onChangeText={setProductName}
+              value={draftName}
+              onChangeText={setDraftName}
             />
           </View>
 
@@ -170,7 +228,7 @@ export default function AddProductScreen() {
                   return {
                     id: c.id,
                     label: c.label,
-                    value: c.label,
+                    value: c.id.toString(),
                   };
                 }) || []
               }
@@ -178,11 +236,11 @@ export default function AddProductScreen() {
               labelField="label"
               valueField="value"
               placeholder={!isFocus ? "Select category" : "..."}
-              value={category}
+              value={categoryId}
               onFocus={() => setIsFocus(true)}
               onBlur={() => setIsFocus(false)}
               onChange={(item) => {
-                setCategory(item.value);
+                setCategoryId(item.value);
                 setIsFocus(false);
               }}
               renderRightIcon={() => <Ionicons name="chevron-down" size={20} color={colors.text} />}
@@ -221,8 +279,8 @@ export default function AddProductScreen() {
           <View style={styles.formGroup}>
             <Text style={styles.label}>Photo:</Text>
             <TouchableOpacity style={styles.uploadContainer} onPress={pickImage}>
-              {imageUri ? (
-                <Image source={{ uri: imageUri }} style={styles.previewImage} />
+              {displayImageUri ? (
+                <Image source={{ uri: displayImageUri }} style={styles.previewImage} />
               ) : (
                 <>
                   <Ionicons name="images-outline" size={40} color={colors.tabIcon} />
@@ -234,26 +292,18 @@ export default function AddProductScreen() {
 
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
-            <TouchableOpacity
-              onPress={createProductDraftHandler}
-              style={[styles.button, styles.draftButton]}
-              disabled={isDraftPending}
-            >
-              {isDraftPending ? (
+            <TouchableOpacity onPress={handleSaveDraft} style={[styles.button, styles.draftButton]} disabled={saving}>
+              {saving ? (
                 <ActivityIndicator size="small" color={colors.text} />
               ) : (
-                <Text style={styles.draftButtonText}>Create Product Draft</Text>
+                <Text style={styles.draftButtonText}>Save Draft</Text>
               )}
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleAddNewProduct}
-              style={[styles.button, styles.addButton]}
-              disabled={isPending}
-            >
-              {isPending ? (
+            <TouchableOpacity onPress={handlePublish} style={[styles.button, styles.publishButton]} disabled={saving}>
+              {saving ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={styles.addButtonText}>Add</Text>
+                <Text style={styles.publishButtonText}>Publish</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -265,17 +315,29 @@ export default function AddProductScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.veryLightPink },
-  scrollViewContent: { padding: sizes.l },
-  title: {
-    fontSize: font.xl,
+  scrollViewContent: { paddingBottom: sizes.xl },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.m,
+    backgroundColor: colors.veryLightPink,
+  },
+  backIconButton: {
+    padding: sizes.xs,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: font.l,
     fontWeight: "bold",
     color: colors.text,
-    textAlign: "center",
-    marginBottom: sizes.xl,
+    marginLeft: sizes.s,
   },
   formContainer: {
     backgroundColor: colors.white,
     borderRadius: sizes.borderRadius,
+    margin: sizes.l,
     padding: sizes.l,
     ...shadows.medium,
   },
@@ -288,7 +350,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     backgroundColor: colors.white,
-    borderRadius: 16, // Larger border radius
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.lightGray,
     paddingHorizontal: sizes.m,
@@ -298,9 +360,6 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: "row", alignItems: "center" },
   priceCurrency: { marginRight: sizes.xs, fontWeight: "bold", color: colors.text },
   textArea: { height: 100, paddingTop: sizes.s },
-  placeholderStyle: { fontSize: font.s, color: colors.tabIcon },
-  selectedTextStyle: { fontSize: font.s, color: colors.text },
-  inputSearchStyle: { height: 40, fontSize: font.s },
   uploadContainer: {
     backgroundColor: colors.white,
     borderRadius: 16,
@@ -322,7 +381,9 @@ const styles = StyleSheet.create({
   button: { paddingVertical: sizes.s, paddingHorizontal: sizes.xl, borderRadius: 12, marginLeft: sizes.m },
   draftButton: { backgroundColor: colors.secondary },
   draftButtonText: { color: colors.text, fontWeight: "bold" },
-  addButton: { backgroundColor: colors.primary },
-  addButtonText: { color: colors.white, fontWeight: "bold" },
-  footerText: { textAlign: "center", marginTop: sizes.xl, fontSize: font.m, color: colors.text, fontWeight: "bold" },
+  publishButton: { backgroundColor: colors.primary },
+  publishButtonText: { color: colors.white, fontWeight: "bold" },
+  placeholderStyle: { fontSize: font.s, color: colors.tabIcon },
+  selectedTextStyle: { fontSize: font.s, color: colors.text },
+  inputSearchStyle: { height: 40, fontSize: font.s },
 });
