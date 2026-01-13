@@ -1,5 +1,6 @@
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
 import ConsultationSection from "@/src/components/sections/ConsultationSection";
+import { ShopForYouAndBaby } from "@/src/components/sections/ShopForYouAndBaby";
 import BabySizeSection from "@/src/components/sections/BabySizeSection";
 import JournalSection from "@/src/components/sections/JournalSection";
 import ArticleSection from "@/src/components/sections/ArticleSection";
@@ -24,6 +25,7 @@ export default function MotherHomeScreen() {
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
           />
           <BabySizeSection />
+          <ShopForYouAndBaby onBackPress={() => router.push("/main/mother/shop")} />
           <JournalSection doFetchMetrics onEdit={() => router.push("/main/mother/journal")} />
           <ArticleSection onViewAll={() => router.push("/main/mother/articles")} />
           <View style={{ height: 20 }} />
