@@ -1,23 +1,22 @@
-import CertificateUploadCard from "@/src/components/cards/CertificateUploadCard";
 import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
+import CertificateUploadCard from "@/src/components/cards/CertificateUploadCard";
 import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
-import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { sizes } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
-import React, { useState } from "react";
+import { sizes } from "@/src/shared/designSystem";
+import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
+import React, { useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DoctorProfileScreen() {
   const me = useAuthStore((state) => state.me);
-  const signOut = useAuthStore((state) => state.clearAuthState);
+  const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   const [fullName, setFullName] = useState(me ? utils.formatFullname(me) : "Olivia Wilson");
   const [email, setEmail] = useState(me?.email || "olivia.wilson@email.com");
   const [mcrNumber, setMcrNumber] = useState("?????");
-  const [certificateUri] = useState<string | undefined>(undefined);
   const memberSince = "2025";
 
   const handleChangePhoto = () => {
@@ -40,31 +39,35 @@ export default function DoctorProfileScreen() {
     console.log("Delete account pressed");
   };
 
+  // ✅ FIXED LOGOUT
+  const signOut = () => {
+    clearAuthState();
+    router.replace("/(intro)/whoAreYouJoiningAs");
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={globalStyles.screenContainer}>
       <ScrollView style={globalStyles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={globalStyles.pageHeader}>
-          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>My Profile</Text>
+          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>
+            My Profile
+          </Text>
         </View>
 
         <View style={profileStyles.card}>
           <View style={profileStyles.profileHeader}>
-            {/* --------------------------------------------------- */}
-            <View style={profileStyles.avatar}>
-              {/*<Text style={profileStyles.avatarText}>{getInitials()}</Text>*/}
-            </View>
+            <View style={profileStyles.avatar} />
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>Dr. {fullName}</Text>
               <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
-              {
-                <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
-                  <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
-                </TouchableOpacity>
-              }
+
+              <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
+                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+              </TouchableOpacity>
             </View>
           </View>
-          {/* --------------------------------------------------- */}
+
           <View style={profileStyles.formContainer}>
             <ProfileCardInput
               inputLabel="Full Name"
@@ -85,7 +88,6 @@ export default function DoctorProfileScreen() {
               onUpdateField={setMcrNumber}
             />
 
-            {/* Telemedicine Certificate Upload */}
             <CertificateUploadCard
               label="Telemedicine Consultation"
               handleCertificateUpload={handleCertificateUpload}

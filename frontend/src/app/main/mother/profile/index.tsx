@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MotherProfileScreen() {
   const me = useAuthStore((state) => state.me);
-  const signOut = useAuthStore((state) => state.clearAuthState);
+  const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   const [fullName, setFullName] = useState(me ? utils.formatFullname(me) : "Olivia Wilson");
   const [dateOfBirth, setDateOfBirth] = useState<string>("01/01/1998");
@@ -47,31 +47,38 @@ export default function MotherProfileScreen() {
     console.log("Delete account pressed");
   };
 
+  // ✅ FIXED LOGOUT: clear auth, then force-reset route to intro
+  const signOut = () => {
+    clearAuthState();
+    router.replace("/(intro)/whoAreYouJoiningAs");
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={globalStyles.screenContainer}>
       <ScrollView style={globalStyles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={globalStyles.pageHeader}>
-          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>My Profile</Text>
+          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>
+            My Profile
+          </Text>
         </View>
 
         <View style={profileStyles.card}>
           <View style={profileStyles.profileHeader}>
-            {/* --------------------------------------------------- */}
             <View style={profileStyles.avatar}>
               {/*<Text style={profileStyles.avatarText}>{getInitials()}</Text>*/}
             </View>
+
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>{fullName}</Text>
               <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
-              {
-                <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
-                  <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
-                </TouchableOpacity>
-              }
+
+              <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
+                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+              </TouchableOpacity>
             </View>
           </View>
-          {/* --------------------------------------------------- */}
+
           <View style={profileStyles.formContainer}>
             <ProfileCardInput
               inputLabel="Full name"
@@ -94,14 +101,13 @@ export default function MotherProfileScreen() {
           </View>
         </View>
 
-        
         {/* Pregnancy Details Card */}
         <PregnancyDetailsCard data={pregnancyData} onUpdateField={handlePregnancyUpdate} />
 
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
           onChangePassword={handleChangePassword}
-          onLogOut={signOut}
+          onLogOut={signOut}   // ✅ now routes to intro correctly
           onDeleteAccount={handleDeleteAccount}
         />
 

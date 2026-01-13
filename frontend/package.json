@@ -35,7 +35,7 @@
     "expo-haptics": "~15.0.7",
     "expo-image": "~3.0.11",
     "expo-image-manipulator": "~14.0.8",
-    "expo-image-picker": "~17.0.8",
+    "expo-image-picker": "~17.0.10",
     "expo-linking": "~8.0.8",
     "expo-notifications": "~0.32.13",
     "expo-router": "~6.0.15",
