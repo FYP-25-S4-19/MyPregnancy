@@ -14,6 +14,7 @@ type ArticleOverview = {
   title: string;
   category: string;
   excerpt: string;
+  trimester: number;
 };
 
 type ArticleCategory = {
@@ -24,6 +25,20 @@ type ArticleCategory = {
 const goBackSafe = () => {
   router.replace("/main/mother/(home)");
 };
+
+const getTrimesterColor = (trimester: number) => {
+  switch (trimester) {
+    case 1:
+      return "#FFB6C1"; // Light Pink for 1st trimester
+    case 2:
+      return "#FFD700"; // Gold for 2nd trimester
+    case 3:
+      return "#87CEFA"; // Light Blue for 3rd trimester
+    default:
+      return "#D3D3D3"; // Grey as fallback
+  }
+};
+
 
 export default function ArticlesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -179,6 +194,13 @@ export default function ArticlesScreen() {
                   <Text style={styles.openText}>Open</Text>
                   <Ionicons name="chevron-forward" size={18} color={colors.tabIcon} />
                 </View>
+
+                <View style={styles.metaRow}>
+                  <View style={[styles.trimesterChip, { backgroundColor: getTrimesterColor(item.trimester) }]}>
+                    <Text style={styles.trimesterText}>Trimester {item.trimester}</Text>
+                  </View>
+                </View>
+
               </View>
             </TouchableOpacity>
           )}
@@ -244,4 +266,19 @@ const styles = StyleSheet.create({
   helper: { color: colors.tabIcon, marginBottom: sizes.s },
   retry: { color: colors.primary, fontWeight: "900" },
   empty: { textAlign: "center", marginTop: sizes.xl, color: colors.tabIcon },
+
+  trimesterChip: {
+    paddingHorizontal: sizes.s,
+    paddingVertical: sizes.xs ,
+    borderRadius: sizes.l,
+    marginLeft: sizes.s,
+  },
+  trimesterText: {
+    fontSize: font.xs,
+    fontWeight: "700",
+    color: "BLACK", 
+    letterSpacing: 0.5,
+  },
+
+
 });
