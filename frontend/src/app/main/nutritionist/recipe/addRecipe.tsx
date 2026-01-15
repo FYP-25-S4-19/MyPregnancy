@@ -110,9 +110,11 @@ export default function AddRecipeScreen() {
 
   /* ---------------- submit ---------------- */
   const submitRecipe = async (isDraft: boolean) => {
-    if (!name || !description || !ingredients || !instructions) {
-      Alert.alert("Missing info", "Please fill in all required fields.");
-      return;
+    if (!isDraft) {
+      if (!name || !description || !ingredients || !instructions) {
+        Alert.alert("Missing info", "Please fill in all required fields to publish.");
+        return;
+      }
     }
 
     try {
