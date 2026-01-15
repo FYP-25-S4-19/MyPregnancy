@@ -20,6 +20,7 @@ type DraftRecipe = {
   description: string | null;
   img_key: string | null;
   updated_at: string;
+  trimester: number | null;
 };
 
 const getImageUrl = (imgKey: string | null) => {
