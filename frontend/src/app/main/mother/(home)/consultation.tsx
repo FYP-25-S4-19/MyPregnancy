@@ -141,6 +141,7 @@ export default function ConsultationsScreen() {
             id={item.doctor_id}
             name={"Dr. " + item.first_name}
             image={item.profile_img_url}
+            specialization={item.specialisation}
             isFavorite={item.is_liked}
             rating={item.avg_rating ?? null}
             ratingCount={item.ratings_count ?? 0}
