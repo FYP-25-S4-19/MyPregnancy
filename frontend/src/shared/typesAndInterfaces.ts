@@ -131,6 +131,7 @@ export interface RecipeData {
   img_url: string;
   description: string;
   category: string;
+  trimester: number;
   is_saved: boolean;
 }
 

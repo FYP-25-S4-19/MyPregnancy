@@ -18,6 +18,7 @@ import {
   Image,
   Text,
   View,
+  
 } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -133,6 +134,7 @@ export default function RecipePreviewsScreen() {
         </View>
       </View>
 
+
       {/* ================= CATEGORY ================= */}
       <View style={styles.categoryContainer}>
         <View style={styles.sectionHeader}>
@@ -190,6 +192,7 @@ export default function RecipePreviewsScreen() {
             description={item.description}
             imgUrl={item.img_url}
             isSaved={item.is_saved}
+            trimester={item.trimester}
             onViewPress={() => router.push(`/main/mother/recipe/${item.id}`)}
             onSavePress={() => handleToggleSave(item.id, item.is_saved)}
           />
