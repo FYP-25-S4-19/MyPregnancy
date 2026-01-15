@@ -13,12 +13,11 @@ from app.features.accounts.account_models import (
     MyProfileResponse,
     PregnancyDetailsUpdateRequest,
     RejectAccountCreationRequestReason,
-    AccountUpdate,
-    PregnantWomanUpdate, 
-    VolunteerDoctorUpdate, 
-    NutritionistUpdate, 
-    MerchantUpdate,
-    AccountUpdateType,
+    # PregnantWomanUpdate, 
+    # VolunteerDoctorUpdate, 
+    # NutritionistUpdate, 
+    # MerchantUpdate,
+    # AccountUpdateType,
 )
 from app.features.accounts.account_service import AccountService
 
@@ -211,37 +210,37 @@ async def reject_nutritionist_account_creation_request(
 
 
 
-# Helper function to determine the correct update model based on user type
-def get_update_model(user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant):
-    """Return the appropriate update model based on user type"""
-    if isinstance(user, PregnantWoman):
-        return PregnantWomanUpdate
-    elif isinstance(user, VolunteerDoctor):
-        return VolunteerDoctorUpdate
-    elif isinstance(user, Nutritionist):
-        return NutritionistUpdate
-    elif isinstance(user, Merchant):
-        return MerchantUpdate
-    else:
-        raise HTTPException(status_code=400, detail="Unknown user type")
+# # Helper function to determine the correct update model based on user type
+# def get_update_model(user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant):
+#     """Return the appropriate update model based on user type"""
+#     if isinstance(user, PregnantWoman):
+#         return PregnantWomanUpdate
+#     elif isinstance(user, VolunteerDoctor):
+#         return VolunteerDoctorUpdate
+#     elif isinstance(user, Nutritionist):
+#         return NutritionistUpdate
+#     elif isinstance(user, Merchant):
+#         return MerchantUpdate
+#     else:
+#         raise HTTPException(status_code=400, detail="Unknown user type")
 
-@account_router.put("/me/account")
-async def update_my_account(
-    payload: AccountUpdateType,
-    user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant = Depends(get_current_user),
-    service: AccountService = Depends(get_account_service),
-    db: AsyncSession = Depends(get_db),
-    password_hasher: PasswordHasher = Depends(get_password_hasher)
-) -> dict:
-    """
-    Update account information for the current user.
-    Automatically uses the correct update model based on user type.
-    """
-    try:
-        await service.update_account_info(user, payload, password_hasher)
-        await db.commit()
-        return {"message": "Account updated successfully"}
-    except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+# @account_router.put("/me/account")
+# async def update_my_account(
+#     payload: AccountUpdateType,
+#     user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant = Depends(get_current_user),
+#     service: AccountService = Depends(get_account_service),
+#     db: AsyncSession = Depends(get_db),
+#     password_hasher: PasswordHasher = Depends(get_password_hasher)
+# ) -> dict:
+#     """
+#     Update account information for the current user.
+#     Automatically uses the correct update model based on user type.
+#     """
+#     try:
+#         await service.update_account_info(user, payload, password_hasher)
+#         await db.commit()
+#         return {"message": "Account updated successfully"}
+#     except Exception as e:
+#         await db.rollback()
+#         raise HTTPException(status_code=400, detail=str(e))
 

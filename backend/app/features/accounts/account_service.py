@@ -21,11 +21,11 @@ from app.features.accounts.account_models import (
     HealthProfileUpdateRequest,
     MyProfileResponse,
     PregnancyDetailsUpdateRequest,
-    AccountUpdate,
-    PregnantWomanUpdate, 
-    VolunteerDoctorUpdate, 
-    NutritionistUpdate, 
-    MerchantUpdate
+    # AccountUpdate,
+    # PregnantWomanUpdate, 
+    # VolunteerDoctorUpdate, 
+    # NutritionistUpdate, 
+    # MerchantUpdate
 )
 from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import is_valid_image
@@ -283,51 +283,51 @@ class AccountService:
     #         raise HTTPException(status_code=400, detail="Failed to update account")
         
     
-    async def update_account_info(
-        self, user: Union[PregnantWoman, VolunteerDoctor, Nutritionist, Merchant],
-        payload: Union[PregnantWomanUpdate, VolunteerDoctorUpdate, NutritionistUpdate, MerchantUpdate],
-        password_hasher: PasswordHasher = None
-    ) -> None:
-        """
-        Update account information based on user type.
-        This is a generic method that handles all user types.
-        """
+    # async def update_account_info(
+    #     self, user: Union[PregnantWoman, VolunteerDoctor, Nutritionist, Merchant],
+    #     payload: Union[PregnantWomanUpdate, VolunteerDoctorUpdate, NutritionistUpdate, MerchantUpdate],
+    #     password_hasher: PasswordHasher = None
+    # ) -> None:
+    #     """
+    #     Update account information based on user type.
+    #     This is a generic method that handles all user types.
+    #     """
         
-        # 1. Check email uniqueness (against base User table)
-        if payload.email and payload.email != user.email:
-            stmt = select(UserRole).where(
-                UserRole.email == payload.email, 
-                UserRole.id != user.id
-            )
-            existing_user = (await self.db.execute(stmt)).scalar_one_or_none()
-            if existing_user:
-                raise HTTPException(status_code=409, detail="Email already in use")
-            user.email = payload.email
+    #     # 1. Check email uniqueness (against base User table)
+    #     if payload.email and payload.email != user.email:
+    #         stmt = select(UserRole).where(
+    #             UserRole.email == payload.email, 
+    #             UserRole.id != user.id
+    #         )
+    #         existing_user = (await self.db.execute(stmt)).scalar_one_or_none()
+    #         if existing_user:
+    #             raise HTTPException(status_code=409, detail="Email already in use")
+    #         user.email = payload.email
         
-        # 2. Update common fields (present in BaseAccountUpdate)
-        if payload.first_name is not None:
-            user.first_name = payload.first_name
-        if payload.middle_name is not None:
-            user.middle_name = payload.middle_name
-        if payload.last_name is not None:
-            user.last_name = payload.last_name
-        if payload.date_of_birth is not None:
-            user.date_of_birth = payload.date_of_birth
+    #     # 2. Update common fields (present in BaseAccountUpdate)
+    #     if payload.first_name is not None:
+    #         user.first_name = payload.first_name
+    #     if payload.middle_name is not None:
+    #         user.middle_name = payload.middle_name
+    #     if payload.last_name is not None:
+    #         user.last_name = payload.last_name
+    #     if payload.date_of_birth is not None:
+    #         user.date_of_birth = payload.date_of_birth
         
-        # 3. Update password if provided
-        if payload.password and password_hasher:
-            user.hashed_password = password_hasher.hash(payload.password)
+    #     # 3. Update password if provided
+    #     if payload.password and password_hasher:
+    #         user.hashed_password = password_hasher.hash(payload.password)
         
-        # 4. Update user-specific fields
-        if isinstance(user, PregnantWoman) and isinstance(payload, PregnantWomanUpdate):
-            await self._update_pregnant_woman_fields(user, payload)
-        # Add other user types here as needed
+    #     # 4. Update user-specific fields
+    #     if isinstance(user, PregnantWoman) and isinstance(payload, PregnantWomanUpdate):
+    #         await self._update_pregnant_woman_fields(user, payload)
+    #     # Add other user types here as needed
         
-        # 5. Save changes
-        try:
-            await self.db.flush()
-        except IntegrityError as e:
-            # Handle database constraints
-            if "email" in str(e).lower():
-                raise HTTPException(status_code=409, detail="Email already in use")
-            raise HTTPException(status_code=400, detail="Failed to update account")
+    #     # 5. Save changes
+    #     try:
+    #         await self.db.flush()
+    #     except IntegrityError as e:
+    #         # Handle database constraints
+    #         if "email" in str(e).lower():
+    #             raise HTTPException(status_code=409, detail="Email already in use")
+    #         raise HTTPException(status_code=400, detail="Failed to update account")
