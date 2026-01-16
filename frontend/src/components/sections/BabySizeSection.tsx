@@ -1,37 +1,94 @@
+// frontend/src/components/sections/BabySizeSection.tsx
+
+import React, { useMemo } from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { colors, font, sizes } from "@/src/shared/designSystem";
+import useAuthStore from "@/src/shared/authStore";
+import { getPregnancySnapshotFromDueDate } from "@/src/shared/pregnancyTracker";
 
-const pregnancyData = {
-  week: 24,
-  totalWeeks: 40,
-  babySize: {
-    comparison: "corn",
-    length: 30,
-    weight: 600,
-  },
-};
+function emojiForComparison(comparison: string) {
+  const c = comparison.toLowerCase();
+
+  if (c.includes("corn")) return "🌽";
+  if (c.includes("pumpkin")) return "🎃";
+  if (c.includes("watermelon")) return "🍉";
+  if (c.includes("banana")) return "🍌";
+  if (c.includes("avocado")) return "🥑";
+  if (c.includes("lemon")) return "🍋";
+  if (c.includes("lime")) return "🍋";
+  if (c.includes("strawberry")) return "🍓";
+  if (c.includes("raspberry")) return "🫐";
+  if (c.includes("pea")) return "🟢";
+  if (c.includes("poppy")) return "⚪️";
+  if (c.includes("zucchini")) return "🥒";
+  if (c.includes("eggplant")) return "🍆";
+  if (c.includes("cabbage")) return "🥬";
+  if (c.includes("squash")) return "🎃";
+  if (c.includes("papaya")) return "🥭";
+  if (c.includes("cantaloupe")) return "🍈";
+
+  // default cute fallback
+  return "👶";
+}
 
 export default function BabySizeSection() {
-  const getProgressPercentage = (): number => {
-    return Math.round((pregnancyData.week / pregnancyData.totalWeeks) * 100);
-  };
+  /**
+   * Option A: Due Date (EDD).
+   * If you already have it in `me` from backend, great.
+   * If not yet, we’ll fall back safely to Week 24 stub.
+   *
+   * If your backend uses a different field name, just add it below.
+   */
+  const me = useAuthStore((state) => state.me);
+
+  // Try common keys. Add/adjust if your backend uses another key name.
+  const dueDateISO =
+    // @ts-ignore
+    me?.due_date ??
+    // @ts-ignore
+    me?.expected_due_date ??
+    // @ts-ignore
+    me?.edd ??
+    null;
+
+  const snapshot = useMemo(() => {
+    if (!dueDateISO) {
+      // fallback = your current stub
+      return {
+        week: 24,
+        totalWeeks: 40,
+        progressPct: Math.round((24 / 40) * 100),
+        babySize: {
+          comparison: "corn",
+          lengthCm: 30,
+          weightG: 600,
+        },
+      };
+    }
+    return getPregnancySnapshotFromDueDate(dueDateISO);
+  }, [dueDateISO]);
+
+  const emoji = emojiForComparison(snapshot.babySize.comparison);
 
   return (
     <>
       {/* Baby Size Card */}
       <View style={styles.babySizeCard}>
         <View style={styles.babyCircle}>
-          <Text style={styles.cornEmoji}>🌽</Text>
-          <Text style={styles.weekText}>Week {pregnancyData.week}</Text>
+          <Text style={styles.emoji}>{emoji}</Text>
+          <Text style={styles.weekText}>Week {snapshot.week}</Text>
         </View>
 
         <View style={styles.babySizeInfo}>
           <Text style={styles.babySizeTitle}>Your baby is now</Text>
-          <Text style={styles.babySizeSubtitle}>as big as a {pregnancyData.babySize.comparison}.</Text>
+          <Text style={styles.babySizeSubtitle}>
+            as big as a {snapshot.babySize.comparison}.
+          </Text>
+
           <View style={styles.measurements}>
             <Text style={styles.measurementText}>Approx:</Text>
-            <Text style={styles.measurementText}>length: {pregnancyData.babySize.length} cm</Text>
-            <Text style={styles.measurementText}>weight: {pregnancyData.babySize.weight} g</Text>
+            <Text style={styles.measurementText}>length: {snapshot.babySize.lengthCm} cm</Text>
+            <Text style={styles.measurementText}>weight: {snapshot.babySize.weightG} g</Text>
           </View>
         </View>
       </View>
@@ -39,14 +96,16 @@ export default function BabySizeSection() {
       {/* Progress Bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${getProgressPercentage()}%` }]} />
+          <View style={[styles.progressFill, { width: `${snapshot.progressPct}%` }]} />
         </View>
         <Text style={styles.weekProgress}>
-          Week {pregnancyData.week}/{pregnancyData.totalWeeks}
+          Week {snapshot.week}/{snapshot.totalWeeks}
         </Text>
       </View>
 
-      <Text style={styles.progressLabel}>{getProgressPercentage()}% of your pregnancy journey!</Text>
+      <Text style={styles.progressLabel}>
+        {snapshot.progressPct}% of your pregnancy journey!
+      </Text>
     </>
   );
 }
@@ -72,7 +131,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cornEmoji: {
+  emoji: {
     fontSize: 60,
     marginBottom: sizes.s,
   },

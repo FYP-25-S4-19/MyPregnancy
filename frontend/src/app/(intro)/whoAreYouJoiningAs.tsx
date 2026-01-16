@@ -19,22 +19,27 @@ export default function WhoAreYouJoiningAsScreen() {
     <ImageBackground source={wallpaper} style={styles.bg} resizeMode="cover">
       <StatusBar barStyle="dark-content" />
       <View style={styles.screen}>
-        {/* Title */}
         <View style={styles.titleBlock}>
           <Text style={styles.titleSmall}>my</Text>
           <Text style={styles.titleLarge}>Pregnancy</Text>
         </View>
 
-        {/* Question */}
         <Text style={styles.question}>Who are you joining as?</Text>
 
-        {/* Buttons */}
         <TouchableOpacity
           style={[styles.btn, styles.btnFilled]}
           onPress={() => router.push("/(intro)/register?role=mom")}
           activeOpacity={0.85}
         >
           <Text style={styles.btnFilledText}>I'm a Mom-to-be</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.btn, styles.btnFilled]}
+          onPress={() => router.push("/(intro)/register?role=merchant")}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.btnFilledText}>I'm a Merchant</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -45,7 +50,6 @@ export default function WhoAreYouJoiningAsScreen() {
           <Text style={styles.btnOutlineText}>I'm a Specialist</Text>
         </TouchableOpacity>
 
-        {/* Admin Login (leave as placeholder unless you have a real route) */}
         <TouchableOpacity
           style={styles.adminLinkWrap}
           onPress={() => console.log("Admin Login pressed")}
@@ -60,14 +64,12 @@ export default function WhoAreYouJoiningAsScreen() {
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-
   screen: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: sizes.xl,
   },
-
   titleBlock: {
     alignItems: "center",
     marginBottom: sizes.xl,
@@ -84,15 +86,12 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginTop: sizes.xs,
   },
-
   question: {
     color: colors.text,
     fontSize: font.s,
     fontWeight: "600",
     marginBottom: sizes.l,
   },
-
-  // Match button shape from index.tsx
   btn: {
     width: "88%",
     paddingVertical: sizes.m,
@@ -120,12 +119,6 @@ const styles = StyleSheet.create({
     fontSize: font.s,
     fontWeight: "700",
   },
-
-  adminLinkWrap: {
-    marginTop: sizes.m,
-  },
-  adminLink: {
-    color: colors.text,
-    fontSize: font.xs,
-  },
+  adminLinkWrap: { marginTop: sizes.m },
+  adminLink: { color: colors.text, fontSize: font.xs },
 });

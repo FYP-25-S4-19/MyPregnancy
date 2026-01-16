@@ -1,581 +1,468 @@
 import React, { useMemo, useState } from "react";
 import {
-  SafeAreaView,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Modal,
-  Pressable,
-  ActivityIndicator,
-  Alert,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import api from "@/src/shared/api";
+import useAuthStore from "@/src/shared/authStore";
 
-import api from "@/src/shared/api"; // ✅ uses your existing axios instance
-import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
+// Use designSystem if present, fallback if not (won’t crash)
+import * as DS from "@/src/shared/designSystem";
+const COLORS = (DS as any).COLORS ?? (DS as any).colors ?? {};
+const PINK = COLORS.PINK ?? "#FADADD";
+const MAROON = COLORS.MAROON ?? "#6d2828";
+const LIGHT = COLORS.LIGHT ?? "#FFF8F8";
 
-type RoleParam = "mom" | "specialist" | undefined;
+type DirectRegisterRole = "PREGNANT_WOMAN" | "MERCHANT";
+type SpecialistType = "DOCTOR" | "NUTRITIONIST";
 
-const SPECIALIST_OPTIONS = ["health care", "nutrition", "mental care", "exercise", "baby care"] as const;
-const DOCTOR_NUTRITIONIST_OPTIONS = ["Doctor", "Nutritionist"] as const;
-
-type PickerValue = string;
-
-function SimplePickerModal({
-  visible,
-  title,
-  options,
-  onClose,
-  onPick,
-}: {
-  visible: boolean;
-  title: string;
-  options: readonly string[];
-  onClose: () => void;
-  onPick: (value: PickerValue) => void;
-}) {
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={pickerStyles.overlay} onPress={onClose}>
-        <Pressable style={pickerStyles.card} onPress={() => {}}>
-          <Text style={pickerStyles.title}>{title}</Text>
-
-          {options.map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              style={pickerStyles.option}
-              onPress={() => onPick(opt)}
-              activeOpacity={0.85}
-            >
-              <Text style={pickerStyles.optionText}>{opt}</Text>
-            </TouchableOpacity>
-          ))}
-
-          <TouchableOpacity style={pickerStyles.cancel} onPress={onClose} activeOpacity={0.85}>
-            <Text style={pickerStyles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
+function normalizeMcr(input: string) {
+  return input.trim().toUpperCase();
 }
 
-const pickerStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "center",
-    paddingHorizontal: sizes.l,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: sizes.borderRadius,
-    padding: sizes.l,
-    ...shadows.small,
-  },
-  title: {
-    fontSize: font.s,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: sizes.m,
-  },
-  option: {
-    paddingVertical: sizes.m,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGray,
-  },
-  optionText: {
-    fontSize: font.s,
-    color: colors.black,
-    fontWeight: "600",
-    textTransform: "capitalize",
-  },
-  cancel: {
-    marginTop: sizes.l,
-    paddingVertical: sizes.m,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: colors.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelText: {
-    color: colors.text,
-    fontSize: font.s,
-    fontWeight: "700",
-  },
-});
+function extractErrorMessage(e: any): string {
+  const data = e?.response?.data;
+  const detail = data?.detail ?? data;
+
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail) || typeof detail === "object") return JSON.stringify(detail, null, 2);
+
+  return e?.message || "Registration failed. Please try again.";
+}
+
+/**
+ * IMPORTANT:
+ * Expo image picker sometimes returns:
+ * - iOS: ph://...
+ * - Android: content://...
+ * Axios/FormData upload often fails (Network Error) unless we copy it to a local file:// URI.
+ */
+async function ensureFileUri(uri: string, suggestedName: string) {
+  if (uri.startsWith("file://")) return { uri, name: suggestedName };
+
+  const ext = suggestedName.split(".").pop() || "jpg";
+  const target = `${FileSystem.cacheDirectory}${Date.now()}-${Math.random()
+    .toString(16)
+    .slice(2)}.${ext}`;
+
+  await FileSystem.copyAsync({ from: uri, to: target });
+  return { uri: target, name: suggestedName };
+}
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ role?: RoleParam }>();
-  const role: RoleParam = params.role;
+  const params = useLocalSearchParams<{ role?: string }>();
 
-  // --- base fields
-  const [name, setName] = useState("");
-  const [dob, setDob] = useState(""); // for mom flow (your earlier figma had DOB)
+  const setAccessToken = useAuthStore((s) => s.setAccessToken);
+  const setMe = useAuthStore((s) => s.setMe);
+
+  // expected: "mom" | "merchant" | "specialist"
+  const entryRole = (params?.role ?? "mom").toString();
+
+  const [specialistType, setSpecialistType] = useState<SpecialistType>("DOCTOR");
+
+  const [fullName, setFullName] = useState("");
+  const [dob, setDob] = useState(""); // UI only (not sent)
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState(""); // specialist figma shows Mobile
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // --- specialist-only fields
-  const [doctorOrNutritionist, setDoctorOrNutritionist] = useState<PickerValue>("");
   const [mcrNumber, setMcrNumber] = useState("");
-  const [specialistType, setSpecialistType] = useState<PickerValue>("");
 
-  // certificate (optional)
-  const [certificateName, setCertificateName] = useState<string>("");
-  const [certificateUri, setCertificateUri] = useState<string>("");
+  const [qualificationImg, setQualificationImg] = useState<{
+    uri: string;
+    name: string;
+    type: string;
+  } | null>(null);
 
-  // pickers
-  const [showDocPicker, setShowDocPicker] = useState(false);
-  const [showSpecPicker, setShowSpecPicker] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // API state
-  const [submitting, setSubmitting] = useState(false);
+  const nameParts = useMemo(() => {
+    const trimmed = fullName.trim();
+    if (!trimmed) return { first_name: "", last_name: "" };
 
-  const isSpecialist = role === "specialist";
+    const parts = trimmed.split(/\s+/);
 
-  const passwordsMatch =
-    password.length === 0 ||
-    confirmPassword.length === 0 ||
-    password === confirmPassword;
-
-  const canSubmit = useMemo(() => {
-    // required for both
-    if (!name.trim()) return false;
-    if (!email.trim()) return false;
-    if (!password.trim()) return false;
-    if (!confirmPassword.trim()) return false;
-    if (password !== confirmPassword) return false;
-
-    if (isSpecialist) {
-      if (!mobile.trim()) return false;
-      if (!doctorOrNutritionist) return false;
-      if (!mcrNumber.trim()) return false;
-      if (!specialistType) return false;
-      // certificate not specified -> not required
-    } else {
-      // mom flow: if your backend wants DOB, keep it required. If not, we can remove later.
-      if (!dob.trim()) return false;
+    // If user types only one word, backend still requires last_name
+    if (parts.length === 1) {
+      return { first_name: parts[0], last_name: parts[0] };
     }
 
-    return true;
-  }, [
-    name,
-    dob,
-    email,
-    mobile,
-    password,
-    confirmPassword,
-    doctorOrNutritionist,
-    mcrNumber,
-    specialistType,
-    isSpecialist,
-  ]);
+    return { first_name: parts[0], last_name: parts.slice(1).join(" ") };
+  }, [fullName]);
 
-  const pickCertificate = async () => {
-    // We avoid hard dependency assumptions: try dynamic import.
-    // If expo-document-picker is not installed, we show a helpful message.
-    try {
-      const DocumentPicker = await import("expo-document-picker");
-      const res = await DocumentPicker.getDocumentAsync({
-        copyToCacheDirectory: true,
-        multiple: false,
-      });
+  const isSpecialist = entryRole === "specialist";
+  const isDirectRegister = entryRole === "mom" || entryRole === "merchant";
 
-      if (res.canceled) return;
-
-      const file = res.assets?.[0];
-      if (!file?.uri) return;
-
-      setCertificateUri(file.uri);
-      setCertificateName(file.name ?? "certificate");
-    } catch (e) {
-      Alert.alert(
-        "Document Picker not available",
-        "Your project may not have expo-document-picker installed. Tell your teammate/TA, or share your package.json and I’ll adjust the upload approach."
-      );
+  async function pickQualificationImage() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permission required", "Please allow photo access to upload your qualification.");
+      return;
     }
-  };
 
-  const submitRegistration = async () => {
-    if (!canSubmit) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.9,
+    });
 
-    setSubmitting(true);
+    if (result.canceled) return;
+    const asset = result.assets?.[0];
+    if (!asset?.uri) return;
+
+    // Prefer fileName/mimeType if available (newer expo)
+    const guessedExt =
+      asset.fileName?.split(".").pop()?.toLowerCase() ||
+      asset.uri.split(".").pop()?.toLowerCase() ||
+      "jpg";
+
+    const name = asset.fileName || `qualification.${guessedExt}`;
+    const type =
+      asset.mimeType ||
+      (guessedExt === "png" ? "image/png" : guessedExt === "heic" ? "image/heic" : "image/jpeg");
+
+    // convert to file:// if needed
+    const fixed = await ensureFileUri(asset.uri, name);
+
+    setQualificationImg({ uri: fixed.uri, name: fixed.name, type });
+  }
+
+  async function isMcrValid(mcr: string): Promise<boolean> {
     try {
-      // Payload (JSON) – safe default unless backend requires multipart
-      const payload: any = {
-        name: name.trim(),
-        email: email.trim(),
-        password: password,
-        role: isSpecialist ? "specialist" : "mom",
-      };
+      const res = await api.get("/avail-mcr");
+      const list: string[] = Array.isArray(res.data) ? res.data : [];
+      const normalized = normalizeMcr(mcr);
+      return list.map((x) => normalizeMcr(String(x))).includes(normalized);
+    } catch {
+      return false;
+    }
+  }
+
+  function validateCommonFields() {
+    if (!email.trim()) return "Email is required.";
+    if (!password) return "Password is required.";
+    if (password !== confirmPassword) return "Passwords do not match.";
+    if (!nameParts.first_name) return "Name is required.";
+    return null;
+  }
+
+  async function doLoginAfterRegister() {
+    // OAuth2PasswordRequestForm expects form data
+    const form = new URLSearchParams();
+    form.append("username", email.trim().toLowerCase());
+    form.append("password", password);
+
+    const loginRes = await api.post("/auth/jwt/login", form, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+
+    const token = loginRes?.data?.access_token;
+    if (!token) throw new Error("No access token returned after registration.");
+
+    setAccessToken(token);
+
+    const meRes = await api.get("/users/me");
+    setMe(meRes.data);
+  }
+
+  async function submitDirectRegister(role: DirectRegisterRole) {
+    const payload = {
+      email: email.trim().toLowerCase(),
+      password,
+      is_active: true,
+      is_superuser: false,
+      is_verified: false,
+      first_name: nameParts.first_name,
+      middle_name: "",
+      last_name: nameParts.last_name,
+      role,
+    };
+
+    await api.post("/auth/register", payload);
+  }
+
+  async function submitSpecialistRequest(type: SpecialistType) {
+  if (!qualificationImg) {
+    throw new Error("Qualification image is required.");
+  }
+
+  // Doctor must have valid MCR before submission
+  if (type === "DOCTOR") {
+    const mcr = normalizeMcr(mcrNumber);
+    if (!mcr) throw new Error("MCR number is required for doctors.");
+
+    const ok = await isMcrValid(mcr);
+    if (!ok) throw new Error("Invalid MCR number. Please check and try again.");
+  }
+
+  const form = new FormData();
+  form.append("email", email.trim().toLowerCase());
+  form.append("password", password);
+  form.append("first_name", nameParts.first_name);
+  form.append("middle_name", "");
+  form.append("last_name", nameParts.last_name);
+
+  if (type === "DOCTOR") {
+    form.append("mcr_number", normalizeMcr(mcrNumber));
+  }
+
+  // MUST be file:// for iOS uploads. If it's ph:// or content://, it can break.
+  // If your picker returns ph://, you must convert it (see next section).
+  form.append("qualification_img", {
+    uri: qualificationImg.uri,
+    name: qualificationImg.name,
+    type: qualificationImg.type,
+  } as any);
+
+  const endpoint =
+    type === "DOCTOR" ? "/account-requests/doctors" : "/account-requests/nutritionists";
+
+  const baseUrl = (api.defaults.baseURL || "").replace(/\/$/, "");
+  const url = `${baseUrl}${endpoint}`;
+
+  // IMPORTANT: Do NOT set Content-Type manually. fetch will set boundary correctly.
+  const res = await fetch(url, {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    const text = await res.text(); // backend may return json or plain text
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+}
+
+  async function onSubmit() {
+    const err = validateCommonFields();
+    if (err) return Alert.alert("Registration Failed", err);
+
+    setLoading(true);
+    try {
+      if (isDirectRegister) {
+        const role: DirectRegisterRole = entryRole === "merchant" ? "MERCHANT" : "PREGNANT_WOMAN";
+        await submitDirectRegister(role);
+
+        // ✅ AUTO LOGIN DIRECT USERS (mom/merchant)
+        await doLoginAfterRegister();
+        router.replace("/main");
+        return;
+      }
 
       if (isSpecialist) {
-        payload.mobile = mobile.trim();
-        payload.profession = doctorOrNutritionist; // Doctor / Nutritionist
-        payload.mcrNumber = mcrNumber.trim();
-        payload.specialistType = specialistType; // health care / nutrition / etc
-      } else {
-        payload.dateOfBirth = dob.trim();
+        await submitSpecialistRequest(specialistType);
+        Alert.alert(
+          "Request submitted",
+          "Your account creation request has been submitted. An admin will review it shortly.",
+        );
+        router.replace("/(intro)/login");
+        return;
       }
 
-      // If certificate selected, try multipart form-data (common pattern)
-      if (certificateUri) {
-        const form = new FormData();
-        Object.keys(payload).forEach((k) => form.append(k, String(payload[k])));
-
-        // best-effort file object
-        const fileName = certificateName || "certificate";
-        const ext = fileName.includes(".") ? fileName.split(".").pop()?.toLowerCase() : "";
-        const mime =
-          ext === "pdf"
-            ? "application/pdf"
-            : ext === "png"
-              ? "image/png"
-              : ext === "jpg" || ext === "jpeg"
-                ? "image/jpeg"
-                : "application/octet-stream";
-
-        form.append("telemedicineCertificate", {
-          uri: certificateUri,
-          name: fileName,
-          type: mime,
-        } as any);
-
-        await api.post("/auth/register", form, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        await api.post("/auth/register", payload);
-      }
-
-      router.replace("/(intro)/submissionSuccess");
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Registration failed. Please try again.";
-      Alert.alert("Registration Failed", String(msg));
+      throw new Error("Unknown registration role.");
+    } catch (e: any) {
+      // helpful debug in terminal
+      console.log("REGISTER ERROR FULL:", e);
+      console.log("REGISTER ERROR RESPONSE STATUS:", e?.response?.status);
+      console.log("REGISTER ERROR RESPONSE DATA:", e?.response?.data);
+      Alert.alert("Registration Failed", extractErrorMessage(e));
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        style={styles.kav}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          {/* Back */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.85}>
-            <Ionicons name="chevron-back" size={sizes.icon} color={colors.text} />
-          </TouchableOpacity>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: LIGHT }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 60 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: PINK,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 18 }}>←</Text>
+        </TouchableOpacity>
 
-          {/* Title */}
-          <Text style={styles.title}>
-            HELLO!{"\n"}REGISTER NOW
+        <Text style={{ fontSize: 34, color: MAROON, marginBottom: 14, letterSpacing: 1 }}>
+          {isSpecialist ? "SPECIALIST\nREQUEST" : "HELLO!\nREGISTER NOW"}
+        </Text>
+
+        {isDirectRegister && (
+          <Text style={{ color: "#666", marginBottom: 18 }}>
+            You are registering as:{" "}
+            <Text style={{ fontWeight: "700" }}>
+              {entryRole === "merchant" ? "Merchant" : "Mom-to-be"}
+            </Text>
           </Text>
+        )}
 
-          {/* MOM FLOW FIELDS */}
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-          />
+        {isSpecialist && (
+          <View style={{ marginBottom: 18 }}>
+            <Text style={{ fontWeight: "700", marginBottom: 8, color: MAROON }}>
+              Specialist type
+            </Text>
 
-          {/* If you are mom-to-be, include DOB like your earlier figma */}
-          {!isSpecialist ? (
-            <>
-              <Text style={[styles.label, { marginTop: sizes.m }]}>Date of Birth</Text>
-              <TextInput
-                value={dob}
-                onChangeText={setDob}
-                style={styles.input}
-                placeholder=""
-                placeholderTextColor={colors.tabIcon}
-              />
-            </>
-          ) : null}
-
-          <Text style={[styles.label, { marginTop: sizes.m }]}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-
-          {/* SPECIALIST FLOW fields */}
-          {isSpecialist ? (
-            <>
-              <Text style={[styles.label, { marginTop: sizes.m }]}>Mobile</Text>
-              <TextInput
-                value={mobile}
-                onChangeText={setMobile}
-                style={styles.input}
-                placeholder=""
-                placeholderTextColor={colors.tabIcon}
-                keyboardType="phone-pad"
-              />
-            </>
-          ) : null}
-
-          <Text style={[styles.label, { marginTop: sizes.m }]}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            secureTextEntry
-          />
-
-          <Text style={[styles.label, { marginTop: sizes.m }]}>Confirm Password</Text>
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={styles.input}
-            placeholder=""
-            placeholderTextColor={colors.tabIcon}
-            secureTextEntry
-          />
-
-          {!passwordsMatch ? <Text style={styles.error}>Passwords do not match.</Text> : null}
-
-          {isSpecialist ? (
-            <>
-              <Text style={[styles.label, { marginTop: sizes.l }]}>Doctor / Nutritionist</Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
               <TouchableOpacity
-                style={styles.dropdown}
-                onPress={() => setShowDocPicker(true)}
-                activeOpacity={0.85}
+                onPress={() => setSpecialistType("DOCTOR")}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 999,
+                  backgroundColor: specialistType === "DOCTOR" ? PINK : "#fff",
+                  borderWidth: 1,
+                  borderColor: specialistType === "DOCTOR" ? PINK : "#ddd",
+                  alignItems: "center",
+                }}
               >
-                <Text style={[styles.dropdownText, !doctorOrNutritionist && styles.placeholder]}>
-                  {doctorOrNutritionist || "Select"}
-                </Text>
-                <Ionicons name="chevron-down" size={sizes.icon} color={colors.tabIcon} />
+                <Text style={{ color: MAROON, fontWeight: "700" }}>Doctor</Text>
               </TouchableOpacity>
 
-              <Text style={[styles.label, { marginTop: sizes.m }]}>MCR #</Text>
-              <TextInput
-                value={mcrNumber}
-                onChangeText={setMcrNumber}
-                style={styles.input}
-                placeholder=""
-                placeholderTextColor={colors.tabIcon}
-                autoCapitalize="characters"
-              />
-
-              <Text style={[styles.label, { marginTop: sizes.m }]}>Specialist</Text>
               <TouchableOpacity
-                style={styles.dropdown}
-                onPress={() => setShowSpecPicker(true)}
-                activeOpacity={0.85}
+                onPress={() => setSpecialistType("NUTRITIONIST")}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 999,
+                  backgroundColor: specialistType === "NUTRITIONIST" ? PINK : "#fff",
+                  borderWidth: 1,
+                  borderColor: specialistType === "NUTRITIONIST" ? PINK : "#ddd",
+                  alignItems: "center",
+                }}
               >
-                <Text style={[styles.dropdownText, !specialistType && styles.placeholder]}>
-                  {specialistType || "Select"}
-                </Text>
-                <Ionicons name="chevron-down" size={sizes.icon} color={colors.tabIcon} />
+                <Text style={{ color: MAROON, fontWeight: "700" }}>Nutritionist</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
-              <Text style={[styles.label, { marginTop: sizes.m }]}>Telemedicine Certificate</Text>
-              <TouchableOpacity style={styles.uploadBox} onPress={pickCertificate} activeOpacity={0.85}>
-                <Ionicons name="image-outline" size={sizes.icon} color={colors.tabIcon} />
-                <Text style={styles.uploadText}>
-                  {certificateName ? certificateName : "Choose Files to Upload"}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : null}
+        <Label text="Name" />
+        <Input value={fullName} onChangeText={setFullName} placeholder="" />
 
-          {/* Submit button */}
-          <TouchableOpacity
-            style={[styles.primaryBtn, (!canSubmit || submitting) && styles.disabledBtn]}
-            onPress={submitRegistration}
-            disabled={!canSubmit || submitting}
-            activeOpacity={0.9}
-          >
-            {submitting ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <Text style={styles.primaryBtnText}>Register</Text>
-            )}
-          </TouchableOpacity>
+        <Label text="Date of Birth (optional)" />
+        <Input value={dob} onChangeText={setDob} placeholder="" />
 
-          {/* Already have account */}
-          <View style={styles.inlineRow}>
-            <Text style={styles.inlineText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.replace("/(intro)/login")} activeOpacity={0.8}>
-              <Text style={styles.inlineLink}>Login Now</Text>
+        <Label text="Email" />
+        <Input
+          value={email}
+          onChangeText={setEmail}
+          placeholder=""
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+
+        <Label text="Password" />
+        <Input value={password} onChangeText={setPassword} placeholder="" secureTextEntry />
+
+        <Label text="Confirm Password" />
+        <Input
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder=""
+          secureTextEntry
+        />
+
+        {isSpecialist && specialistType === "DOCTOR" && (
+          <>
+            <Label text="MCR Number (required for doctors)" />
+            <Input
+              value={mcrNumber}
+              onChangeText={setMcrNumber}
+              placeholder="e.g. M12345A"
+              autoCapitalize="characters"
+            />
+          </>
+        )}
+
+        {isSpecialist && (
+          <View style={{ marginBottom: 10 }}>
+            <Label text="Qualification Image (required)" />
+            <TouchableOpacity
+              onPress={pickQualificationImage}
+              style={{
+                backgroundColor: "#fff",
+                borderWidth: 1,
+                borderColor: "#ddd",
+                borderRadius: 10,
+                padding: 12,
+              }}
+            >
+              <Text style={{ color: MAROON, fontWeight: "700" }}>
+                {qualificationImg ? "Change Image" : "Upload Image"}
+              </Text>
+              <Text style={{ marginTop: 6, color: "#666" }}>
+                {qualificationImg ? qualificationImg.name : "No file selected"}
+              </Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        )}
 
-      {/* Pickers */}
-      <SimplePickerModal
-        visible={showDocPicker}
-        title="Doctor / Nutritionist"
-        options={DOCTOR_NUTRITIONIST_OPTIONS}
-        onClose={() => setShowDocPicker(false)}
-        onPick={(v) => {
-          setDoctorOrNutritionist(v);
-          setShowDocPicker(false);
-        }}
-      />
+        <TouchableOpacity
+          onPress={onSubmit}
+          disabled={loading}
+          style={{
+            marginTop: 20,
+            backgroundColor: PINK,
+            borderRadius: 999,
+            paddingVertical: 14,
+            alignItems: "center",
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          <Text style={{ color: MAROON, fontWeight: "700" }}>
+            {loading ? "Submitting..." : isSpecialist ? "Submit Request" : "Register"}
+          </Text>
+        </TouchableOpacity>
 
-      <SimplePickerModal
-        visible={showSpecPicker}
-        title="Specialist"
-        options={SPECIALIST_OPTIONS}
-        onClose={() => setShowSpecPicker(false)}
-        onPick={(v) => {
-          setSpecialistType(v);
-          setShowSpecPicker(false);
-        }}
-      />
-    </SafeAreaView>
+        <View style={{ marginTop: 16, alignItems: "center" }}>
+          <Text style={{ color: "#999" }}>Already have an account?</Text>
+          <TouchableOpacity onPress={() => router.push("/(intro)/login")}>
+            <Text style={{ color: "#2d6cdf", marginTop: 6 }}>Login Now</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: 30 }} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.white },
-  kav: { flex: 1 },
-  container: {
-    paddingHorizontal: sizes.xl,
-    paddingTop: sizes.l,
-    paddingBottom: sizes.xxl,
-  },
+function Label({ text }: { text: string }) {
+  return <Text style={{ fontWeight: "700", marginBottom: 6, color: "#333" }}>{text}</Text>;
+}
 
-  backBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: colors.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: sizes.l,
-  },
-
-  title: {
-    color: colors.text,
-    fontSize: font.xxl,
-    fontWeight: "700",
-    lineHeight: font.xxl + 6,
-    marginBottom: sizes.l,
-    textTransform: "uppercase",
-  },
-
-  label: {
-    color: colors.black,
-    fontSize: font.xs,
-    fontWeight: "600",
-    marginBottom: sizes.s,
-  },
-
-  input: {
-    height: 46,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: sizes.borderRadius,
-    paddingHorizontal: sizes.m,
-    fontSize: font.xs,
-    color: colors.black,
-    backgroundColor: colors.white,
-  },
-
-  dropdown: {
-    height: 46,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: sizes.borderRadius,
-    paddingHorizontal: sizes.m,
-    backgroundColor: colors.white,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  dropdownText: {
-    fontSize: font.xs,
-    color: colors.black,
-    fontWeight: "600",
-    textTransform: "capitalize",
-  },
-  placeholder: {
-    color: colors.tabIcon,
-    fontWeight: "500",
-  },
-
-  uploadBox: {
-    height: 64,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: sizes.borderRadius,
-    backgroundColor: colors.white,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: sizes.s,
-  },
-  uploadText: {
-    fontSize: font.xs,
-    color: colors.black,
-    fontWeight: "600",
-  },
-
-  error: {
-    marginTop: sizes.s,
-    color: colors.fail,
-    fontSize: font.xs,
-    fontWeight: "600",
-  },
-
-  primaryBtn: {
-    marginTop: sizes.xl,
-    backgroundColor: colors.secondary,
-    borderRadius: 999,
-    paddingVertical: sizes.m,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.small,
-  },
-  primaryBtnText: {
-    color: colors.text,
-    fontSize: font.s,
-    fontWeight: "700",
-  },
-  disabledBtn: { opacity: 0.55 },
-
-  inlineRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: sizes.l,
-  },
-  inlineText: {
-    color: colors.black,
-    fontSize: font.xs,
-  },
-  inlineLink: {
-    color: colors.primary,
-    fontSize: font.xs,
-    fontWeight: "700",
-    textDecorationLine: "underline",
-  },
-});
+function Input(props: any) {
+  return (
+    <TextInput
+      {...props}
+      style={{
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        marginBottom: 14,
+        backgroundColor: "#fff",
+      }}
+    />
+  );
+}
