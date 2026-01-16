@@ -1,6 +1,6 @@
 import { TAB_BAR_ICON_SIZE, tabScreenOptions } from "@/src/shared/globalStyles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 
 export default function MerchantTabLayout() {
   return (
@@ -21,6 +21,12 @@ export default function MerchantTabLayout() {
           tabBarIcon: ({ color, size = TAB_BAR_ICON_SIZE }) => (
             <MaterialCommunityIcons name="shopping" size={size} color={color} />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.navigate("/main/merchant/shop");
+          },
         }}
       />
       <Tabs.Screen

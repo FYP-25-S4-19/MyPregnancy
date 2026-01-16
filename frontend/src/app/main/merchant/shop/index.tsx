@@ -23,7 +23,9 @@ export default function MerchantShopScreen() {
         {/* Banner Image */}
         <View style={styles.bannerContainer}>
           <Image
-            source={{ uri: "https://via.placeholder.com/600x200/667eea/ffffff?text=Best+Baby+Strollers" }}
+            source={{
+              uri: "https://www.shutterstock.com/image-photo/baby-stroller-indoor-empty-place-260nw-1687325395.jpg",
+            }}
             style={styles.bannerImage}
             resizeMode="cover"
           />

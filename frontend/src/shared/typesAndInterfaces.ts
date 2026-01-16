@@ -117,6 +117,18 @@ export interface ProductMutationData {
   description: string;
   img_file: File | any;
 }
+
+export interface ProductDraft {
+  id: number;
+  name: string | null;
+  category_id: number | null;
+  category_label: string | null;
+  price_cents: number | null;
+  description: string | null;
+  img_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
 //==================================================
 //=================== RECIPE =======================
 //==================================================

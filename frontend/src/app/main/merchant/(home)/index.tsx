@@ -31,7 +31,7 @@ export default function MerchantHomeScreen() {
             showSearch={true}
             showCategoryFilter={true}
             showAllCategoryOption={false}
-            onProductCardPress={(productId) => router.replace(`/main/merchant/shop/${productId}`)}
+            onProductCardPress={(productId) => router.navigate(`/main/merchant/shop/${productId}`)}
           />
           <View style={{ height: sizes.xxl }} />
         </ScrollView>

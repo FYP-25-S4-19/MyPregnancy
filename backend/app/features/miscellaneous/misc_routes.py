@@ -27,10 +27,10 @@ from app.features.miscellaneous.misc_models import (
     DoctorPreviewData,
     DoctorRatingRequest,
     DoctorRatingResponse,
+    DoctorRatingSummaryResponse,
     DoctorsPaginatedResponse,
     DoctorSpecializationModel,
     UpdateDoctorSpecializationRequest,
-    DoctorRatingSummaryResponse,
 )
 from app.shared.utils import get_s3_bucket_prefix
 
@@ -208,7 +208,6 @@ async def get_doctor_rating_summary(
     )
 
 
-
 @misc_router.get("/avail-mcr", response_model=list[str])
 async def get_available_mcr_numbers(db: AsyncSession = Depends(get_db)) -> list[str]:
     stmt = select(MCRNumber).where(MCRNumber.doctor == null)
@@ -320,7 +319,6 @@ async def list_of_doctors(
                 ratings_count=cnt,
             )
         )
-
 
     return DoctorsPaginatedResponse(doctors=doctor_previews, next_cursor=next_cursor, has_more=has_more)
 

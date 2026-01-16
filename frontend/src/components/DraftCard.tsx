@@ -1,15 +1,19 @@
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from "react-native";
 import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
-import { ProductPreview } from "@/src/shared/typesAndInterfaces";
-import { FC, useEffect, useRef, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { FC } from "react";
 import utils from "@/src/shared/utils";
 
-export const ProductCard: FC<{
-  item: ProductPreview;
+export const DraftCard: FC<{
+  id: number;
+  name: string | null;
+  category: string | null;
+  price_cents: number | null;
+  img_url: string | null;
   isVisible: boolean;
-  onProductCardPress: (productId: number) => void;
-}> = ({ item, isVisible, onProductCardPress }) => {
+  onPress: (draftId: number) => void;
+}> = ({ id, name, category, price_cents, img_url, isVisible, onPress }) => {
   const opacity = useRef(new Animated.Value(1)).current;
   const [shouldRender, setShouldRender] = useState(true);
 
@@ -36,11 +40,13 @@ export const ProductCard: FC<{
     return null;
   }
 
+  const displayPrice = price_cents ? utils.centsToDollarStr(price_cents) : "0.00";
+
   return (
     <Animated.View style={[styles.cardWrapper, { opacity }]}>
-      <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => onProductCardPress(item.id)}>
-        {item.img_url ? (
-          <Image source={{ uri: item.img_url }} style={styles.productImage} resizeMode="cover" />
+      <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => onPress(id)}>
+        {img_url ? (
+          <Image source={{ uri: img_url }} style={styles.productImage} resizeMode="cover" />
         ) : (
           <View style={[styles.productImage, styles.placeholderImage]}>
             <Ionicons name="image-outline" size={40} color={colors.tabIcon} />
@@ -48,38 +54,16 @@ export const ProductCard: FC<{
         )}
         <View style={styles.cardInfo}>
           <Text style={styles.productName} numberOfLines={2}>
-            {item.name}
+            {name || "Untitled Draft"}
           </Text>
-          <Text style={styles.productPrice}>${utils.centsToDollarStr(item.price_cents)}</Text>
+          <Text style={styles.productPrice}>${displayPrice}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-interface ProductGridProps {
-  products: ProductPreview[];
-  selectedCategory?: string;
-  onProductCardPress: (productId: number) => void;
-}
-
-export const ProductGrid: FC<ProductGridProps> = ({ products, selectedCategory = "", onProductCardPress }) => {
-  return (
-    <View style={styles.grid}>
-      {products.map((item) => {
-        const isVisible = selectedCategory.length === 0 || item.category === selectedCategory;
-        return <ProductCard key={item.id} item={item} isVisible={isVisible} onProductCardPress={onProductCardPress} />;
-      })}
-    </View>
-  );
-};
-
 const styles = StyleSheet.create({
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
   cardWrapper: {
     width: "48%",
     marginBottom: sizes.m,

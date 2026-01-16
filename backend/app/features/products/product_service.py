@@ -104,7 +104,6 @@ class ProductService:
     async def get_product_previews(
         self, limit: int, user: User | None = None, cursor: int | None = None
     ) -> ProductPreviewsPaginatedResponse:
-        """Get paginated list of products ordered by listed_at (newest first)."""
         query_stmt = (
             select(Product)
             .options(
@@ -164,8 +163,6 @@ class ProductService:
         )
 
     async def like_product(self, product_id: int, mother: PregnantWoman) -> MotherLikeProduct:
-        """Like a product. Only mothers can like products."""
-        # Verify product exists
         stmt = select(Product).where(Product.id == product_id)
         product = (await self.db.execute(stmt)).scalars().first()
 
@@ -184,8 +181,6 @@ class ProductService:
         return MotherLikeProduct(product_id=product_id, mother_id=mother.id)
 
     async def unlike_product(self, product_id: int, mother: PregnantWoman) -> None:
-        """Unlike a product. Only mothers can unlike products."""
-        # Find the existing like
         stmt = select(MotherLikeProduct).where(
             MotherLikeProduct.product_id == product_id, MotherLikeProduct.mother_id == mother.id
         )
@@ -228,7 +223,6 @@ class ProductService:
     async def create_product_draft(
         self, merchant: Merchant, draft_data: ProductDraftCreateRequest
     ) -> ProductDraftResponse:
-        """Create a new product draft for a merchant."""
         # Validate category if provided
         if draft_data.category_id is not None:
             category_stmt = select(ProductCategory).where(ProductCategory.id == draft_data.category_id)
@@ -249,7 +243,6 @@ class ProductService:
         return await self._build_draft_response(new_draft)
 
     async def get_product_draft(self, draft_id: int, merchant_id: UUID) -> ProductDraftResponse:
-        """Get a single product draft. Only the owning merchant can view."""
         stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
         draft = (await self.db.execute(stmt)).scalar_one_or_none()
 
@@ -265,7 +258,6 @@ class ProductService:
         return await self._build_draft_response(draft)
 
     async def list_product_drafts(self, merchant_id: UUID) -> list[ProductDraftResponse]:
-        """List all product drafts for a merchant."""
         stmt = (
             select(ProductDraft).where(ProductDraft.merchant_id == merchant_id).order_by(ProductDraft.updated_at.desc())
         )
@@ -276,10 +268,8 @@ class ProductService:
     async def update_product_draft(
         self, draft_id: int, merchant_id: UUID, draft_data: ProductDraftUpdateRequest
     ) -> ProductDraftResponse:
-        """Update a product draft. Only the owning merchant can update."""
-        stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
+        stmt = select(ProductDraft).where(ProductDraft.id == draft_id).options(selectinload(ProductDraft.merchant))
         draft = (await self.db.execute(stmt)).scalar_one_or_none()
-
         if not draft:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
 
@@ -307,10 +297,10 @@ class ProductService:
             draft.description = draft_data.description
 
         await self.db.flush()
+        await self.db.refresh(draft)
         return await self._build_draft_response(draft)
 
     async def upload_product_draft_image(self, draft_id: int, merchant_id: UUID, img_file: UploadFile) -> None:
-        """Upload or replace image for a product draft."""
         stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
         draft = (await self.db.execute(stmt)).scalar_one_or_none()
 
