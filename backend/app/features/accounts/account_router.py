@@ -6,18 +6,18 @@ from app.core.password_hasher import get_password_hasher
 from app.core.security import require_role, get_current_user
 from app.db.db_config import get_db
 
-from app.db.db_schema import Admin, PregnantWoman, VolunteerDoctor, Nutritionist, Merchant, UserRole
+from app.db.db_schema import Admin, PregnantWoman, VolunteerDoctor, Nutritionist, Merchant, UserRole, MCRNumber
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
     HealthProfileUpdateRequest,
     MyProfileResponse,
     PregnancyDetailsUpdateRequest,
     RejectAccountCreationRequestReason,
-    # PregnantWomanUpdate, 
-    # VolunteerDoctorUpdate, 
-    # NutritionistUpdate, 
-    # MerchantUpdate,
-    # AccountUpdateType,
+    DoctorUpdateRequest,
+    NutritionistUpdateRequest,
+    MerchantUpdateRequest,
+    PregnantWomanUpdateRequest,
+    MyAccountResponse,
 )
 from app.features.accounts.account_service import AccountService
 
@@ -192,55 +192,64 @@ async def reject_nutritionist_account_creation_request(
         raise
 
 
-# @account_router.put("/me/account")
-# async def update_my_account(
-#     payload: AccountUpdate,
-#     user: PregnantWoman | VolunteerDoctor | Nutritionist = Depends(UserRole),
-#     service: AccountService = Depends(get_account_service),
-#     db: AsyncSession = Depends(get_db),
-#     password_hasher: PasswordHasher = Depends(get_password_hasher)
-# ) -> None:
-#     try:
-#         await service.update_account_info(user, payload, password_hasher)
-#         await db.commit()
-#     except:
-#         await db.rollback()
-#         raise
 
 
+# .........................
+# User profile updates
+# ..........................
 
+@account_router.put("/doctor", response_model=None)
+async def update_doctor(
+    payload: DoctorUpdateRequest,
+    doctor: VolunteerDoctor = Depends(require_role(VolunteerDoctor)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_doctor_profile(doctor, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
 
-# # Helper function to determine the correct update model based on user type
-# def get_update_model(user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant):
-#     """Return the appropriate update model based on user type"""
-#     if isinstance(user, PregnantWoman):
-#         return PregnantWomanUpdate
-#     elif isinstance(user, VolunteerDoctor):
-#         return VolunteerDoctorUpdate
-#     elif isinstance(user, Nutritionist):
-#         return NutritionistUpdate
-#     elif isinstance(user, Merchant):
-#         return MerchantUpdate
-#     else:
-#         raise HTTPException(status_code=400, detail="Unknown user type")
+@account_router.put("/nutritionist", response_model=None)
+async def update_nutritionist(
+    payload: NutritionistUpdateRequest,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_nutritionist_profile(nutritionist, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
 
-# @account_router.put("/me/account")
-# async def update_my_account(
-#     payload: AccountUpdateType,
-#     user: PregnantWoman | VolunteerDoctor | Nutritionist | Merchant = Depends(get_current_user),
-#     service: AccountService = Depends(get_account_service),
-#     db: AsyncSession = Depends(get_db),
-#     password_hasher: PasswordHasher = Depends(get_password_hasher)
-# ) -> dict:
-#     """
-#     Update account information for the current user.
-#     Automatically uses the correct update model based on user type.
-#     """
-#     try:
-#         await service.update_account_info(user, payload, password_hasher)
-#         await db.commit()
-#         return {"message": "Account updated successfully"}
-#     except Exception as e:
-#         await db.rollback()
-#         raise HTTPException(status_code=400, detail=str(e))
+@account_router.put("/merchant", response_model=None)
+async def update_merchant(
+    payload: MerchantUpdateRequest,
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_merchant_profile(merchant, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
 
+@account_router.put("/pregnant-woman", response_model=None)
+async def update_pregnant_woman(
+    payload: PregnantWomanUpdateRequest,
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_pregnant_woman_profile(mother, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
