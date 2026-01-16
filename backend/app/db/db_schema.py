@@ -85,6 +85,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     saved_edu_articles: Mapped[list["SavedEduArticle"]] = relationship(back_populates="saver")
     notifications: Mapped[list["Notification"]] = relationship(back_populates="recipient")
     saved_recipes: Mapped[list["SavedRecipe"]] = relationship(back_populates="saver")
+    expo_push_tokens: Mapped[list["ExpoPushToken"]] = relationship(back_populates="user")
 
 
 class Admin(User):
@@ -762,10 +763,16 @@ class MCRNumber(Base):
     doctor: Mapped[VolunteerDoctor | None] = relationship(back_populates="mcr_no")
 
 
+# Since a user can have many devices, each with their own "push token" - what we will do is....
+# Make the "token" the PK, and make the users have a one-to-many relationship with the expo tokens
+#
+# i.e Many tokens are tied to the same user
 class ExpoPushToken(Base):
     __tablename__ = "expo_push_tokens"
-    id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    token: Mapped[str]
+    token: Mapped[str] = mapped_column(primary_key=True)
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    user: Mapped["User"] = relationship(back_populates="expo_push_tokens")
 
 
 # ===========================================

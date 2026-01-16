@@ -23,6 +23,11 @@ export default function MotherHomeScreen() {
           <HomePageHeader
             headerText={me ? utils.formatFullname(me) : ""}
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
+            onNotificationPress={() => {
+              if (me?.id) {
+                utils.registerForPushNofificationsAsync(me.id);
+              }
+            }}
           />
           <BabySizeSection />
           <ShopForYouAndBaby onBackPress={() => router.push("/main/mother/shop")} />

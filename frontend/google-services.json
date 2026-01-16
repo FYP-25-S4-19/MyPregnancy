@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "627920844084",
+    "project_id": "mypregnancy-d10ea",
+    "storage_bucket": "mypregnancy-d10ea.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:627920844084:android:e0e66845326f24f3006161",
+        "android_client_info": {
+          "package_name": "com.fyp_25_s4_19.mypregnancy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrEhLqW-ZMLfj6XDKYCh05IlZjgOUcsbE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

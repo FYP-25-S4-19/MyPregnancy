@@ -8,6 +8,7 @@ interface HomePageHeaderProps {
   headerText: string;
   profilePicURL?: string;
   profilePicStrFallback?: string;
+  onNotificationPress?: () => void;
 }
 
 /**
@@ -21,6 +22,7 @@ const HomePageHeader: FC<HomePageHeaderProps> = ({
   headerText,
   profilePicURL = null,
   profilePicStrFallback,
+  onNotificationPress,
 }) => {
   return (
     <View style={styles.header}>
@@ -37,7 +39,7 @@ const HomePageHeader: FC<HomePageHeaderProps> = ({
           <Text style={styles.userName}>{headerText}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.notificationButton}>
+      <TouchableOpacity onPress={onNotificationPress ?? onNotificationPress} style={styles.notificationButton}>
         <View style={styles.notificationDot} />
         <Ionicons name="notifications-outline" size={28} />
       </TouchableOpacity>

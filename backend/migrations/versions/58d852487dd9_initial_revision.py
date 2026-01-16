@@ -159,13 +159,13 @@ def upgrade() -> None:
     )
     op.create_table(
         "expo_push_tokens",
-        sa.Column("id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("user_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.Column("token", sa.String(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["id"],
+            ["user_id"],
             ["users.id"],
         ),
-        sa.PrimaryKeyConstraint("id"),
+        sa.PrimaryKeyConstraint("user_id"),
     )
     op.create_table(
         "notifications",
