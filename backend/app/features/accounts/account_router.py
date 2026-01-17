@@ -1,23 +1,21 @@
 from argon2 import PasswordHasher
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status, HTTPException
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.password_hasher import get_password_hasher
-from app.core.security import require_role, get_current_user
+from app.core.security import require_role
 from app.db.db_config import get_db
-
-from app.db.db_schema import Admin, PregnantWoman, VolunteerDoctor, Nutritionist, Merchant, UserRole, MCRNumber
+from app.db.db_schema import Admin, Merchant, Nutritionist, PregnantWoman, UserRole, VolunteerDoctor
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
-    HealthProfileUpdateRequest,
-    MyProfileResponse,
-    PregnancyDetailsUpdateRequest,
-    RejectAccountCreationRequestReason,
     DoctorUpdateRequest,
-    NutritionistUpdateRequest,
+    HealthProfileUpdateRequest,
     MerchantUpdateRequest,
+    MyProfileResponse,
+    NutritionistUpdateRequest,
+    PregnancyDetailsUpdateRequest,
     PregnantWomanUpdateRequest,
-    MyAccountResponse,
+    RejectAccountCreationRequestReason,
 )
 from app.features.accounts.account_service import AccountService
 
@@ -192,11 +190,10 @@ async def reject_nutritionist_account_creation_request(
         raise
 
 
-
-
 # .........................
 # User profile updates
 # ..........................
+
 
 @account_router.put("/doctor", response_model=None)
 async def update_doctor(
@@ -212,6 +209,7 @@ async def update_doctor(
         await db.rollback()
         raise
 
+
 @account_router.put("/nutritionist", response_model=None)
 async def update_nutritionist(
     payload: NutritionistUpdateRequest,
@@ -226,6 +224,7 @@ async def update_nutritionist(
         await db.rollback()
         raise
 
+
 @account_router.put("/merchant", response_model=None)
 async def update_merchant(
     payload: MerchantUpdateRequest,
@@ -239,6 +238,7 @@ async def update_merchant(
     except:
         await db.rollback()
         raise
+
 
 @account_router.put("/pregnant-woman", response_model=None)
 async def update_pregnant_woman(

@@ -33,7 +33,7 @@ export default function AddRecipeScreen() {
   const [pregnancyBenefit, setPregnancyBenefit] = useState("");
   const [servingCount, setServingCount] = useState("");
   const [trimester, setTrimester] = useState<string>("1");
-  const [category, setCategory] = useState<string>("");
+  const [categoryID, setCategoryID] = useState<string>("");
   const [categories, setCategories] = useState<Array<{ label: string; value: string }>>([]);
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,7 @@ export default function AddRecipeScreen() {
         }));
         setCategories(categoryList);
         if (categoryList.length > 0) {
-          setCategory(categoryList[0].value);
+          setCategoryID(categoryList[0].value);
         }
       } catch (err) {
         console.log("Failed to fetch categories", err);
@@ -108,8 +108,62 @@ export default function AddRecipeScreen() {
     }
   };
 
-  /* ---------------- submit ---------------- */
-  const submitRecipe = async (isDraft: boolean) => {
+  /* ---------------- submit draft (JSON body) ---------------- */
+  const submitDraft = async (draftIdToUpdate?: number): Promise<number | null> => {
+    try {
+      const draftPayload = {
+        name: name || null,
+        description: description || null,
+        ingredients: ingredients || null,
+        instructions_markdown: instructions || null,
+        est_calories: estCalories || null,
+        pregnancy_benefit: pregnancyBenefit || null,
+        serving_count: servingCount ? parseInt(servingCount) : null,
+        trimester: trimester ? parseInt(trimester) : null,
+        category_id: categoryID || null,
+      };
+
+      let createdDraftId: number | null = null;
+
+      if (draftIdToUpdate) {
+        // Update existing draft
+        const updatePayload = {
+          ...draftPayload,
+          category: categoryID ? categoryID : null,
+        };
+        delete (updatePayload as any).category;
+
+        await api.patch(`/recipes/drafts/${draftIdToUpdate}`, updatePayload);
+        createdDraftId = draftIdToUpdate;
+      } else {
+        // Create new draft
+        const response = await api.post(`/recipes/drafts/`, draftPayload);
+        createdDraftId = response.data.id;
+      }
+
+      // Upload image if selected
+      if (image && image.uri && !image.uri.startsWith(process.env.EXPO_PUBLIC_API_URL || "")) {
+        const imageFormData = new FormData();
+        imageFormData.append("img_file", {
+          uri: image.uri,
+          name: "recipe.jpg",
+          type: "image/jpeg",
+        } as any);
+
+        await api.post(`/recipes/drafts/${createdDraftId}/image`, imageFormData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      }
+
+      return createdDraftId;
+    } catch (err) {
+      console.log("Error submitting draft", err);
+      throw err;
+    }
+  };
+
+  /* ---------------- submit recipe (form data) ---------------- */
+  const submitRecipe = async (isDraft: boolean): Promise<void> => {
     if (!isDraft) {
       if (!name || !description || !ingredients || !instructions) {
         Alert.alert("Missing info", "Please fill in all required fields to publish.");
@@ -120,54 +174,45 @@ export default function AddRecipeScreen() {
     try {
       setLoading(true);
 
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("ingredients", ingredients);
-      formData.append("instructions", instructions);
-      formData.append("est_calories", estCalories);
-      formData.append("pregnancy_benefit", pregnancyBenefit);
-      formData.append("serving_count", servingCount);
-      formData.append("trimester", trimester);
-      formData.append("category_id", category);
-      if (image) {
-        formData.append("image_file", {
-          uri: image.uri,
-          name: "recipe.jpg",
-          type: "image/jpeg",
-        } as any);
-      }
-
-      if (draftId && mode === "edit") {
-        // Editing an existing draft
-        if (isDraft) {
-          await api.patch(`/recipes/drafts/${draftId}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          Alert.alert("Success", "Draft updated successfully");
-        } else {
-          // Publishing the draft
-          await api.post(`/recipes/drafts/${draftId}/publish`, null, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          Alert.alert("Success", "Draft published successfully");
-        }
+      if (isDraft) {
+        // Handle draft submission
+        await submitDraft(draftId);
+        Alert.alert("Success", draftId ? "Draft updated successfully" : "Draft created successfully");
+        router.back();
       } else {
-        // Creating new
-        if (isDraft) {
-          await api.post(`/recipes/drafts`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
-          Alert.alert("Success", "Draft created successfully");
+        // Handle recipe publication or creation
+        if (draftId && mode === "edit") {
+          // Publishing an existing draft
+          await api.post(`/recipes/drafts/${draftId}/publish`, null);
+          Alert.alert("Success", "Draft published successfully");
+          router.back();
         } else {
+          // Creating a new recipe directly (not from draft)
+          const formData = new FormData();
+          formData.append("name", name);
+          formData.append("description", description);
+          formData.append("ingredients", ingredients);
+          formData.append("instructions", instructions);
+          formData.append("est_calories", estCalories);
+          formData.append("pregnancy_benefit", pregnancyBenefit);
+          formData.append("serving_count", servingCount);
+          formData.append("trimester", trimester);
+          formData.append("category_id", categoryID);
+          if (image && image.uri && !image.uri.startsWith(process.env.EXPO_PUBLIC_API_URL || "")) {
+            formData.append("image_file", {
+              uri: image.uri,
+              name: "recipe.jpg",
+              type: "image/jpeg",
+            } as any);
+          }
+
           await api.post(`/recipes/`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           Alert.alert("Success", "Recipe created successfully");
+          router.back();
         }
       }
-
-      router.back();
     } catch (err) {
       console.log("Error submitting recipe", err);
       Alert.alert("Error", "Failed to save recipe");
@@ -249,10 +294,10 @@ export default function AddRecipeScreen() {
               labelField="label"
               valueField="value"
               placeholder={!isCategoryFocus ? "Select category" : "..."}
-              value={category}
+              value={categoryID}
               onFocus={() => setIsCategoryFocus(true)}
               onBlur={() => setIsCategoryFocus(false)}
-              onChange={(item) => setCategory(item.value)}
+              onChange={(item) => setCategoryID(item.value)}
               renderRightIcon={() => <Ionicons name="chevron-down" size={20} color={colors.text} />}
             />
           </View>

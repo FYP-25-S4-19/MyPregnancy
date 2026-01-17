@@ -3,7 +3,7 @@ from typing import Type, TypeVar, Union
 from fastapi import Depends, HTTPException, status
 
 from app.core.users_manager import current_active_user
-from app.db.db_schema import User, PregnantWoman, VolunteerDoctor, Nutritionist, Merchant
+from app.db.db_schema import Merchant, Nutritionist, PregnantWoman, User, VolunteerDoctor
 
 T = TypeVar("T", bound=User)
 
@@ -19,8 +19,9 @@ def require_role(required_role: Type[T]):
 
     return role_checker
 
+
 def get_current_user(
-    current_user: User = Depends(current_active_user)
+    current_user: User = Depends(current_active_user),
 ) -> Union[PregnantWoman, VolunteerDoctor, Nutritionist, Merchant]:
     """
     Get the current authenticated user without role restrictions.
