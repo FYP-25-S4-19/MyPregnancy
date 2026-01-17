@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { jwtDecode } from "jwt-decode";
 import * as Device from "expo-device";
+import api from "./api";
 
 const utils = {
   /**
@@ -113,7 +114,7 @@ const utils = {
       }
       try {
         const pushTokenString = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-        // console.log(pushTokenString);
+        await api.patch("/notifications/upsert", { token: pushTokenString });
         return pushTokenString;
       } catch (e: unknown) {
         this._alertAndThrowErrorMessage(`${e}`);
