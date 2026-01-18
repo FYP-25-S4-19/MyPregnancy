@@ -34,7 +34,7 @@ class MyProfileResponse(CustomBaseModel):
 class AccountCreationRequestView(CustomBaseModel):
     request_id: int
 
-    user_role: Literal["DOCTOR", "NUTRITIONIST"]
+    user_role: Literal["VOLUNTEER_DOCTOR", "NUTRITIONIST"]
 
     first_name: str
     middle_name: Optional[str] = None

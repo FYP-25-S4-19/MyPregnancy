@@ -736,6 +736,8 @@ class DoctorAccountCreationRequest(Base):
     account_status: Mapped["AccountCreationRequestStatus"] = mapped_column(
         SQLAlchemyEnum(AccountCreationRequestStatus), server_default=text("'PENDING'")
     )
+    mcr_no: Mapped[str]
+    specialisation: Mapped[str]
     reject_reason: Mapped[str | None]
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
