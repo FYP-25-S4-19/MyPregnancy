@@ -196,5 +196,6 @@ export interface DoctorsPaginatedResponse {
   doctors: DoctorPreviewData[];
   next_cursor: string | null;
   has_more: boolean;
-  
 }
+
+export type ChatFilter = "all" | "unread";

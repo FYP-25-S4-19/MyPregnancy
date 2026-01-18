@@ -20,9 +20,10 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.frontend",
+      "package": "com.fyp_25_s4_19.mypregnancy",
       "minSdkVersion": 26,
       "permissions": [
         "android.permission.health.READ_HEART_RATE",
@@ -71,7 +72,6 @@
           "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
         }
       ],
-      "expo-notifications",
       [
         "expo-image-picker",
         {
@@ -93,6 +93,13 @@
             "targetSdkVersion": 35,
             "minSdkVersion": 26
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "default",
+          "color": "#ffffff"
         }
       ]
     ],

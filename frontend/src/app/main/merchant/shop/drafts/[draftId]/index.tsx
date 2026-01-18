@@ -77,7 +77,6 @@ export default function EditProductDraftScreen() {
         setLoading(false);
       }
     };
-
     fetchDraft();
   }, [draftId]);
 

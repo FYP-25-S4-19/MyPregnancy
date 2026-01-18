@@ -2,6 +2,7 @@ import { router, useRootNavigationState, useSegments } from "expo-router";
 import useAuthStore from "../authStore";
 import { useEffect } from "react";
 import utils from "../utils";
+import { useGuestGate } from "./useGuestGate";
 
 export function useProtectedRoute() {
   const segments = useSegments();
@@ -11,36 +12,36 @@ export function useProtectedRoute() {
   const me = useAuthStore((state) => state.me);
   const isHydrated = useAuthStore.persist.hasHydrated();
 
+  const openGuestGate = useGuestGate((s) => s.open);
+
   useEffect(() => {
-    // Wait for hydration and navigation to be ready
     if (!isHydrated) return;
     if (!rootNavigationState?.key) return;
 
-    // Analyze where the user is trying to go
-    const inAuthGroup = segments[0] === "(intro)"; // Login/Register
-    const inMainGroup = segments[0] === "main"; // The App
-    const inGuestRoute = segments[1] === "guest"; // specifically /main/guest
+    const inAuthGroup = segments[0] === "(intro)";
+    const inMainGroup = segments[0] === "main";
+    const inGuestRoute = segments[1] === "guest"; // /main/guest/...
 
-    // Not logged-in (Guest) or invalid JWT ---
+    const attemptedPath = "/" + segments.join("/");
+
+    // --------- GUEST / NOT LOGGED IN ----------
     if (!accessToken || utils.safeDecodeUnexpiredJWT(accessToken) === null) {
-      // If they are trying to access /main...
-      if (inMainGroup) {
-        // ...and it is NOT the guest route -> Kick to Login
-        if (!inGuestRoute) {
-          router.replace("/(intro)");
-        }
-        // If it IS the guest route, do nothing. Let them stay.
+      if (inMainGroup && !inGuestRoute) {
+        // ✅ Instead of kicking to login immediately:
+        // 1) show modal
+        // 2) bounce back to guest home
+        openGuestGate(attemptedPath);
+        router.replace("/main/guest");
       }
       return;
     }
 
-    // --- LOGGED IN (USER) ---
-    // If a logged-in user is on the Login page OR the Guest page -> Redirect to their Home
+    // --------- LOGGED IN ----------
     if (inAuthGroup || (inMainGroup && inGuestRoute)) {
       if (me?.role === "PREGNANT_WOMAN") router.replace("/main/mother");
       else if (me?.role === "NUTRITIONIST") router.replace("/main/nutritionist");
       else if (me?.role === "VOLUNTEER_DOCTOR") router.replace("/main/doctor");
       else if (me?.role === "MERCHANT") router.replace("/main/merchant");
     }
-  }, [accessToken, segments, isHydrated, me?.role, rootNavigationState?.key]);
+  }, [accessToken, segments, isHydrated, me?.role, rootNavigationState?.key, openGuestGate]);
 }

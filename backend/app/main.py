@@ -20,6 +20,7 @@ from app.features.journal.journal_router import journal_router
 from app.features.kick_tracker.kick_tracker_router import kick_tracker_router
 from app.features.miscellaneous.feedback_router import router as feedback_router
 from app.features.miscellaneous.misc_routes import misc_router, router
+from app.features.notifications.notification_router import notification_router
 from app.features.products.product_router import product_router
 from app.features.recipes.recipe_router import recipe_router
 from app.features.risk.risk_router import router as risk_router
@@ -61,6 +62,7 @@ app.include_router(
     prefix="/users",
     tags=["Users"],
 )
+app.include_router(notification_router)
 app.include_router(admin_router)
 app.include_router(edu_articles_router)
 app.include_router(appointments_router)
