@@ -63,30 +63,45 @@ class AccountService:
         )
 
     async def get_account_creation_requests(self) -> list[AccountCreationRequestView]:
+        doctor_reqs = (await self.db.execute(select(DoctorAccountCreationRequest))).scalars().all()
+        nutritionist_reqs = (await self.db.execute(select(NutritionistAccountCreationRequest))).scalars().all()
+
         doctor_creation_requests = [
             AccountCreationRequestView(
+                request_id=req.id,
+                user_role=UserRole.VOLUNTEER_DOCTOR.value,
                 first_name=req.first_name,
                 middle_name=req.middle_name,
                 last_name=req.last_name,
-                qualification_img_url="",
-                user_role=UserRole.VOLUNTEER_DOCTOR.value,
+                email=req.email,
+                qualification_img_url=req.qualification_img_key,  # or convert to URL if you do that elsewhere
+                account_status=req.account_status.value if hasattr(req.account_status, "value") else req.account_status,
+                reject_reason=req.reject_reason,
                 submitted_at=req.submitted_at,
             )
-            for req in (await self.db.execute(select(DoctorAccountCreationRequest))).scalars().all()
+            for req in doctor_reqs
         ]
+
         nutritionist_creation_requests = [
             AccountCreationRequestView(
+                request_id=req.id,
+                user_role=UserRole.NUTRITIONIST.value,
                 first_name=req.first_name,
                 middle_name=req.middle_name,
                 last_name=req.last_name,
-                qualification_img_url="",
-                user_role=UserRole.NUTRITIONIST.value,
+                email=req.email,
+                qualification_img_url=req.qualification_img_key,
+                account_status=req.account_status.value if hasattr(req.account_status, "value") else req.account_status,
+                reject_reason=req.reject_reason,
                 submitted_at=req.submitted_at,
             )
-            for req in (await self.db.execute(select(NutritionistAccountCreationRequest))).scalars().all()
+            for req in nutritionist_reqs
         ]
+
         return sorted(
-            doctor_creation_requests + nutritionist_creation_requests, key=lambda req: req.submitted_at, reverse=True
+            doctor_creation_requests + nutritionist_creation_requests,
+            key=lambda r: r.submitted_at,
+            reverse=True,
         )
 
     async def submit_account_creation_request(
@@ -99,12 +114,13 @@ class AccountService:
         user_role: str,
         qualification_img: UploadFile,
     ) -> None:
-        if user_role != UserRole.VOLUNTEER_DOCTOR.value and user_role != UserRole.NUTRITIONIST.value:
+        if user_role not in (UserRole.VOLUNTEER_DOCTOR.value, UserRole.NUTRITIONIST.value):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user role")
 
         if qualification_img is not None and (not is_valid_image(qualification_img)):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid qualification image file"
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Invalid qualification image file",
             )
 
         stmt = (
@@ -124,104 +140,109 @@ class AccountService:
             )
 
         if user_role == UserRole.VOLUNTEER_DOCTOR.value:
-            dr_acc_creation_req = DoctorAccountCreationRequest(
-                first_name=first_name,
-                middle_name=middle_name,
-                last_name=last_name,
-                email=email,
-                password=password,
-                qualification_img_key=img_key,
+            self.db.add(
+                DoctorAccountCreationRequest(
+                    first_name=first_name,
+                    middle_name=middle_name,
+                    last_name=last_name,
+                    email=email,
+                    password=password,
+                    qualification_img_key=img_key,
+                )
             )
-            self.db.add(dr_acc_creation_req)
         else:
-            nutritionist_acc_creation_req = NutritionistAccountCreationRequest(
-                first_name=first_name,
-                middle_name=middle_name,
-                last_name=last_name,
-                email=email,
-                password=password,
-                qualification_img_key=img_key,
+            self.db.add(
+                NutritionistAccountCreationRequest(
+                    first_name=first_name,
+                    middle_name=middle_name,
+                    last_name=last_name,
+                    email=email,
+                    password=password,
+                    qualification_img_key=img_key,
+                )
             )
-            self.db.add(nutritionist_acc_creation_req)
+
+        await self.db.flush()
 
     async def accept_doctor_account_creation_request(self, request_id: int, password_hasher: PasswordHasher) -> None:
         stmt = select(DoctorAccountCreationRequest).where(DoctorAccountCreationRequest.id == request_id)
         acc_creation_req = (await self.db.execute(stmt)).scalar_one_or_none()
+
         if acc_creation_req is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account creation request not found")
         if acc_creation_req.account_status == AccountCreationRequestStatus.APPROVED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been approved"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already approved")
         if acc_creation_req.account_status == AccountCreationRequestStatus.REJECTED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been rejected"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already rejected")
 
+        # ✅ FIX: role must be set (users.role is NOT NULL)
         new_doctor = VolunteerDoctor(
             first_name=acc_creation_req.first_name,
             middle_name=acc_creation_req.middle_name,
             last_name=acc_creation_req.last_name,
             email=acc_creation_req.email,
             hashed_password=password_hasher.hash(acc_creation_req.password),
+            role=UserRole.VOLUNTEER_DOCTOR,  # <-- critical
         )
+
         self.db.add(new_doctor)
-        await self.db.flush()  # To get the new doctor ID
+        await self.db.flush()  # get new_doctor.id
 
         new_doctor.qualification_img_key = S3StorageInterface.promote_staging_qualification_img(
-            user_id=new_doctor.id, staging_img_key=acc_creation_req.qualification_img_key
+            user_id=new_doctor.id,
+            staging_img_key=acc_creation_req.qualification_img_key,
         )
         if new_doctor.qualification_img_key is None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to promote qualification image. Please try again.",
             )
+
         acc_creation_req.account_status = AccountCreationRequestStatus.APPROVED
+        await self.db.flush()
 
     async def reject_doctor_account_creation_request(self, request_id: int, reject_reason: str) -> None:
         stmt = select(DoctorAccountCreationRequest).where(DoctorAccountCreationRequest.id == request_id)
         acc_creation_req = (await self.db.execute(stmt)).scalar_one_or_none()
+
         if acc_creation_req is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account creation request not found")
         if acc_creation_req.account_status == AccountCreationRequestStatus.APPROVED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been approved"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already approved")
         if acc_creation_req.account_status == AccountCreationRequestStatus.REJECTED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been rejected"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already rejected")
+
         acc_creation_req.account_status = AccountCreationRequestStatus.REJECTED
         acc_creation_req.reject_reason = reject_reason
+        await self.db.flush()
 
-    async def accept_nutritionist_account_creation_request(
-        self, request_id: int, password_hasher: PasswordHasher
-    ) -> None:
+    async def accept_nutritionist_account_creation_request(self, request_id: int, password_hasher: PasswordHasher) -> None:
         stmt = select(NutritionistAccountCreationRequest).where(NutritionistAccountCreationRequest.id == request_id)
         acc_creation_req = (await self.db.execute(stmt)).scalar_one_or_none()
+
         if acc_creation_req is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account creation request not found")
         if acc_creation_req.account_status == AccountCreationRequestStatus.APPROVED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been approved"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already approved")
         if acc_creation_req.account_status == AccountCreationRequestStatus.REJECTED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been rejected"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already rejected")
 
+        # ✅ FIX: role must be set (users.role is NOT NULL)
         new_nutritionist = Nutritionist(
             first_name=acc_creation_req.first_name,
             middle_name=acc_creation_req.middle_name,
             last_name=acc_creation_req.last_name,
             email=acc_creation_req.email,
             hashed_password=password_hasher.hash(acc_creation_req.password),
+            role=UserRole.NUTRITIONIST,  # <-- critical
         )
+
         self.db.add(new_nutritionist)
-        await self.db.flush()  # To get the new nutritionist ID
+        await self.db.flush()  # get new_nutritionist.id
 
         new_nutritionist.qualification_img_key = S3StorageInterface.promote_staging_qualification_img(
-            user_id=new_nutritionist.id, staging_img_key=acc_creation_req.qualification_img_key
+            user_id=new_nutritionist.id,
+            staging_img_key=acc_creation_req.qualification_img_key,
         )
         if new_nutritionist.qualification_img_key is None:
             raise HTTPException(
@@ -230,19 +251,19 @@ class AccountService:
             )
 
         acc_creation_req.account_status = AccountCreationRequestStatus.APPROVED
+        await self.db.flush()
 
     async def reject_nutritionist_account_creation_request(self, request_id: int, reject_reason: str) -> None:
         stmt = select(NutritionistAccountCreationRequest).where(NutritionistAccountCreationRequest.id == request_id)
         acc_creation_req = (await self.db.execute(stmt)).scalar_one_or_none()
+
         if acc_creation_req is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account creation request not found")
         if acc_creation_req.account_status == AccountCreationRequestStatus.APPROVED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been approved"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already approved")
         if acc_creation_req.account_status == AccountCreationRequestStatus.REJECTED:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Account creation request has already been rejected"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account creation request already rejected")
+
         acc_creation_req.account_status = AccountCreationRequestStatus.REJECTED
         acc_creation_req.reject_reason = reject_reason
+        await self.db.flush()
