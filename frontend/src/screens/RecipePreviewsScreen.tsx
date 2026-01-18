@@ -18,7 +18,7 @@ import {
   Image,
   Text,
   View,
-  
+
 } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -41,6 +41,23 @@ export default function RecipePreviewsScreen() {
     const index = Math.round(scrollPosition / SCREEN_WIDTH);
     setCurrentImageIndex(index);
   };
+
+
+  // trimester 
+  const TRIMESTERS = [1, 2, 3] as const;
+  type Trimester = typeof TRIMESTERS[number]; // 1 | 2 | 3
+
+  const [selectedTrimesters, setSelectedTrimesters] = useState<Trimester[]>([]);
+
+  const toggleTrimester = (trimester: Trimester): void => {
+    setSelectedTrimesters((prev) =>
+      prev.includes(trimester)
+        ? prev.filter((t) => t !== trimester)
+        : [...prev, trimester]
+    );
+  };
+
+
 
   const { data: recipeCategories } = useQuery({
     queryKey: ["Recipe categories"],
@@ -69,12 +86,19 @@ export default function RecipePreviewsScreen() {
   });
 
   const allRecipes: RecipeData[] = recipesData?.pages.flatMap((page) => page.recipes) || [];
-  const filteredRecipes: RecipeData[] = allRecipes.filter((recipe) => {
-    if (selectedCategories.includes("All")) {
-      return true;
-    }
-    return selectedCategories.includes(recipe.category);
+  const filteredRecipes = allRecipes.filter((recipe) => {
+    const categoryMatch =
+      selectedCategories.includes("All") ||
+      selectedCategories.includes(recipe.category);
+
+    const trimesterMatch =
+      selectedTrimesters.length === 0 ||
+      selectedTrimesters.includes(recipe.trimester as Trimester);
+
+    return categoryMatch && trimesterMatch;
   });
+
+
 
   const handleLoadMore = (): void => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -166,6 +190,42 @@ export default function RecipePreviewsScreen() {
           ))}
         </ScrollView>
       </View>
+
+
+      {/* ================= TRIMESTER ================= */}
+      <View style={styles.categoryContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Trimester</Text>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryList}
+        >
+          {TRIMESTERS.map((tri) => (
+            <TouchableOpacity
+              key={tri}
+              style={[
+                styles.categoryChip,
+                selectedTrimesters.includes(tri) && styles.categoryChipActive,
+              ]}
+              onPress={() => toggleTrimester(tri)}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedTrimesters.includes(tri) && styles.categoryTextActive,
+                ]}
+              >
+                Trimester {tri}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+        </ScrollView>
+      </View>
+
     </>
   );
 
