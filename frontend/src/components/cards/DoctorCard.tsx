@@ -3,23 +3,24 @@ import { colors, sizes, font } from "../../shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 
-const specializationColors: Record<string, string> = {
-  "Obstetrics and Gynaecology": "#FF8C00",      // Dark Orange
-  "Reproductive Endocrinology": "#FF1493",      // Deep Pink
-  "Prenatal Care": "#1E90FF",                   // Dodger Blue
-  "Perinatal Medicine": "#20B2AA",              // Light Sea Green
-  "General Practitioner": "#32CD32",            // Lime Green
-  "Midwifery": "#673AB7",                       // Deep Purple
-  "Internal Medicine": "#009688",               // Teal
-  "Family Medicine": "#FF4500",                 // Orange Red
-  "High-Risk Pregnancy": "#DC143C",
-  // add all specializations dynamically later if needed
-};
+// const specializationColors: Record<string, string> = {
+//   "Obstetrics and Gynaecology": "#FF8C00",      // Dark Orange
+//   "Reproductive Endocrinology": "#FF1493",      // Deep Pink
+//   "Prenatal Care": "#1E90FF",                   // Dodger Blue
+//   "Perinatal Medicine": "#20B2AA",              // Light Sea Green
+//   "General Practitioner": "#32CD32",            // Lime Green
+//   "Midwifery": "#673AB7",                       // Deep Purple
+//   "Internal Medicine": "#009688",               // Teal
+//   "Family Medicine": "#FF4500",                 // Orange Red
+//   "High-Risk Pregnancy": "#DC143C",
+//   "Maternal-Fetal Medicine": "#8B4513",
+//   // add all specializations dynamically later if needed
+// };
 
-const getSpecializationColor = (specialization?: string) => {
-  if (!specialization) return "#ccc"; // default color
-  return specializationColors[specialization] || "#ccc"; // fallback
-};
+// const getSpecializationColor = (specialization?: string) => {
+//   if (!specialization) return "#ccc"; // default color
+//   return specializationColors[specialization] || "#ccc"; // fallback
+// };
 
 
 interface DoctorCardProps {
@@ -60,16 +61,12 @@ export default function DoctorCard({
             <Text style={styles.name}>{name}</Text>
 
             {specialization && (
-              <View
-                style={[
-                  styles.specializationBadge,
-                  { backgroundColor: getSpecializationColor(specialization) + "33" }, // keep colored background
-                ]}
-              >
-                <Text style={styles.specializationText}>
+              <View style={styles.specializationChip}>
+                <Text style={styles.specializationChipText}>
                   {specialization}
                 </Text>
               </View>
+
             )}
 
           </View>
@@ -177,4 +174,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
+  specializationChip: {
+    marginTop: 4,
+    alignSelf: "flex-start",
+    backgroundColor: colors.white,
+    paddingHorizontal: sizes.s,
+    paddingVertical: sizes.xs / 2,
+    borderRadius: sizes.l,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+  },
+
+  specializationChipText: {
+    fontSize: font.xs,
+    fontWeight: "600",
+    color: colors.text,
+  },
+
 });

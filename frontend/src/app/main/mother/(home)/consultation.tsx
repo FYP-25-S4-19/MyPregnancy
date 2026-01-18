@@ -1,24 +1,47 @@
-import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
-import { UpsertChannelResponse, DoctorsPaginatedResponse } from "@/src/shared/typesAndInterfaces";
-import { colors, sizes, font } from "../../../../shared/designSystem";
-import DoctorCard from "../../../../components/cards/DoctorCard";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+  ScrollView,
+} from "react-native";
+import React, { useState, useMemo } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import SearchBar from "../../../../components/SearchBar";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
 import { router } from "expo-router";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+
 import api from "@/src/shared/api";
+import { colors, sizes, font } from "@/src/shared/designSystem";
+import SearchBar from "@/src/components/SearchBar";
+import DoctorCard from "@/src/components/cards/DoctorCard";
+
+/* ================= TYPES ================= */
+
+type Doctor = {
+  doctor_id: string;
+  first_name: string;
+  profile_img_url: string;
+  specialisation: string;
+  is_liked: boolean;
+  avg_rating: number | null;
+  ratings_count: number | null;
+};
+
+/* ================= SCREEN ================= */
 
 export default function ConsultationsScreen() {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [submittedQuery, setSubmittedQuery] = useState<string>(""); //search
-
-  const qc = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
+  const [selectedSpecialisation, setSelectedSpecialisation] = useState("All");
 
   const handleSubmitSearch = () => {
     setSubmittedQuery(searchQuery.trim());
   };
+
+  /* ================= DOCTORS QUERY ================= */
 
   const {
     data: doctorsData,
@@ -27,17 +50,44 @@ export default function ConsultationsScreen() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["List of doctors", submittedQuery], //search
+    queryKey: ["doctors", submittedQuery],
     queryFn: async ({ pageParam }) => {
       const cursorParam = pageParam ? `&cursor=${pageParam}` : "";
       const qParam = submittedQuery ? `&q=${encodeURIComponent(submittedQuery)}` : "";
-      const res = await api.get<DoctorsPaginatedResponse>(`/doctors?limit=5${cursorParam}${qParam}`);
+      const res = await api.get<{ doctors: Doctor[]; has_more: boolean; next_cursor?: string }>(
+        `/doctors?limit=10${cursorParam}${qParam}`
+      );
       return res.data;
     },
-    getNextPageParam: (lastPage) => {
-      return lastPage.has_more ? lastPage.next_cursor : undefined;
-    },
+    getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.next_cursor : undefined),
   });
+
+  const allDoctors = doctorsData?.pages.flatMap((page) => page.doctors) ?? [];
+
+  /* ================= SPECIALISATIONS FROM DOCTORS ================= */
+
+  const specialisations = useMemo(() => {
+    return Array.from(new Set(allDoctors.map((doc) => doc.specialisation)));
+  }, [allDoctors]);
+
+  const allSpecialisationChips = useMemo(() => ["All", ...specialisations], [specialisations]);
+
+  /* ================= FILTERED DOCTORS ================= */
+
+  const filteredDoctors = useMemo(() => {
+    return allDoctors.filter((doc) => {
+      const searchMatch =
+        !submittedQuery ||
+        doc.first_name.toLowerCase().includes(submittedQuery.toLowerCase());
+
+      const specialisationMatch =
+        selectedSpecialisation === "All" || doc.specialisation === selectedSpecialisation;
+
+      return searchMatch && specialisationMatch;
+    });
+  }, [allDoctors, submittedQuery, selectedSpecialisation]);
+
+  /* ================= LIKE MUTATION ================= */
 
   const toggleLikeMutation = useMutation({
     mutationFn: async (vars: { doctorId: string; nextLike: boolean }) => {
@@ -48,38 +98,26 @@ export default function ConsultationsScreen() {
       await api.delete(`/doctors/${vars.doctorId}/like`);
       return { doctorId: vars.doctorId, is_liked: false };
     },
-    onMutate: async ({ doctorId, nextLike }) => {
-      const queries = qc.getQueriesData({ queryKey: ["List of doctors"] });
-
-      queries.forEach(([key, oldData]: any) => {
-        if (!oldData) return;
-        qc.setQueryData(key, {
-          ...oldData,
-          pages: oldData.pages.map((p: any) => ({
-            ...p,
-            doctors: p.doctors.map((d: any) => (d.doctor_id === doctorId ? { ...d, is_liked: nextLike } : d)),
-          })),
-        });
-      });
-      return { queries };
-    },
-    onError: (_err, _vars, ctx: any) => {
-      if (!ctx?.queries) return;
-      ctx.queries.forEach(([key, oldData]: any) => qc.setQueryData(key, oldData));
+    onMutate: ({ doctorId, nextLike }) => {
+      doctorsData?.pages.forEach((page) =>
+        page.doctors.forEach((d) => {
+          if (d.doctor_id === doctorId) d.is_liked = nextLike;
+        })
+      );
     },
   });
 
-  const allDoctors = doctorsData?.pages.flatMap((page) => page.doctors) || [];
+  /* ================= LOAD MORE ================= */
 
   const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
   };
 
-  const onChatPress = async (doctorID: string): Promise<void> => {
+  /* ================= CHAT ================= */
+
+  const onChatPress = async (doctorID: string) => {
     try {
-      const res = await api.post<UpsertChannelResponse>("/stream/chat/channel", { doctor_id: doctorID });
+      const res = await api.post<{ channel_id: string }>("/stream/chat/channel", { doctor_id: doctorID });
       router.replace(`/main/mother/chats`);
       router.push(`/main/chat/${res.data.channel_id}`);
     } catch (err) {
@@ -87,24 +125,46 @@ export default function ConsultationsScreen() {
     }
   };
 
+  /* ================= RENDER SPECIALISATION FILTER ================= */
+
+  const renderSpecialisationChips = () => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: sizes.m, paddingLeft: sizes.m }}>
+      {allSpecialisationChips.map((spec) => {
+        const active = spec === selectedSpecialisation;
+        return (
+          <TouchableOpacity
+            key={spec}
+            onPress={() => setSelectedSpecialisation(active ? "All" : spec)}
+            style={[styles.chip, active && styles.chipActive]}
+          >
+            <Text style={[styles.chipText, active && styles.chipTextActive]}>{spec}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+
+  /* ================= HEADER ================= */
+
   const renderHeader = () => (
     <>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>CONSULTATION</Text>
         <MaterialCommunityIcons name="message-text-outline" size={sizes.xl} color={colors.primary} />
       </View>
 
-      {/* Subtitle */}
       <Text style={styles.subtitle}>Find the right specialist{"\n"}for your pregnancy journey! 🤰</Text>
 
-      {/* Specialist Section Header */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Specialist</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>See All</Text>
-        </TouchableOpacity>
+      <View style={styles.searchContainer}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={handleSubmitSearch}
+          onSearchPress={handleSubmitSearch}
+        />
       </View>
+
+      {renderSpecialisationChips()}
     </>
   );
 
@@ -117,20 +177,12 @@ export default function ConsultationsScreen() {
     );
   };
 
+  /* ================= RENDER ================= */
+
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSubmitEditing={handleSubmitSearch}
-          onSearchPress={handleSubmitSearch}
-        />
-      </View>
-
       <FlatList
-        data={allDoctors}
+        data={filteredDoctors}
         keyExtractor={(item) => item.doctor_id}
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
@@ -146,7 +198,9 @@ export default function ConsultationsScreen() {
             rating={item.avg_rating ?? null}
             ratingCount={item.ratings_count ?? 0}
             onChatPress={() => onChatPress(item.doctor_id)}
-            onFavoritePress={() => toggleLikeMutation.mutate({ doctorId: item.doctor_id, nextLike: !item.is_liked })}
+            onFavoritePress={() =>
+              toggleLikeMutation.mutate({ doctorId: item.doctor_id, nextLike: !item.is_liked })
+            }
           />
         )}
         ListEmptyComponent={
@@ -165,75 +219,36 @@ export default function ConsultationsScreen() {
   );
 }
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: sizes.m,
-    paddingTop: sizes.m,
-    paddingBottom: sizes.l,
-  },
-  headerTitle: {
-    fontSize: font.l,
-    fontWeight: "700",
-    color: colors.primary,
-    letterSpacing: 1,
-  },
-  subtitle: {
-    fontSize: font.m,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: sizes.l,
-    lineHeight: 32,
-    textAlign: "center",
-  },
-  searchContainer: {
-    marginBottom: sizes.l,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  container: { flex: 1, backgroundColor: colors.white },
+  header: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: sizes.m, paddingTop: sizes.m, paddingBottom: sizes.l },
+  headerTitle: { fontSize: font.l, fontWeight: "700", color: colors.primary, letterSpacing: 1 },
+  subtitle: { fontSize: font.m, fontWeight: "700", color: colors.text, marginBottom: sizes.l, lineHeight: 32, textAlign: "center" },
+  searchContainer: { marginBottom: sizes.l },
+  listContent: { flexGrow: 1 },
+  footerLoader: { paddingVertical: sizes.l, alignItems: "center" },
+  emptyLoader: { flex: 1, justifyContent: "center", alignItems: "center", paddingTop: sizes.xxl },
+  loadingText: { marginTop: sizes.m, fontSize: font.m, color: colors.primary },
+  emptyText: { textAlign: "center", marginTop: sizes.xl, fontSize: font.m, color: colors.tabIcon },
+
+  chip: {
+    backgroundColor: "#FFE9EC",
     paddingHorizontal: sizes.m,
-    marginBottom: sizes.m,
+    paddingVertical: sizes.s,
+    borderRadius: sizes.l,
+    marginRight: sizes.s,
   },
-  sectionTitle: {
-    fontSize: font.l,
-    fontWeight: "700",
+  chipActive: {
+    backgroundColor: colors.primary,
+  },
+  chipText: {
     color: colors.text,
+    fontWeight: "700",
+    fontSize: font.xs,
   },
-  seeAllText: {
-    fontSize: font.s,
-    color: colors.tabIcon,
-    fontWeight: "500",
-  },
-  listContent: {
-    flexGrow: 1,
-  },
-  footerLoader: {
-    paddingVertical: sizes.l,
-    alignItems: "center",
-  },
-  emptyLoader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: sizes.xxl,
-  },
-  loadingText: {
-    marginTop: sizes.m,
-    fontSize: font.m,
-    color: colors.primary,
-  },
-  emptyText: {
-    textAlign: "center",
-    marginTop: sizes.xl,
-    fontSize: font.m,
-    color: colors.tabIcon,
+  chipTextActive: {
+    color: colors.white,
   },
 });
