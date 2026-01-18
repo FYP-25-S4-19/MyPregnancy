@@ -1,34 +1,27 @@
 from argon2 import PasswordHasher
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
-from typing import Union
 
 from app.db.db_schema import (
     AccountCreationRequestStatus,
     DoctorAccountCreationRequest,
+    Merchant,
     Nutritionist,
     NutritionistAccountCreationRequest,
     PregnantWoman,
-    Nutritionist,
-    VolunteerDoctor,
     UserRole,
-    MCRNumber,
-    Merchant,
+    VolunteerDoctor,
 )
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
-    HealthProfileUpdateRequest,
-    MyProfileResponse,
-    PregnancyDetailsUpdateRequest,
-    RejectAccountCreationRequestReason,
-    UserUpdateRequest,
     DoctorUpdateRequest,
-    NutritionistUpdateRequest,
+    HealthProfileUpdateRequest,
     MerchantUpdateRequest,
+    MyProfileResponse,
+    NutritionistUpdateRequest,
+    PregnancyDetailsUpdateRequest,
     PregnantWomanUpdateRequest,
-    MyAccountResponse,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import is_valid_image
@@ -259,9 +252,9 @@ class AccountService:
         acc_creation_req.account_status = AccountCreationRequestStatus.REJECTED
         acc_creation_req.reject_reason = reject_reason
 
-# ....................
-# User profile updates
-# ....................
+    # ....................
+    # User profile updates
+    # ....................
     async def update_doctor_profile(self, doctor: VolunteerDoctor, data: DoctorUpdateRequest):
         # Check email uniqueness
         existing_user = await self.db.execute(
@@ -269,7 +262,7 @@ class AccountService:
         )
         if existing_user.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
-        
+
         # Update doctor fields
         doctor.first_name = data.first_name
         doctor.middle_name = data.middle_name

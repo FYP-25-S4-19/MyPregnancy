@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -18,9 +10,17 @@ type DraftRecipe = {
   id: number;
   name: string | null;
   description: string | null;
-  img_key: string | null;
-  updated_at: string;
+  est_calories: string | null;
+  pregnancy_benefit: string | null;
+  img_url: string | null;
+  serving_count: number | null;
+  ingredients: string | null;
+  instructions_markdown: string | null;
+  category_id: string | null;
+  category_label: string | null;
   trimester: number | null;
+  updated_at: string;
+  created_at: string;
 };
 
 const getImageUrl = (imgKey: string | null) => {
@@ -45,7 +45,6 @@ export default function NutritionistRecipeDraftsScreen() {
         setLoading(false);
       }
     };
-
     fetchDrafts();
   }, []);
 
@@ -63,20 +62,16 @@ export default function NutritionistRecipeDraftsScreen() {
         })
       }
     >
-      <Image source={{ uri: getImageUrl(item.img_key) }} style={styles.image} />
+      <Image source={{ uri: getImageUrl(item.img_url) }} style={styles.image} />
 
       <View style={styles.content}>
-        <Text style={styles.title}>
-          {item.name ?? "Untitled Recipe"}
-        </Text>
+        <Text style={styles.title}>{item.name ?? "Untitled Recipe"}</Text>
 
         <Text style={styles.description} numberOfLines={2}>
           {item.description ?? "Draft not completed yet"}
         </Text>
 
-        <Text style={styles.updatedAt}>
-          Last edited {new Date(item.updated_at).toLocaleDateString()}
-        </Text>
+        <Text style={styles.updatedAt}>Last edited {new Date(item.updated_at).toLocaleDateString()}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -90,9 +85,7 @@ export default function NutritionistRecipeDraftsScreen() {
       ) : drafts.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>No draft recipes</Text>
-          <Text style={styles.emptyText}>
-            Recipes saved as draft will appear here.
-          </Text>
+          <Text style={styles.emptyText}>Recipes saved as draft will appear here.</Text>
         </View>
       ) : (
         <FlatList

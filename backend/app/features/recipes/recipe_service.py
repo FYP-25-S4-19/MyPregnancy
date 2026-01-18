@@ -228,12 +228,14 @@ class RecipeService:
         self, nutritionist: Nutritionist, draft_data: RecipeDraftCreateRequest
     ) -> RecipeDraftResponse:
         # Validate category if provided
+        print("About to validate category")
         if draft_data.category_id is not None:
             category_stmt = select(RecipeCategory).where(RecipeCategory.id == draft_data.category_id)
-            category = (await self.db.execute(category_stmt)).scalar_one_or_none()
-            if not category:
+            existing_category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+            if not existing_category:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid recipe category")
 
+        print("Category validated, ID:", draft_data.category_id)
         new_draft = RecipeDraft(
             nutritionist_id=nutritionist.id,
             name=draft_data.name,
@@ -245,8 +247,8 @@ class RecipeService:
             instructions_markdown=draft_data.instructions_markdown,
             category_id=draft_data.category_id,
             trimester=draft_data.trimester,
-
         )
+        print("Recipe Draft:", new_draft)
         self.db.add(new_draft)
         await self.db.flush()
 

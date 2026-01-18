@@ -1,6 +1,8 @@
 from datetime import date, datetime
-from typing import Literal, Optional
-from pydantic import BaseModel, validator, EmailStr
+from typing import Literal
+
+from pydantic import BaseModel, EmailStr
+
 from app.core.custom_base_model import CustomBaseModel
 
 PregnancyStage = Literal["planning", "pregnant", "postpartum"]
@@ -48,6 +50,7 @@ class RejectAccountCreationRequestReason(CustomBaseModel):
 # User profile models
 # .................
 
+
 # Base model for all users
 class UserUpdateRequest(BaseModel):
     first_name: str
@@ -55,21 +58,26 @@ class UserUpdateRequest(BaseModel):
     last_name: str
     email: EmailStr
 
+
 # Doctor-specific update (includes MCR number)
 class DoctorUpdateRequest(UserUpdateRequest):
     mcr_no_id: int
+
 
 # Nutritionist update (just name and email)
 class NutritionistUpdateRequest(UserUpdateRequest):
     pass
 
+
 # Merchant update (includes shop name)
 class MerchantUpdateRequest(UserUpdateRequest):
     shop_name: str
 
+
 # Pregnant woman update (includes DOB)
 class PregnantWomanUpdateRequest(UserUpdateRequest):
     date_of_birth: date
+
 
 # Response model for any user
 class MyAccountResponse(CustomBaseModel):
