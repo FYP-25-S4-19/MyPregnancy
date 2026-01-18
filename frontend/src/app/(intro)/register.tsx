@@ -50,9 +50,7 @@ async function ensureFileUri(uri: string, suggestedName: string) {
   if (uri.startsWith("file://")) return { uri, name: suggestedName };
 
   const ext = suggestedName.split(".").pop() || "jpg";
-  const target = `${FileSystem.cacheDirectory}${Date.now()}-${Math.random()
-    .toString(16)
-    .slice(2)}.${ext}`;
+  const target = `${FileSystem.cacheDirectory}${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`;
 
   await FileSystem.copyAsync({ from: uri, to: target });
   return { uri: target, name: suggestedName };
@@ -123,14 +121,11 @@ export default function RegisterScreen() {
 
     // Prefer fileName/mimeType if available (newer expo)
     const guessedExt =
-      asset.fileName?.split(".").pop()?.toLowerCase() ||
-      asset.uri.split(".").pop()?.toLowerCase() ||
-      "jpg";
+      asset.fileName?.split(".").pop()?.toLowerCase() || asset.uri.split(".").pop()?.toLowerCase() || "jpg";
 
     const name = asset.fileName || `qualification.${guessedExt}`;
     const type =
-      asset.mimeType ||
-      (guessedExt === "png" ? "image/png" : guessedExt === "heic" ? "image/heic" : "image/jpeg");
+      asset.mimeType || (guessedExt === "png" ? "image/png" : guessedExt === "heic" ? "image/heic" : "image/jpeg");
 
     // convert to file:// if needed
     const fixed = await ensureFileUri(asset.uri, name);
@@ -140,10 +135,11 @@ export default function RegisterScreen() {
 
   async function isMcrValid(mcr: string): Promise<boolean> {
     try {
-      const res = await api.get("/avail-mcr");
-      const list: string[] = Array.isArray(res.data) ? res.data : [];
-      const normalized = normalizeMcr(mcr);
-      return list.map((x) => normalizeMcr(String(x))).includes(normalized);
+      await api.get(`/mcr-valid-and-unused/${mcr}`);
+      return true;
+      // const list: string[] = Array.isArray(res.data) ? res.data : [];
+      // const normalized = normalizeMcr(mcr);
+      // return list.map((x) => normalizeMcr(String(x))).includes(normalized);
     } catch {
       return false;
     }
@@ -193,55 +189,54 @@ export default function RegisterScreen() {
   }
 
   async function submitSpecialistRequest(type: SpecialistType) {
-  if (!qualificationImg) {
-    throw new Error("Qualification image is required.");
+    if (!qualificationImg) {
+      throw new Error("Qualification image is required.");
+    }
+
+    // Doctor must have valid MCR before submission
+    if (type === "DOCTOR") {
+      const mcr = normalizeMcr(mcrNumber);
+      if (!mcr) throw new Error("MCR number is required for doctors.");
+
+      const ok = await isMcrValid(mcr);
+      if (!ok) throw new Error("Invalid MCR number. Please check and try again.");
+    }
+
+    const form = new FormData();
+    form.append("email", email.trim().toLowerCase());
+    form.append("password", password);
+    form.append("first_name", nameParts.first_name);
+    form.append("middle_name", "");
+    form.append("last_name", nameParts.last_name);
+
+    if (type === "DOCTOR") {
+      form.append("mcr_number", normalizeMcr(mcrNumber));
+    }
+
+    // MUST be file:// for iOS uploads. If it's ph:// or content://, it can break.
+    // If your picker returns ph://, you must convert it (see next section).
+    form.append("qualification_img", {
+      uri: qualificationImg.uri,
+      name: qualificationImg.name,
+      type: qualificationImg.type,
+    } as any);
+
+    const endpoint = type === "DOCTOR" ? "/account-requests/doctors" : "/account-requests/nutritionists";
+
+    const baseUrl = (api.defaults.baseURL || "").replace(/\/$/, "");
+    const url = `${baseUrl}${endpoint}`;
+
+    // IMPORTANT: Do NOT set Content-Type manually. fetch will set boundary correctly.
+    const res = await fetch(url, {
+      method: "POST",
+      body: form,
+    });
+
+    if (!res.ok) {
+      const text = await res.text(); // backend may return json or plain text
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
   }
-
-  // Doctor must have valid MCR before submission
-  if (type === "DOCTOR") {
-    const mcr = normalizeMcr(mcrNumber);
-    if (!mcr) throw new Error("MCR number is required for doctors.");
-
-    const ok = await isMcrValid(mcr);
-    if (!ok) throw new Error("Invalid MCR number. Please check and try again.");
-  }
-
-  const form = new FormData();
-  form.append("email", email.trim().toLowerCase());
-  form.append("password", password);
-  form.append("first_name", nameParts.first_name);
-  form.append("middle_name", "");
-  form.append("last_name", nameParts.last_name);
-
-  if (type === "DOCTOR") {
-    form.append("mcr_number", normalizeMcr(mcrNumber));
-  }
-
-  // MUST be file:// for iOS uploads. If it's ph:// or content://, it can break.
-  // If your picker returns ph://, you must convert it (see next section).
-  form.append("qualification_img", {
-    uri: qualificationImg.uri,
-    name: qualificationImg.name,
-    type: qualificationImg.type,
-  } as any);
-
-  const endpoint =
-    type === "DOCTOR" ? "/account-requests/doctors" : "/account-requests/nutritionists";
-
-  const baseUrl = (api.defaults.baseURL || "").replace(/\/$/, "");
-  const url = `${baseUrl}${endpoint}`;
-
-  // IMPORTANT: Do NOT set Content-Type manually. fetch will set boundary correctly.
-  const res = await fetch(url, {
-    method: "POST",
-    body: form,
-  });
-
-  if (!res.ok) {
-    const text = await res.text(); // backend may return json or plain text
-    throw new Error(`HTTP ${res.status}: ${text}`);
-  }
-}
 
   async function onSubmit() {
     const err = validateCommonFields();
@@ -309,17 +304,13 @@ export default function RegisterScreen() {
         {isDirectRegister && (
           <Text style={{ color: "#666", marginBottom: 18 }}>
             You are registering as:{" "}
-            <Text style={{ fontWeight: "700" }}>
-              {entryRole === "merchant" ? "Merchant" : "Mom-to-be"}
-            </Text>
+            <Text style={{ fontWeight: "700" }}>{entryRole === "merchant" ? "Merchant" : "Mom-to-be"}</Text>
           </Text>
         )}
 
         {isSpecialist && (
           <View style={{ marginBottom: 18 }}>
-            <Text style={{ fontWeight: "700", marginBottom: 8, color: MAROON }}>
-              Specialist type
-            </Text>
+            <Text style={{ fontWeight: "700", marginBottom: 8, color: MAROON }}>Specialist type</Text>
 
             <View style={{ flexDirection: "row", gap: 10 }}>
               <TouchableOpacity
@@ -374,12 +365,7 @@ export default function RegisterScreen() {
         <Input value={password} onChangeText={setPassword} placeholder="" secureTextEntry />
 
         <Label text="Confirm Password" />
-        <Input
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholder=""
-          secureTextEntry
-        />
+        <Input value={confirmPassword} onChangeText={setConfirmPassword} placeholder="" secureTextEntry />
 
         {isSpecialist && specialistType === "DOCTOR" && (
           <>

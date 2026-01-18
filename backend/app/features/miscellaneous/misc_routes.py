@@ -210,9 +210,19 @@ async def get_doctor_rating_summary(
 
 @misc_router.get("/avail-mcr", response_model=list[str])
 async def get_available_mcr_numbers(db: AsyncSession = Depends(get_db)) -> list[str]:
-    stmt = select(MCRNumber).where(MCRNumber.doctor == null)
+    stmt = select(MCRNumber).where(MCRNumber.doctor == None)
     all_mcr_obj = (await db.execute(stmt)).scalars().all()
     return [mcr_obj.value for mcr_obj in all_mcr_obj]
+
+
+@misc_router.get("/mcr-valid-and-unused/{mcr_number}", status_code=status.HTTP_204_NO_CONTENT)
+async def is_mcr_valid_and_unused(mcr_number: str, db: AsyncSession = Depends(get_db)):
+    exists_stmt = select(MCRNumber).options(selectinload(MCRNumber.doctor)).where(MCRNumber.value == mcr_number)
+    mcr_exists = (await db.execute(exists_stmt)).scalar_one_or_none()
+    if not mcr_exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MCR number not found")
+    if mcr_exists.doctor is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="MCR number is already assigned to a doctor")
 
 
 def encode_cursor(created_at: datetime, doctor_id: str) -> str:
