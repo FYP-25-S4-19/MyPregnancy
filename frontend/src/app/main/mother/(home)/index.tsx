@@ -24,9 +24,10 @@ export default function MotherHomeScreen() {
             headerText={me ? utils.formatFullname(me) : ""}
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
             onNotificationPress={() => {
-              if (me?.id) {
-                utils.registerForPushNofificationsAsync(me.id);
-              }
+              router.push(`/main/mother/(home)/notifications`);
+              // if (me?.id) {
+              //   utils.registerForPushNofificationsAsync(me.id);
+              // }
             }}
           />
           <BabySizeSection />
