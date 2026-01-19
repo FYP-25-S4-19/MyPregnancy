@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from app.core.custom_base_model import CustomBaseModel
 
@@ -32,11 +32,21 @@ class MyProfileResponse(CustomBaseModel):
 
 
 class AccountCreationRequestView(CustomBaseModel):
+    request_id: int
+
+    user_role: Literal["VOLUNTEER_DOCTOR", "NUTRITIONIST"]
+
     first_name: str
-    middle_name: str | None = None
+    middle_name: Optional[str] = None
     last_name: str
+
+    email: str
+
     qualification_img_url: str
-    user_role: str
+
+    account_status: str
+    reject_reason: Optional[str] = None
+
     submitted_at: datetime
 
 
