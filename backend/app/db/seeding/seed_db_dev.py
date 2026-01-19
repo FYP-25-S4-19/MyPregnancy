@@ -5,6 +5,7 @@ from app.core.password_hasher import get_password_hasher
 from app.db.db_config import SessionLocal
 from app.db.db_schema import (
     CommunityThread,
+    DoctorAccountCreationRequest,
     DoctorSpecialisation,
     EduArticle,
     EduArticleCategory,
@@ -12,12 +13,14 @@ from app.db.db_schema import (
     MCRNumber,
     Merchant,
     Nutritionist,
+    NutritionistAccountCreationRequest,
     PregnantWoman,
     ThreadCategory,
     ThreadComment,
     User,
     VolunteerDoctor,
 )
+from app.db.seeding.generators.account_requests_generator import AccountRequestsGenerator
 from app.db.seeding.generators.community_thread_generator import CommunityThreadGenerator
 from app.db.seeding.generators.defaults_generator import DefaultsGenerator
 from app.db.seeding.generators.edu_articles_generator import EduArticlesGenerator
@@ -76,6 +79,17 @@ if __name__ == "__main__":
         UsersGenerator.generate_admins(db_session, faker, password_hasher, "./seed_data/profiles/admins.json")
         all_users: list[User] = preg_women + doctors + nutritionists + merchants
         print("Finished seeding the database users!\n")
+
+        # ------- Generate Account Creation Requests --------
+        doctor_requests: list[DoctorAccountCreationRequest] = AccountRequestsGenerator.generate_doctor_account_requests(
+            db_session, faker, password_hasher, QUALIFICATION_FILEPATH, available_mcr_numbers, doctor_specialisations
+        )
+        nutritionist_requests: list[NutritionistAccountCreationRequest] = (
+            AccountRequestsGenerator.generate_nutritionist_account_requests(
+                db_session, faker, password_hasher, QUALIFICATION_FILEPATH
+            )
+        )
+        print("Finished seeding account creation requests!\n")
 
         # ------- Generate Community Thread --------
         all_thread_categories: list[ThreadCategory] = CommunityThreadGenerator.generate_thread_categories(db_session)

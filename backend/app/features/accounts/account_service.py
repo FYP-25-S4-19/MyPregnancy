@@ -96,10 +96,12 @@ class AccountService:
                 middle_name=req.middle_name,
                 last_name=req.last_name,
                 email=req.email,
-                qualification_img_url=req.qualification_img_key,  # or convert to URL if you do that elsewhere
+                qualification_img_url=req.qualification_img_key,
                 account_status=req.account_status.value if hasattr(req.account_status, "value") else req.account_status,
                 reject_reason=req.reject_reason,
                 submitted_at=req.submitted_at,
+                mcr_no=req.mcr_no,
+                specialisation=req.specialisation,
             )
             for req in doctor_reqs
         ]

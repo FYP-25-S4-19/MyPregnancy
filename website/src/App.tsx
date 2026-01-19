@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
 import AdminLayout from './layouts/AdminLayout'
 import ManageAccount from './pages/admin/manageAccount'
+import ViewPendingUsers from './pages/admin/ViewPendingUsers'
 import WebsiteBuilder from './pages/admin/WebsiteBuilder'
 import ArticleCategories from './pages/admin/ArticleCategories'
 import DoctorSpecialization from './pages/admin/DoctorSpecialization'
@@ -21,6 +22,7 @@ function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Navigate to="/admin/website-builder" replace />} />
         <Route path="manage-account" element={<ManageAccount />} />
+        <Route path="view-pending-users" element={<ViewPendingUsers />} />
         <Route path="website-builder" element={<WebsiteBuilder />} />
         <Route path="recipe-categories" element={<RecipeCategories />} />
         <Route path="article-categories" element={<ArticleCategories />} />

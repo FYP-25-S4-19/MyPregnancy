@@ -62,6 +62,14 @@ export const adminAPI = {
   unsuspendUser: (userId: string) => api.post(`/admin/users/${userId}/unsuspend`),
 };
 
+export const accountRequestsAPI = {
+  getAccountCreationRequests: () => api.get('/account-requests/'),
+  acceptDoctorRequest: (requestId: number) => api.patch(`/account-requests/doctors/${requestId}/accept`),
+  rejectDoctorRequest: (requestId: number, reason: string) => api.patch(`/account-requests/doctors/${requestId}/reject`, { reject_reason: reason }),
+  acceptNutritionistRequest: (requestId: number) => api.patch(`/account-requests/nutritionists/${requestId}/accept`),
+  rejectNutritionistRequest: (requestId: number, reason: string) => api.patch(`/account-requests/nutritionists/${requestId}/reject`, { reject_reason: reason }),
+};
+
 export const recipesAPI = {
   getCategories: () => api.get('/recipes/categories'),
   createCategory: (label: string) => api.post('/recipes/admin/categories', { label }),

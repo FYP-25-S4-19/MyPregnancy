@@ -48,6 +48,10 @@ class AccountCreationRequestView(CustomBaseModel):
     reject_reason: Optional[str] = None
 
     submitted_at: datetime
+    
+    # Doctor-specific fields
+    mcr_no: Optional[str] = None
+    specialisation: Optional[str] = None
 
 
 class RejectAccountCreationRequestReason(CustomBaseModel):

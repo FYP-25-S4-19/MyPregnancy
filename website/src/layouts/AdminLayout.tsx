@@ -10,12 +10,14 @@ import {
   Tags,
   UtensilsCrossed,
   Users,
+  UserCheck,
   X,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Website Builder', href: '/admin/website-builder', icon: Globe },
   { name: 'Users', href: '/admin/manage-account', icon: Users },
+  { name: 'Pending Users', href: '/admin/view-pending-users', icon: UserCheck },
   { name: 'Recipe Categories', href: '/admin/recipe-categories', icon: UtensilsCrossed },
   { name: 'Article Categories', href: '/admin/article-categories', icon: BookOpen },
   { name: 'Doctor Specialization', href: '/admin/doctor-specialization', icon: Stethoscope },
