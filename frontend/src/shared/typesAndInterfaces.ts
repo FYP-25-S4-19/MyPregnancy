@@ -170,6 +170,10 @@ export interface MeData {
   middle_name: string | null;
   last_name: string;
   role: RoleType;
+    // ---- role-specific ----
+  mcr_no_id?: number;       // Doctor
+  shop_name?: string;       // Merchant
+  date_of_birth?: string;   // Pregnant woman
 }
 
 export interface JwtData {

@@ -4,20 +4,71 @@ import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
 import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
-import utils from "@/src/shared/utils";
+import api from "@/src/shared/api";
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DoctorProfileScreen() {
   const me = useAuthStore((state) => state.me);
+  const setMe = useAuthStore((state) => state.setMe);
   const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
-  const [fullName, setFullName] = useState(me ? utils.formatFullname(me) : "Olivia Wilson");
-  const [email, setEmail] = useState(me?.email || "olivia.wilson@email.com");
-  const [mcrNumber, setMcrNumber] = useState("?????");
+  // -------------------------
+  // Form state
+  // -------------------------
+  const [firstName, setFirstName] = useState(me?.first_name || "");
+  const [middleName, setMiddleName] = useState(me?.middle_name || "");
+  const [lastName, setLastName] = useState(me?.last_name || "");
+  const [email, setEmail] = useState(me?.email || "");
+  const [mcrNumber, setMcrNumber] = useState(
+    me?.mcr_no_id ? String(me.mcr_no_id) : ""
+  );
+  const [isSaving, setIsSaving] = useState(false);
+
   const memberSince = "2025";
+
+  const fullName = useMemo(
+    () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
+    [firstName, middleName, lastName]
+  );
+
+  // -------------------------
+  // Actions
+  // -------------------------
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+
+      await api.put("/accounts/doctor", {
+        first_name: firstName,
+        middle_name: middleName || null,
+        last_name: lastName,
+        email: email,
+        mcr_no_id: Number(mcrNumber),
+      });
+
+      // ✅ Sync auth store
+      setMe({
+        ...me!,
+        first_name: firstName,
+        middle_name: middleName || null,
+        last_name: lastName,
+        email: email,
+        mcr_no_id: Number(mcrNumber),
+      });
+
+      Alert.alert("Success", "Profile updated successfully");
+    } catch (err: any) {
+      Alert.alert(
+        "Update failed",
+        err?.response?.data?.detail || "Something went wrong"
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleChangePhoto = () => {
     console.log("Change photo pressed");
@@ -39,7 +90,6 @@ export default function DoctorProfileScreen() {
     console.log("Delete account pressed");
   };
 
-  // ✅ FIXED LOGOUT
   const signOut = () => {
     clearAuthState();
     router.replace("/(intro)/whoAreYouJoiningAs");
@@ -60,31 +110,55 @@ export default function DoctorProfileScreen() {
             <View style={profileStyles.avatar} />
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>Dr. {fullName}</Text>
-              <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
+              <Text style={profileStyles.profileSubtext}>
+                Member since {memberSince}
+              </Text>
 
-              <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
-                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+              <TouchableOpacity
+                style={profileStyles.secondaryButton}
+                onPress={handleChangePhoto}
+              >
+                <Text style={profileStyles.secondaryButtonText}>
+                  Change Photo
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
 
+          {/* ---------------- Form ---------------- */}
           <View style={profileStyles.formContainer}>
             <ProfileCardInput
-              inputLabel="Full Name"
-              fieldValue={fullName}
-              placeholder="Enter your full name"
-              onUpdateField={setFullName}
+              inputLabel="First name"
+              fieldValue={firstName}
+              placeholder="First name"
+              onUpdateField={setFirstName}
             />
+
+            <ProfileCardInput
+              inputLabel="Middle name"
+              fieldValue={middleName}
+              placeholder="Middle name (optional)"
+              onUpdateField={setMiddleName}
+            />
+
+            <ProfileCardInput
+              inputLabel="Last name"
+              fieldValue={lastName}
+              placeholder="Last name"
+              onUpdateField={setLastName}
+            />
+
             <ProfileCardInput
               inputLabel="Email"
               fieldValue={email}
               placeholder="your.email@example.com"
               onUpdateField={setEmail}
             />
+
             <ProfileCardInput
               inputLabel="MCR #"
               fieldValue={mcrNumber}
-              placeholder="?????"
+              placeholder="Enter MCR number"
               onUpdateField={setMcrNumber}
             />
 
@@ -92,6 +166,21 @@ export default function DoctorProfileScreen() {
               label="Telemedicine Consultation"
               handleCertificateUpload={handleCertificateUpload}
             />
+
+            {/* ✅ Save Button */}
+            <TouchableOpacity
+              style={[
+                profileStyles.secondaryButton,
+                { marginTop: sizes.m },
+                isSaving && { opacity: 0.6 },
+              ]}
+              onPress={handleSaveProfile}
+              disabled={isSaving}
+            >
+              <Text style={profileStyles.secondaryButtonText}>
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
