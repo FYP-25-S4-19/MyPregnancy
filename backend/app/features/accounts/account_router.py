@@ -19,8 +19,8 @@ from app.features.accounts.account_models import (
 )
 from app.features.accounts.account_service import AccountService
 
-account_router = APIRouter(prefix="/account-requests", tags=["Account Creation Requests"])
-
+# account_router = APIRouter(prefix="/account-requests", tags=["Account Creation Requests"])
+account_router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 def get_account_service(db: AsyncSession = Depends(get_db)) -> AccountService:
     return AccountService(db)

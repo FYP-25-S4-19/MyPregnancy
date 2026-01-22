@@ -47,6 +47,11 @@ export default function MotherProfileScreen() {
     }));
   };
 
+  const formatDateForBackend = (dateStr: string) => {
+    // Convert from "MM/DD/YYYY" to "YYYY-MM-DD"
+    const [month, day, year] = dateStr.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
   // -------------------------
   // Actions
   // -------------------------
@@ -59,7 +64,7 @@ export default function MotherProfileScreen() {
         middle_name: middleName || null,
         last_name: lastName,
         email: email,
-        date_of_birth: dateOfBirth,
+        date_of_birth: formatDateForBackend(dateOfBirth),
       });
 
       // ✅ Sync auth store
