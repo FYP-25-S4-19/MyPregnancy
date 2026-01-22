@@ -42,6 +42,7 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./secrets:/app/secrets:ro
     depends_on:
       - db
       - localstack
@@ -57,6 +58,8 @@ services:
       # As such, the simplest way was to just hardcode it in this specific instance,
       # to the name of the 'postgres' service above
       ASYNC_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
+      GOOGLE_APPLICATION_CREDENTIALS: /app/secrets/gcp-sa.json
+      VISION_ENABLED: ${VISION_ENABLED:-true}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:

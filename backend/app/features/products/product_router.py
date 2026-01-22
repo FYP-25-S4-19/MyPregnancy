@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
 
 from app.core.security import require_role
 from app.core.users_manager import optional_current_active_user
@@ -14,9 +15,12 @@ from app.features.products.product_models import (
     ProductPreviewResponse,
     ProductPreviewsPaginatedResponse,
 )
+from app.features.products.product_scan import VisionProductScanner
 from app.features.products.product_service import ProductService
 
 product_router = APIRouter(prefix="/products", tags=["Products"])
+
+_vision_scanner = VisionProductScanner()
 
 
 def get_product_service(db: AsyncSession = Depends(get_db)) -> ProductService:
@@ -54,6 +58,33 @@ async def add_new_product(
     except:
         await db.rollback()
         raise
+
+
+@product_router.post("/scan")
+async def scan_product_from_image(
+    img_file: UploadFile = File(...),
+    merchant: Merchant = Depends(require_role(Merchant)),
+):
+    # Merchant is required (same as add_new_product)
+    _ = merchant
+
+    if not img_file.content_type or not img_file.content_type.startswith("image/"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please upload an image file")
+
+    image_bytes = await img_file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty file")
+
+    try:
+        result = await run_in_threadpool(_vision_scanner.scan, image_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Vision scan failed: {e}")
+
+    return {
+        "candidates": result.candidates,
+        "raw_text": result.raw_text,
+        "labels": result.labels,
+    }
 
 
 @product_router.get("/previews", response_model=ProductPreviewsPaginatedResponse)
