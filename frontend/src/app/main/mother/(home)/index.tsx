@@ -10,6 +10,7 @@ import { colors, sizes } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
+import { ProductsSection } from "@/src/components/sections/ProductsSection";
 
 export default function MotherHomeScreen() {
   const me = useAuthStore((state) => state.me);
@@ -34,6 +35,15 @@ export default function MotherHomeScreen() {
           />
 
           <ConsultationSection onFindDoctorPressed={() => router.push("/main/mother/consultation")} />
+          <View style={{ height: sizes.l }} />
+
+          <ProductsSection
+            title="Shop"
+            showAllCategoryOption
+            onProductCardPress={(productId) =>
+              router.push({ pathname: "/main/mother/(home)/shop/[id]", params: { id: String(productId) } } as any)
+            }
+          />
           <View style={{ height: sizes.xl }} />
         </ScrollView>
       </SafeAreaView>
