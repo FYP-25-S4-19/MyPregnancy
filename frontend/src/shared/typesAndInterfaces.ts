@@ -158,6 +158,35 @@ export interface ArticlePreviewData {
   id: number;
   title: string;
 }
+//====================================================
+//==================== NOTIFICATIONS =======================
+//====================================================
+export type NotificationType =
+  | "THREAD_LIKE"
+  | "THREAD_COMMENT"
+  | "COMMENT_LIKE"
+  | "COMMENT_REPLY"
+  | "NEW_ARTICLE"
+  | "APPOINTMENT_REMINDER"
+  | "APPOINTMENT_REQUEST"
+  | "PRIVATE_MESSAGE";
+
+export interface AppNotificationData {
+  id: number;
+  recipient_id: string;
+  content: string;
+  sent_at: string;
+  is_seen: boolean;
+  type: NotificationType;
+  data: {
+    thread_id?: number;
+    [key: string]: any;
+  };
+}
+
+export interface AppNotificationListResponse {
+  notifications: AppNotificationData[];
+}
 //=====================================================
 //================== AUTHENTICATION ===================
 //=====================================================
