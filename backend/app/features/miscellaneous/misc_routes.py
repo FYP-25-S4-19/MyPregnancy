@@ -34,7 +34,6 @@ from app.features.miscellaneous.misc_models import (
     UpdateDoctorSpecializationRequest,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
-from app.shared.utils import get_s3_bucket_prefix
 
 misc_router = APIRouter(tags=["Miscellaneous"])
 
@@ -320,7 +319,7 @@ async def list_of_doctors(
     for doctor in doctors_to_return:
         avg_rating, cnt = rating_map.get(doctor.id, (None, 0))
         presigned_url: str | None = (
-            S3StorageInterface.get_presigned_url(doctor.profile_img_key, settings.DOCTOR_CARD_PRESIGNED_URL_EXP_SECONDS)
+            S3StorageInterface.get_presigned_url(doctor.profile_img_key, settings.PRESIGNED_URL_EXP_SECONDS)
             if doctor.profile_img_key
             else None
         )

@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     VISION_ENABLED: bool = False
     GOOGLE_APPLICATION_CREDENTIALS: str | None = None
 
-    DOCTOR_CARD_PRESIGNED_URL_EXP_SECONDS: int
+    PRESIGNED_URL_EXP_SECONDS: int
 
     DOCS_USERNAME: str | None = None
     DOCS_PASSWORD: str | None = None
