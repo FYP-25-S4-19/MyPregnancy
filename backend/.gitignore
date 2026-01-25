@@ -157,6 +157,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Local secrets (do not commit credentials)
+secrets/
+
 # Spyder project settings
 .spyderproject
 .spyproject

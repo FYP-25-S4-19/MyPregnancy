@@ -42,6 +42,7 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./secrets:/app/secrets:ro
     depends_on:
       - db
       - localstack
@@ -59,6 +60,8 @@ services:
       ASYNC_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
       AWS_ENDPOINT_URL: http://localstack:4566
       LOCALSTACK_ENDPOINT_URL: http://localstack:4566
+      GOOGLE_APPLICATION_CREDENTIALS: /app/secrets/gcp-sa.json
+      VISION_ENABLED: ${VISION_ENABLED:-true}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:

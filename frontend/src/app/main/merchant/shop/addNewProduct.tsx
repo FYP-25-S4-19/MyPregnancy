@@ -21,6 +21,18 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { router } from "expo-router";
+import api from "@/src/shared/api";
+
+type ScanResponse = {
+  candidates?: {
+    name?: string | null;
+    price?: string | null;
+    currency?: string | null;
+    description?: string | null;
+  };
+  raw_text?: string;
+  labels?: string[];
+};
 
 export default function AddProductScreen() {
   const [productName, setProductName] = useState("");
@@ -29,26 +41,103 @@ export default function AddProductScreen() {
   const [description, setDescription] = useState("");
   const [isFocus, setIsFocus] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
 
   const { data: productCategories } = useProductCategories();
   const { mutate: addNewProduct, isPending } = useAddNewProductMutation();
   const { mutate: createProductDraftMutate, isPending: isDraftPending } = useCreateProductDraftMutation();
 
-  const pickImage = async () => {
+  const scanProductFromImage = async (uri: string) => {
+    setScanning(true);
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
+      const filename = uri.split("/").pop() || "image.jpg";
+      const match = /\.(\w+)$/.exec(filename);
+      const ext = match?.[1]?.toLowerCase();
+      const type = ext ? `image/${ext}` : "image/jpeg";
+
+      const formData = new FormData();
+      formData.append(
+        "img_file",
+        {
+          uri,
+          name: filename,
+          type,
+        } as any,
+      );
+
+      const res = await api.post<ScanResponse>("/products/scan", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (!result.canceled && result.assets[0]) {
-        setImageUri(result.assets[0].uri);
+      const candidates = res.data?.candidates;
+      if (!candidates) {
+        Alert.alert("Scan Result", "Couldn’t extract product info. You can still fill it manually.");
+        return;
       }
-    } catch {
-      Alert.alert("Error", "Failed to pick image");
+
+      if (candidates.name && !productName.trim()) setProductName(String(candidates.name));
+      if (candidates.price) setPrice(String(candidates.price));
+      if (candidates.description && !description.trim()) setDescription(String(candidates.description));
+
+      if (!candidates.name && !candidates.price && !candidates.description) {
+        Alert.alert("Scan Result", "Couldn’t extract product info. You can still fill it manually.");
+      }
+    } catch (err: any) {
+      Alert.alert("Scan Failed", err?.response?.data?.detail || err?.message || "Failed to scan the image.");
+    } finally {
+      setScanning(false);
     }
+  };
+
+  const pickImage = async () => {
+    const chooseFromLibrary = async () => {
+      try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+          const uri = result.assets[0].uri;
+          setImageUri(uri);
+          await scanProductFromImage(uri);
+        }
+      } catch {
+        Alert.alert("Error", "Failed to pick image");
+      }
+    };
+
+    const takePhoto = async () => {
+      try {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (perm.status !== "granted") {
+          Alert.alert("Permission needed", "Camera permission is required to take a photo.");
+          return;
+        }
+
+        const result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+          const uri = result.assets[0].uri;
+          setImageUri(uri);
+          await scanProductFromImage(uri);
+        }
+      } catch {
+        Alert.alert("Error", "Failed to take photo");
+      }
+    };
+
+    Alert.alert("Upload Photo", "Choose a method", [
+      { text: "Camera", onPress: takePhoto },
+      { text: "Library", onPress: chooseFromLibrary },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   const validateForm = (requireImage: boolean = true): boolean => {
@@ -220,7 +309,7 @@ export default function AddProductScreen() {
           {/* Photo Upload */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Photo:</Text>
-            <TouchableOpacity style={styles.uploadContainer} onPress={pickImage}>
+            <TouchableOpacity style={styles.uploadContainer} onPress={pickImage} disabled={isPending || scanning}>
               {imageUri ? (
                 <Image source={{ uri: imageUri }} style={styles.previewImage} />
               ) : (
@@ -229,6 +318,13 @@ export default function AddProductScreen() {
                   <Text style={styles.uploadText}>Choose Files to Upload</Text>
                 </>
               )}
+
+              {scanning ? (
+                <View style={{ position: "absolute", bottom: 10, flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <ActivityIndicator size="small" color={colors.text} />
+                  <Text style={{ color: colors.text, fontWeight: "600" }}>Scanning…</Text>
+                </View>
+              ) : null}
             </TouchableOpacity>
           </View>
 
@@ -248,7 +344,7 @@ export default function AddProductScreen() {
             <TouchableOpacity
               onPress={handleAddNewProduct}
               style={[styles.button, styles.addButton]}
-              disabled={isPending}
+              disabled={isPending || scanning}
             >
               {isPending ? (
                 <ActivityIndicator size="small" color={colors.white} />
