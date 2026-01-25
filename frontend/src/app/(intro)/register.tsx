@@ -221,7 +221,7 @@ export default function RegisterScreen() {
       type: qualificationImg.type,
     } as any);
 
-    const endpoint = type === "DOCTOR" ? "/account-requests/doctors" : "/account-requests/nutritionists";
+    const endpoint = type === "DOCTOR" ? "/accounts/doctors" : "/accounts/nutritionists";
 
     const baseUrl = (api.defaults.baseURL || "").replace(/\/$/, "");
     const url = `${baseUrl}${endpoint}`;
