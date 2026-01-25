@@ -44,18 +44,27 @@ class AccountRequestsGenerator:
             raise ValueError(f"No qualification images found in {qualifications_img_folder}")
 
         all_requests: list[DoctorAccountCreationRequest] = []
+        used_emails = set()
         
         for i in range(count):
-            # Generate fake names
+            # Generate unique fake names and emails
             first_name = faker.first_name()
             last_name = faker.last_name()
             middle_name = faker.first_name() if random.random() > 0.5 else None
             
-            # Create email from name
+            # Create unique email from name + counter to avoid duplicates
             email_name = f"{first_name.lower()}.{last_name.lower()}"
             if middle_name:
                 email_name = f"{first_name.lower()}.{middle_name[0].lower()}.{last_name.lower()}"
-            email = f"{email_name}@doctor.com"
+            
+            # Ensure email is unique by adding counter if needed
+            base_email = f"{email_name}@doctor.com"
+            email = base_email
+            counter = 1
+            while email in used_emails:
+                email = f"{email_name}.{counter}@doctor.com"
+                counter += 1
+            used_emails.add(email)
             
             # Get random MCR number
             mcr_number = random.choice(mcr_pool)
@@ -128,18 +137,27 @@ class AccountRequestsGenerator:
             raise ValueError(f"No qualification images found in {qualifications_img_folder}")
 
         all_requests: list[NutritionistAccountCreationRequest] = []
+        used_emails = set()
         
         for i in range(count):
-            # Generate fake names
+            # Generate unique fake names and emails
             first_name = faker.first_name()
             last_name = faker.last_name()
             middle_name = faker.first_name() if random.random() > 0.5 else None
             
-            # Create email from name
+            # Create unique email from name + counter to avoid duplicates
             email_name = f"{first_name.lower()}.{last_name.lower()}"
             if middle_name:
                 email_name = f"{first_name.lower()}.{middle_name[0].lower()}.{last_name.lower()}"
-            email = f"{email_name}@nutritionist.com"
+            
+            # Ensure email is unique by adding counter if needed
+            base_email = f"{email_name}@nutritionist.com"
+            email = base_email
+            counter = 1
+            while email in used_emails:
+                email = f"{email_name}.{counter}@nutritionist.com"
+                counter += 1
+            used_emails.add(email)
             
             # Upload a random qualification image using a temporary UUID
             qual_img_file = random.choice(qualification_images)

@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { Eye, Check, X } from 'lucide-react';
 import { accountRequestsAPI } from '../../lib/api';
 
@@ -23,12 +22,39 @@ export default function ViewPendingUsers() {
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ type: 'accept' | 'reject'; id: number } | null>(null);
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'VOLUNTEER_DOCTOR' | 'NUTRITIONIST'>('ALL');
+  const [pendingRequests, setPendingRequests] = useState<PendingUser[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch pending account creation requests
-  const { data: pendingRequests = [], isLoading, refetch } = useQuery({
-    queryKey: ['pending-account-requests'],
-    queryFn: () => accountRequestsAPI.getAccountCreationRequests().then(res => res.data),
-  });
+  // Fetch data directly without React Query caching
+  const fetchRequests = async () => {
+    try {
+      setIsLoading(true);
+      const response = await accountRequestsAPI.getAccountCreationRequests();
+      // Remove duplicates by email to ensure unique records
+      const uniqueRequests = Array.from(
+        new Map(response.data.map((item: PendingUser) => [item.email, item])).values()
+      ) as PendingUser[];
+      setPendingRequests(uniqueRequests);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      alert('Failed to fetch pending requests');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch on mount and when filter changes
+  useEffect(() => {
+    fetchRequests();
+  }, [roleFilter]);
+
+  const filteredRequests = roleFilter === 'ALL' 
+    ? pendingRequests 
+    : pendingRequests.filter((user: PendingUser) => {
+        const userRole = String(user.user_role).trim();
+        return userRole === roleFilter;
+      });
 
   const getFullName = (user: PendingUser) => {
     const parts = [user.first_name, user.middle_name, user.last_name].filter(Boolean);
@@ -48,10 +74,10 @@ export default function ViewPendingUsers() {
         await accountRequestsAPI.acceptNutritionistRequest(requestId);
       }
       setSelectedUser(null);
-      refetch();
+      fetchRequests();
     } catch (error) {
       console.error('Error accepting request:', error);
-      alert('Failed to accept request');
+      alert('Unable to accept, please try again');
     } finally {
       setPendingAction(null);
     }
@@ -73,7 +99,7 @@ export default function ViewPendingUsers() {
       setShowRejectModal(false);
       setRejectReason('');
       setSelectedUser(null);
-      refetch();
+      fetchRequests();
     } catch (error) {
       console.error('Error rejecting request:', error);
       alert('Failed to reject request');
@@ -97,7 +123,31 @@ export default function ViewPendingUsers() {
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">View Pending Users</h1>
 
-        {pendingRequests.length === 0 ? (
+        {/* Filter Section */}
+        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-3">Filter by Role</label>
+          <div className="flex gap-3">
+            {[
+              { value: 'ALL', label: 'All Roles' },
+              { value: 'VOLUNTEER_DOCTOR', label: 'Doctor' },
+              { value: 'NUTRITIONIST', label: 'Nutritionist' }
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setRoleFilter(option.value as 'ALL' | 'VOLUNTEER_DOCTOR' | 'NUTRITIONIST')}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  roleFilter === option.value
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredRequests.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
             <p className="text-gray-500">No pending user requests at this time</p>
           </div>
@@ -117,7 +167,7 @@ export default function ViewPendingUsers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pendingRequests.map((user: PendingUser, index: number) => (
+                  {filteredRequests.map((user: PendingUser, index: number) => (
                     <tr key={user.request_id} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-center text-gray-700">{index + 1}</td>
                       <td className="px-6 py-4 text-sm text-center text-gray-900">{getFullName(user)}</td>
@@ -178,7 +228,7 @@ export default function ViewPendingUsers() {
               </table>
             </div>
             <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600">
-              Showing {pendingRequests.length} pending user{pendingRequests.length !== 1 ? 's' : ''}
+              Showing {filteredRequests.length} pending user{filteredRequests.length !== 1 ? 's' : ''}
             </div>
           </div>
         )}

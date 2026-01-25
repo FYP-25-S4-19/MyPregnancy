@@ -56,7 +56,7 @@ export default function WebsiteBuilder() {
       alert('Website saved successfully!');
     },
     onError: () => {
-      alert('Failed to save website');
+      alert('Unable to save, please try again');
     },
   });
 
@@ -132,7 +132,7 @@ export default function WebsiteBuilder() {
     { type: 'about', label: 'About' },
     { type: 'cta', label: 'Call to Action' },
     { type: 'faq', label: 'FAQ' },
-    { type: 'testimonials', label: 'Testimonials' },
+    { type: 'testimonials', label: 'Feedback' },
   ];
 
   const addSection = (type: any) => {
@@ -433,7 +433,7 @@ export default function WebsiteBuilder() {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
             >
               <Save size={20} />
-              {saveMutation.isPending ? 'Saving...' : 'Save'}
+              {saveMutation.isPending ? 'Confirming...' : 'Confirm'}
             </button>
           </div>
         </div>
@@ -963,15 +963,15 @@ export default function WebsiteBuilder() {
                   ) : (
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium text-gray-900">Testimonials</h4>
+                        <h4 className="font-medium text-gray-900">Feedback</h4>
                         <button
                           onClick={() => {
-                            const newItems = [...currentSection.content.items, { name: 'New User', text: 'User testimonial', rating: 5 }];
+                            const newItems = [...currentSection.content.items, { name: 'New User', text: 'User feedback', rating: 5 }];
                             updateSection({ items: newItems });
                           }}
                           className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition"
                         >
-                          + Add Testimonial
+                          + Add Feedback
                         </button>
                       </div>
                       <div className="space-y-4">

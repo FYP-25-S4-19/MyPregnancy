@@ -185,7 +185,7 @@ export default function ArticleCategories() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400"
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
-                {(createMutation.isPending || updateMutation.isPending) ? 'Saving...' : 'Save'}
+                {(createMutation.isPending || updateMutation.isPending) ? 'Confirming...' : 'Confirm'}
               </button>
             </div>
           </div>

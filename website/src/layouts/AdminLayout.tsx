@@ -29,11 +29,13 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_email');
-    navigate('/');
+    if (confirm('Are you sure you want to log out?')) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('user_id');
+      localStorage.removeItem('user_email');
+      navigate('/');
+    }
   };
 
   return (
@@ -88,10 +90,10 @@ export default function AdminLayout() {
             onClick={() => setSidebarOpen(false)}
           >
             <div className="absolute inset-0 bg-black/40" />
-            <div className="absolute top-0 left-0 h-full w-64 bg-white shadow-xl">
-              <div className="flex items-center justify-between h-16 px-4 border-b">
-                <h2 className="font-semibold">Menu</h2>
-                <button onClick={() => setSidebarOpen(false)} className="text-gray-600">
+            <div className="absolute top-0 left-0 h-full w-64 bg-gradient-to-b from-blue-600 to-blue-700 shadow-xl">
+              <div className="flex items-center justify-between h-16 px-4 border-b border-blue-500">
+                <h2 className="font-semibold text-white">Menu</h2>
+                <button onClick={() => setSidebarOpen(false)} className="text-white hover:text-blue-100">
                   <X size={20} />
                 </button>
               </div>
@@ -103,7 +105,7 @@ export default function AdminLayout() {
                     onClick={() => setSidebarOpen(false)}
                     className={({ isActive }) => `
                       flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
-                      ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}
+                      ${isActive ? 'bg-gray-300 text-gray-900' : 'bg-blue-500 text-white hover:bg-blue-400'}
                     `}
                   >
                     <item.icon size={18} />
@@ -112,7 +114,7 @@ export default function AdminLayout() {
                 ))}
                 <button
                   onClick={handleLogout}
-                  className="mt-2 flex items-center gap-3 w-full px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                  className="mt-2 flex items-center gap-3 w-full px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400"
                 >
                   <LogOut size={18} />
                   <span className="text-sm font-medium">Logout</span>
