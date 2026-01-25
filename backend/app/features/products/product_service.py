@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import Merchant, MotherLikeProduct, PregnantWoman, Product, ProductCategory, ProductDraft, User
+from app.db.db_schema import Admin, Merchant, MotherLikeProduct, PregnantWoman, Product, ProductCategory, ProductDraft, User
 from app.features.products.product_models import (
     ProductCategoryResponse,
     ProductDetailedResponse,
@@ -418,3 +418,45 @@ class ProductService:
             created_at=draft.created_at,
             updated_at=draft.updated_at,
         )
+
+    async def create_category(self, label: str) -> ProductCategoryResponse:
+        # Check if category already exists
+        query = select(ProductCategory).where(ProductCategory.label == label)
+        result = await self.db.execute(query)
+        existing = result.scalars().first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Category already exists",
+            )
+
+        new_category = ProductCategory(label=label)
+        self.db.add(new_category)
+        await self.db.flush()
+
+        return ProductCategoryResponse(id=new_category.id, label=new_category.label)
+
+    async def update_category(self, category_id: int, label: str) -> ProductCategoryResponse:
+        query = select(ProductCategory).where(ProductCategory.id == category_id)
+        result = await self.db.execute(query)
+        category = result.scalars().first()
+        if not category:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Category not found",
+            )
+
+        # Check if new label already exists (and it's not the same category being updated)
+        query = select(ProductCategory).where(ProductCategory.label == label)
+        result = await self.db.execute(query)
+        existing = result.scalars().first()
+        if existing and existing.id != category_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Category label already exists",
+            )
+
+        category.label = label
+        await self.db.flush()
+
+        return ProductCategoryResponse(id=category.id, label=category.label)

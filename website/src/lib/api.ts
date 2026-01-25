@@ -76,6 +76,12 @@ export const recipesAPI = {
   updateCategory: (id: number, label: string) => api.patch(`/recipes/admin/categories/${id}`, { label }),
 };
 
+export const productsAPI = {
+  getCategories: () => api.get("/products/categories"),
+  createCategory: (label: string) => api.post("/products/admin/categories", { label }),
+  updateCategory: (id: number, label: string) => api.patch(`/products/admin/categories/${id}`, { label }),
+};
+
 export const articleCategoriesAPI = {
   getCategories: () => api.get("/articles/categories"),
   createCategory: (label: string) => api.post("/articles/categories", { label }),

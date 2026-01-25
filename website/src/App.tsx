@@ -7,6 +7,7 @@ import WebsiteBuilder from './pages/admin/WebsiteBuilder'
 import ArticleCategories from './pages/admin/ArticleCategories'
 import DoctorSpecialization from './pages/admin/DoctorSpecialization'
 import RecipeCategories from './pages/admin/RecipeCategories'
+import ProductCategories from './pages/admin/ProductCategories'
 import Feedback from './pages/admin/Feedback'
 import PublicPage from "./pages/public/PublicPage";
 import Home from './pages/public/Home'
@@ -25,6 +26,7 @@ function App() {
         <Route path="view-pending-users" element={<ViewPendingUsers />} />
         <Route path="website-builder" element={<WebsiteBuilder />} />
         <Route path="recipe-categories" element={<RecipeCategories />} />
+        <Route path="product-categories" element={<ProductCategories />} />
         <Route path="article-categories" element={<ArticleCategories />} />
         <Route path="doctor-specialization" element={<DoctorSpecialization />} />
         <Route path="feedback" element={<Feedback />} />

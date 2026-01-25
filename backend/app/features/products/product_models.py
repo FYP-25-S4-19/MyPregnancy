@@ -61,3 +61,11 @@ class ProductDraftUpdateRequest(CustomBaseModel):
     category_id: int | None = None
     price_cents: int | None = None
     description: str | None = None
+
+
+class CreateProductCategoryRequest(CustomBaseModel):
+    label: str
+
+
+class UpdateProductCategoryRequest(CustomBaseModel):
+    label: str

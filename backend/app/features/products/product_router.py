@@ -5,8 +5,9 @@ from starlette.concurrency import run_in_threadpool
 from app.core.security import require_role
 from app.core.users_manager import optional_current_active_user
 from app.db.db_config import get_db
-from app.db.db_schema import Merchant, PregnantWoman, User
+from app.db.db_schema import Admin, Merchant, PregnantWoman, User
 from app.features.products.product_models import (
+    CreateProductCategoryRequest,
     ProductCategoryResponse,
     ProductDetailedResponse,
     ProductDraftCreateRequest,
@@ -14,6 +15,7 @@ from app.features.products.product_models import (
     ProductDraftUpdateRequest,
     ProductPreviewResponse,
     ProductPreviewsPaginatedResponse,
+    UpdateProductCategoryRequest,
 )
 from app.features.products.product_scan import VisionProductScanner
 from app.features.products.product_service import ProductService
@@ -360,3 +362,41 @@ async def publish_product_draft(
 #     except:
 #         await db.rollback()
 #         raise
+
+
+# =================================================================
+# ====================== CATEGORY ENDPOINTS =======================
+# =================================================================
+
+
+@product_router.post("/admin/categories", response_model=ProductCategoryResponse, status_code=status.HTTP_201_CREATED)
+async def create_product_category(
+    request: CreateProductCategoryRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: ProductService = Depends(get_product_service),
+) -> ProductCategoryResponse:
+    try:
+        result = await service.create_category(request.label.strip())
+        await db.commit()
+        return result
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@product_router.patch("/admin/categories/{category_id}", response_model=ProductCategoryResponse)
+async def update_product_category(
+    category_id: int,
+    request: UpdateProductCategoryRequest,
+    _: Admin = Depends(require_role(Admin)),
+    db: AsyncSession = Depends(get_db),
+    service: ProductService = Depends(get_product_service),
+) -> ProductCategoryResponse:
+    try:
+        result = await service.update_category(category_id, request.label.strip())
+        await db.commit()
+        return result
+    except Exception:
+        await db.rollback()
+        raise

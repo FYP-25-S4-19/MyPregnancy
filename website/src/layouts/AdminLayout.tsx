@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   BookOpen,
+  ChevronDown,
   Globe,
   LogOut,
   Menu,
   MessageSquare,
+  ShoppingBag,
   Stethoscope,
   Tags,
   UtensilsCrossed,
@@ -18,15 +20,21 @@ const navigation = [
   { name: 'Website Builder', href: '/admin/website-builder', icon: Globe },
   { name: 'Users', href: '/admin/manage-account', icon: Users },
   { name: 'Pending Users', href: '/admin/view-pending-users', icon: UserCheck },
-  { name: 'Recipe Categories', href: '/admin/recipe-categories', icon: UtensilsCrossed },
-  { name: 'Article Categories', href: '/admin/article-categories', icon: BookOpen },
   { name: 'Doctor Specialization', href: '/admin/doctor-specialization', icon: Stethoscope },
   { name: 'Feedback', href: '/admin/feedback', icon: MessageSquare },
 ];
 
+const categoryItems = [
+  { name: 'Recipe Categories', href: '/admin/recipe-categories', icon: UtensilsCrossed },
+  { name: 'Product Categories', href: '/admin/product-categories', icon: ShoppingBag },
+  { name: 'Article Categories', href: '/admin/article-categories', icon: BookOpen },
+];
+
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to log out?')) {
@@ -37,6 +45,8 @@ export default function AdminLayout() {
       navigate('/');
     }
   };
+
+  const isCategoryActive = categoryItems.some(item => location.pathname === item.href);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,6 +82,48 @@ export default function AdminLayout() {
               <span className="text-sm font-medium">{item.name}</span>
             </NavLink>
           ))}
+          
+          {/* Categories Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setCategoriesOpen(!categoriesOpen)}
+              className={`group flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors border ${
+                isCategoryActive ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <span className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 group-hover:bg-blue-100">
+                <Tags size={18} />
+              </span>
+              <span className="text-sm font-medium">Categories</span>
+              <ChevronDown size={16} className={`transition-transform ${categoriesOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {categoriesOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setCategoriesOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                  {categoryItems.map((item) => (
+                    <NavLink
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setCategoriesOpen(false)}
+                      className={({ isActive }) => `
+                        flex items-center gap-3 px-4 py-2 text-sm transition-colors
+                        ${isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}
+                      `}
+                    >
+                      <item.icon size={18} />
+                      <span>{item.name}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             onClick={handleLogout}
             className="ml-2 flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-100"
@@ -112,6 +164,26 @@ export default function AdminLayout() {
                     <span className="text-sm font-medium">{item.name}</span>
                   </NavLink>
                 ))}
+                
+                {/* Categories Section in Mobile */}
+                <div className="pt-2">
+                  <div className="px-3 py-2 text-xs font-semibold text-blue-200 uppercase">Categories</div>
+                  {categoryItems.map((item) => (
+                    <NavLink
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) => `
+                        flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
+                        ${isActive ? 'bg-gray-300 text-gray-900' : 'bg-blue-500 text-white hover:bg-blue-400'}
+                      `}
+                    >
+                      <item.icon size={18} />
+                      <span className="text-sm font-medium">{item.name}</span>
+                    </NavLink>
+                  ))}
+                </div>
+
                 <button
                   onClick={handleLogout}
                   className="mt-2 flex items-center gap-3 w-full px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400"
