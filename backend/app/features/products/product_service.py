@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.settings import settings
 from app.db.db_schema import Merchant, MotherLikeProduct, PregnantWoman, Product, ProductCategory, ProductDraft, User
 from app.features.products.product_models import (
     ProductCategoryResponse,
@@ -16,7 +17,7 @@ from app.features.products.product_models import (
     ProductPreviewsPaginatedResponse,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
-from app.shared.utils import format_user_fullname, get_s3_bucket_prefix
+from app.shared.utils import format_user_fullname
 
 
 class ProductService:
@@ -72,7 +73,11 @@ class ProductService:
         if user and isinstance(user, PregnantWoman):
             is_liked = any(like.mother_id == user.id for like in product.liked_by_mothers)
 
-        img_url = (get_s3_bucket_prefix() + product.img_key) if product.img_key else None
+        presigned_url: str | None = (
+            S3StorageInterface.get_presigned_url(product.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+            if product.img_key
+            else None
+        )
 
         return ProductDetailedResponse(
             id=product.id,
@@ -82,7 +87,7 @@ class ProductService:
             category=ProductCategoryResponse(id=product.category.id, label=product.category.label),
             price_cents=product.price_cents,
             description=product.description,
-            img_url=img_url,
+            img_url=presigned_url,
             is_liked=is_liked,
         )
 
@@ -146,7 +151,11 @@ class ProductService:
                 merchant_name=format_user_fullname(product.merchant),
                 category=product.category.label,
                 price_cents=product.price_cents,
-                img_url=(get_s3_bucket_prefix() + product.img_key) if product.img_key else None,
+                img_url=(
+                    S3StorageInterface.get_presigned_url(product.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+                    if product.img_key
+                    else ""
+                ),
                 is_liked=(
                     any(like.mother_id == user.id for like in product.liked_by_mothers)
                     if user and isinstance(user, PregnantWoman)
@@ -210,7 +219,11 @@ class ProductService:
                 merchant_name=format_user_fullname(product.merchant),
                 category=product.category.label,
                 price_cents=product.price_cents,
-                img_url=(get_s3_bucket_prefix() + product.img_key) if product.img_key else None,
+                img_url=(
+                    S3StorageInterface.get_presigned_url(product.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+                    if product.img_key
+                    else ""
+                ),
                 is_liked=True,
             )
             for product in products
@@ -405,7 +418,11 @@ class ProductService:
             if category:
                 category_label = category.label
 
-        img_url = (get_s3_bucket_prefix() + draft.img_key) if draft.img_key else None
+        presigned_url: str | None = (
+            S3StorageInterface.get_presigned_url(draft.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+            if draft.img_key
+            else None
+        )
 
         return ProductDraftResponse(
             id=draft.id,
@@ -414,7 +431,7 @@ class ProductService:
             category_label=category_label,
             price_cents=draft.price_cents,
             description=draft.description,
-            img_url=img_url,
+            img_url=presigned_url,
             created_at=draft.created_at,
             updated_at=draft.updated_at,
         )

@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { colors, sizes, font } from "../../shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import { Image } from "expo-image";
 
 // const specializationColors: Record<string, string> = {
 //   "Obstetrics and Gynaecology": "#FF8C00",      // Dark Orange
@@ -21,7 +21,6 @@ import React from "react";
 //   if (!specialization) return "#ccc"; // default color
 //   return specializationColors[specialization] || "#ccc"; // fallback
 // };
-
 
 interface DoctorCardProps {
   id: string;
@@ -51,7 +50,7 @@ export default function DoctorCard({
         source={{ uri: image || "" }}
         style={styles.image}
         onError={(err) => {
-          console.log("Failed to load image:", err.nativeEvent.error);
+          console.log("Failed to load image:", err.error);
         }}
       />
 
@@ -62,24 +61,15 @@ export default function DoctorCard({
 
             {specialization && (
               <View style={styles.specializationChip}>
-                <Text style={styles.specializationChipText}>
-                  {specialization}
-                </Text>
+                <Text style={styles.specializationChipText}>{specialization}</Text>
               </View>
-
             )}
-
           </View>
 
           <TouchableOpacity onPress={onFavoritePress}>
-            <Ionicons
-              name={isFavorite ? "heart" : "heart-outline"}
-              size={sizes.icon + 4}
-              color={colors.primary}
-            />
+            <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={sizes.icon + 4} color={colors.primary} />
           </TouchableOpacity>
         </View>
-
 
         <View style={styles.footerRow}>
           <TouchableOpacity style={styles.chatButton} onPress={onChatPress}>
@@ -88,11 +78,7 @@ export default function DoctorCard({
 
           <View style={styles.ratingContainer}>
             <Ionicons name="star" size={25} color={colors.warning} />
-            <Text style={styles.ratingText}>
-              {typeof rating === "number" ? rating.toFixed(1) : "-"}
-            </Text>
-
-
+            <Text style={styles.ratingText}>{typeof rating === "number" ? rating.toFixed(1) : "-"}</Text>
           </View>
         </View>
       </View>
@@ -190,5 +176,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
-
 });

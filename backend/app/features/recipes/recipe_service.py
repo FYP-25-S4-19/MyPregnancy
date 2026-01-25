@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.settings import settings
 from app.db.db_schema import (
     Nutritionist,
     Recipe,
@@ -24,7 +25,6 @@ from app.features.recipes.recipe_models import (
     RecipePreviewsPaginatedResponse,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
-from app.shared.utils import get_s3_bucket_prefix
 
 
 class RecipeService:
@@ -66,7 +66,11 @@ class RecipeService:
                 id=recipe.id,
                 name=recipe.name,
                 category=recipe.recipe_category_associations[0].category.label,
-                img_url=(get_s3_bucket_prefix() + recipe.img_key) if recipe.img_key else "",
+                img_url=(
+                    S3StorageInterface.get_presigned_url(recipe.img_key, settings.PRESIGNED_URL_EXP_SECONDS) or ""
+                    if recipe.img_key
+                    else ""
+                ),
                 description=recipe.description,
                 trimester=recipe.trimester,
                 is_saved=(any(saved.saver_id == user.id for saved in recipe.saved_recipes) if user else False),
@@ -93,7 +97,11 @@ class RecipeService:
         if not recipe:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
 
-        img_url = get_s3_bucket_prefix() + recipe.img_key if recipe.img_key else ""
+        presigned_url: str | None = (
+            S3StorageInterface.get_presigned_url(recipe.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+            if recipe.img_key
+            else ""
+        )
         is_saved = any(saved.saver_id == user.id for saved in recipe.saved_recipes) if user else False
 
         return RecipeDetailedResponse(
@@ -102,7 +110,7 @@ class RecipeService:
             description=recipe.description,
             est_calories=recipe.est_calories,
             pregnancy_benefit=recipe.pregnancy_benefit,
-            img_url=img_url,
+            img_url=presigned_url if presigned_url else "",
             serving_count=recipe.serving_count,
             ingredients=recipe.ingredients,
             instructions=recipe.instructions_markdown,
@@ -446,7 +454,11 @@ class RecipeService:
             if category:
                 category_label = category.label
 
-        img_url = (get_s3_bucket_prefix() + draft.img_key) if draft.img_key else None
+        presigned_url: str | None = (
+            S3StorageInterface.get_presigned_url(draft.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+            if draft.img_key
+            else None
+        )
 
         return RecipeDraftResponse(
             id=draft.id,
@@ -454,7 +466,7 @@ class RecipeService:
             description=draft.description,
             est_calories=draft.est_calories,
             pregnancy_benefit=draft.pregnancy_benefit,
-            img_url=img_url,
+            img_url=presigned_url,
             serving_count=draft.serving_count,
             ingredients=draft.ingredients,
             instructions_markdown=draft.instructions_markdown,

@@ -1,13 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, ScrollView } from "react-native";
 import React, { useState, useMemo } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -55,7 +47,7 @@ export default function ConsultationsScreen() {
       const cursorParam = pageParam ? `&cursor=${pageParam}` : "";
       const qParam = submittedQuery ? `&q=${encodeURIComponent(submittedQuery)}` : "";
       const res = await api.get<{ doctors: Doctor[]; has_more: boolean; next_cursor?: string }>(
-        `/doctors?limit=10${cursorParam}${qParam}`
+        `/doctors?limit=10${cursorParam}${qParam}`,
       );
       return res.data;
     },
@@ -76,12 +68,9 @@ export default function ConsultationsScreen() {
 
   const filteredDoctors = useMemo(() => {
     return allDoctors.filter((doc) => {
-      const searchMatch =
-        !submittedQuery ||
-        doc.first_name.toLowerCase().includes(submittedQuery.toLowerCase());
+      const searchMatch = !submittedQuery || doc.first_name.toLowerCase().includes(submittedQuery.toLowerCase());
 
-      const specialisationMatch =
-        selectedSpecialisation === "All" || doc.specialisation === selectedSpecialisation;
+      const specialisationMatch = selectedSpecialisation === "All" || doc.specialisation === selectedSpecialisation;
 
       return searchMatch && specialisationMatch;
     });
@@ -102,7 +91,7 @@ export default function ConsultationsScreen() {
       doctorsData?.pages.forEach((page) =>
         page.doctors.forEach((d) => {
           if (d.doctor_id === doctorId) d.is_liked = nextLike;
-        })
+        }),
       );
     },
   });
@@ -128,7 +117,11 @@ export default function ConsultationsScreen() {
   /* ================= RENDER SPECIALISATION FILTER ================= */
 
   const renderSpecialisationChips = () => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: sizes.m, paddingLeft: sizes.m }}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={{ marginBottom: sizes.m, paddingLeft: sizes.m }}
+    >
       {allSpecialisationChips.map((spec) => {
         const active = spec === selectedSpecialisation;
         return (
@@ -198,9 +191,7 @@ export default function ConsultationsScreen() {
             rating={item.avg_rating ?? null}
             ratingCount={item.ratings_count ?? 0}
             onChatPress={() => onChatPress(item.doctor_id)}
-            onFavoritePress={() =>
-              toggleLikeMutation.mutate({ doctorId: item.doctor_id, nextLike: !item.is_liked })
-            }
+            onFavoritePress={() => toggleLikeMutation.mutate({ doctorId: item.doctor_id, nextLike: !item.is_liked })}
           />
         )}
         ListEmptyComponent={
@@ -223,9 +214,23 @@ export default function ConsultationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
-  header: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: sizes.m, paddingTop: sizes.m, paddingBottom: sizes.l },
+  header: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: sizes.m,
+    paddingTop: sizes.m,
+    paddingBottom: sizes.l,
+  },
   headerTitle: { fontSize: font.l, fontWeight: "700", color: colors.primary, letterSpacing: 1 },
-  subtitle: { fontSize: font.m, fontWeight: "700", color: colors.text, marginBottom: sizes.l, lineHeight: 32, textAlign: "center" },
+  subtitle: {
+    fontSize: font.m,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: sizes.l,
+    lineHeight: 32,
+    textAlign: "center",
+  },
   searchContainer: { marginBottom: sizes.l },
   listContent: { flexGrow: 1 },
   footerLoader: { paddingVertical: sizes.l, alignItems: "center" },

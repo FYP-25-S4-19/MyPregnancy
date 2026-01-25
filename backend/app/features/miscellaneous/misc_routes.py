@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.security import require_role
+from app.core.settings import settings
 from app.db.db_config import get_db
 from app.db.db_schema import (
     Admin,
@@ -32,7 +33,7 @@ from app.features.miscellaneous.misc_models import (
     DoctorSpecializationModel,
     UpdateDoctorSpecializationRequest,
 )
-from app.shared.utils import get_s3_bucket_prefix
+from app.shared.s3_storage_interface import S3StorageInterface
 
 misc_router = APIRouter(tags=["Miscellaneous"])
 
@@ -314,14 +315,19 @@ async def list_of_doctors(
         for doctor_id, avg_rating, cnt in rows:
             rating_map[doctor_id] = (round(float(avg_rating), 1) if avg_rating is not None else None, int(cnt or 0))
 
-    doctor_previews = []
+    doctor_previews: list[DoctorPreviewData] = []
     for doctor in doctors_to_return:
         avg_rating, cnt = rating_map.get(doctor.id, (None, 0))
+        presigned_url: str | None = (
+            S3StorageInterface.get_presigned_url(doctor.profile_img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+            if doctor.profile_img_key
+            else None
+        )
 
         doctor_previews.append(
             DoctorPreviewData(
                 doctor_id=doctor.id,
-                profile_img_url=get_s3_bucket_prefix() + doctor.profile_img_key if doctor.profile_img_key else None,
+                profile_img_url=presigned_url,
                 first_name=doctor.first_name,
                 specialisation=doctor.specialisation.specialisation,
                 is_liked=doctor.id in liked_ids,
