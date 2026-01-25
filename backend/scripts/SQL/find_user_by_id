@@ -1,0 +1,2 @@
+SELECT * FROM public.users
+WHERE id = '4e4de60e-01eb-44c4-9312-271d37cc096c'

@@ -14,12 +14,11 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
   const { heartRateData, isLoading: hrLoading, error: hrError, fetchHeartRate, runDiagnostics } = useHeartRate();
 
   // Get the latest heart rate reading
-  const latestHeartRate = heartRateData.length > 0 
-    ? heartRateData[heartRateData.length - 1]?.samples?.[0]?.beatsPerMinute 
-    : null;
+  const latestHeartRate =
+    heartRateData.length > 0 ? heartRateData[heartRateData.length - 1]?.samples?.[0]?.beatsPerMinute : null;
 
   // Debug logging
-  console.log('Heart Rate Debug:', {
+  console.log("Heart Rate Debug:", {
     recordCount: heartRateData.length,
     isLoading: hrLoading,
     error: hrError,
@@ -53,7 +52,6 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
     );
   }
 
-  
   if (isLoading || isFetching) {
     return (
       <View style={styles.card}>
@@ -74,57 +72,9 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
     <View style={styles.card}>
       <View style={styles.header}>
         <View>
-          <TouchableOpacity style={{
-            height: 100,
-            width: 300,
-            backgroundColor: colors.secondary,
-            borderRadius: sizes.borderRadius,
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center"
-          }} onPress={() => {
-            console.log("Latest HR:", heartRateData);
-            console.log("🔍 Running Health Connect diagnostics...");
-            runDiagnostics();
-          }}>
-            <Text style={{ color: colors.text, fontWeight: "600", fontSize: font.m }}>
-              Run Diagnostics
-            </Text>
-          </TouchableOpacity>
           <Text style={styles.title}>My Journal</Text>
           <Text style={styles.subtitle}>Tap to write your daily journal!</Text>
-          {hrError && (
-            <Text style={{ color: 'red', fontSize: font.xs, marginTop: sizes.xs }}>
-              HR Error: {hrError}
-            </Text>
-          )}
-          {heartRateData.length === 0 && !hrLoading && (
-            <View style={{ marginTop: sizes.xs, padding: sizes.s, backgroundColor: '#fff3cd', borderRadius: sizes.xs }}>
-              <Text style={{ color: '#856404', fontSize: font.xs, fontWeight: '600' }}>
-                ⚠️ No Heart Rate Data
-              </Text>
-              <Text style={{ color: '#856404', fontSize: font.xs, marginTop: 4 }}>
-                Check Samsung Health app:
-              </Text>
-              <Text style={{ color: '#856404', fontSize: font.xs }}>
-                • Does it show heart rate measurements?
-              </Text>
-              <Text style={{ color: '#856404', fontSize: font.xs }}>
-                • Is your watch actively syncing?
-              </Text>
-              <Text style={{ color: '#856404', fontSize: font.xs }}>
-                • Try manually syncing watch now
-              </Text>
-              <Text style={{ color: '#856404', fontSize: font.xs, marginTop: 4, fontStyle: 'italic' }}>
-                Tap Run Diagnostics to check if ANY data exists in Health Connect
-              </Text>
-            </View>
-          )}
-          {heartRateData.length > 0 && (
-            <Text style={{ color: 'green', fontSize: font.xs, marginTop: sizes.xs }}>
-              ✓ Found {heartRateData.length} heart rate records
-            </Text>
-          )}
+          {hrError && <Text style={{ color: "red", fontSize: font.xs, marginTop: sizes.xs }}>HR Error: {hrError}</Text>}
         </View>
         {onEdit && (
           <TouchableOpacity onPress={onEdit}>
@@ -141,13 +91,13 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
           unit=""
         />
         <MetricRow label="Sugar Level" value={data.sugar_level?.toString() || ""} unit="mmol/L" />
-        <MetricRow 
-          label="Heart Rate" 
+        <MetricRow
+          label="Heart Rate"
           value={
             latestHeartRate !== null && latestHeartRate !== undefined
               ? latestHeartRate.toString()
               : data.heart_rate?.toString() || ""
-          } 
+          }
           unit="bpm"
         />
         <MetricRow label="Weight" value={data.weight?.toString() || ""} unit="kg" />

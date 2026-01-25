@@ -79,17 +79,21 @@ async def submit_doctor_account_creation_request(
     first_name: str = Form(...),
     middle_name: str | None = Form(None),
     last_name: str = Form(...),
+    mcr_no: str = Form(...),
+    specialisation: str = Form(...),
     qualification_img: UploadFile = File(),
     service: AccountService = Depends(get_account_service),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     try:
-        await service.submit_account_creation_request(
+        await service.submit_doctor_account_creation_request(
             email,
             password,
             first_name,
             middle_name,
             last_name,
+            mcr_no,
+            specialisation,
             UserRole.VOLUNTEER_DOCTOR.value,
             qualification_img,
         )
@@ -111,7 +115,7 @@ async def submit_nutritionist_account_creation_request(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     try:
-        await service.submit_account_creation_request(
+        await service.submit_nutritionist_account_creation_request(
             email,
             password,
             first_name,
