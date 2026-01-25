@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     STREAM_API_KEY: str | None = None
     STREAM_API_SECRET: str | None = None
 
+    # Google Cloud Vision (optional)
+    VISION_ENABLED: bool = False
+    GOOGLE_APPLICATION_CREDENTIALS: str | None = None
+
     DOCS_USERNAME: str | None = None
     DOCS_PASSWORD: str | None = None
 

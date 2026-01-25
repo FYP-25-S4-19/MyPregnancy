@@ -8,7 +8,7 @@ import useAuthStore from "@/src/shared/authStore";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
 
-export default function MotherHomeScreen() {
+export default function NutritionistHomeScreen() {
   const me = useAuthStore((state) => state.me);
   const fullname = me ? utils.formatFullname(me) : "";
 
@@ -19,6 +19,9 @@ export default function MotherHomeScreen() {
           <HomePageHeader
             headerText={fullname}
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
+            onNotificationPress={() => {
+              router.push(`/main/nutritionist/(home)/notifications`);
+            }}
           />
 
           <ArticleSection onViewAll={() => router.push("/main/nutritionist/(home)/articles")} />

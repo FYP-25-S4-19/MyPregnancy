@@ -5,6 +5,12 @@ import React from "react";
 
 const IMAGE_WIDTH = 110;
 const IMAGE_HEIGHT = 120;
+const trimesterColors: Record<number, string> = {
+  1: "#A8DADC", // T1 – calm blue
+  2: "#FFE066", // T2 – warm yellow
+  3: "#FF8E8E", // T3 – soft pink
+};
+
 
 interface RecipeCardProps {
   id: number;
@@ -12,6 +18,7 @@ interface RecipeCardProps {
   description: string;
   imgUrl: string | null;
   isSaved?: boolean;
+  trimester: number;
   onViewPress?: () => void;
   onSavePress?: () => void;
 }
@@ -21,6 +28,7 @@ export default function RecipeCard({
   description,
   imgUrl,
   isSaved = false,
+  trimester,
   onViewPress,
   onSavePress,
 }: RecipeCardProps) {
@@ -33,6 +41,18 @@ export default function RecipeCard({
         ) : (
           <View style={[styles.image, styles.placeholderImage]} />
         )}
+
+        {/* ✅ Trimester Badge */}
+
+        <View
+          style={[
+            styles.trimesterBadge,
+            { backgroundColor: trimesterColors[trimester] ?? colors.secondary },
+          ]}
+        >
+          <Text style={styles.trimesterText}>T{trimester}</Text>
+        </View>
+        
       </View>
 
       {/* Right Side: Content */}
@@ -111,4 +131,21 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     paddingBottom: sizes.s,
   },
+
+  trimesterBadge: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    backgroundColor: colors.secondary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+
+  trimesterText: {
+    color: colors.black,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+
 });

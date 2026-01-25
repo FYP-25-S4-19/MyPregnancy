@@ -148,6 +148,7 @@ class RecipeService:
             ingredients=ingredients,
             instructions_markdown=instructions,
             trimester=trimester,
+            category_id=category_id,
         )
         self.db.add(new_recipe)
         await self.db.flush()
@@ -227,12 +228,14 @@ class RecipeService:
         self, nutritionist: Nutritionist, draft_data: RecipeDraftCreateRequest
     ) -> RecipeDraftResponse:
         # Validate category if provided
+        print("About to validate category")
         if draft_data.category_id is not None:
             category_stmt = select(RecipeCategory).where(RecipeCategory.id == draft_data.category_id)
-            category = (await self.db.execute(category_stmt)).scalar_one_or_none()
-            if not category:
+            existing_category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+            if not existing_category:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid recipe category")
 
+        print("Category validated, ID:", draft_data.category_id)
         new_draft = RecipeDraft(
             nutritionist_id=nutritionist.id,
             name=draft_data.name,
@@ -243,7 +246,9 @@ class RecipeService:
             ingredients=draft_data.ingredients,
             instructions_markdown=draft_data.instructions_markdown,
             category_id=draft_data.category_id,
+            trimester=draft_data.trimester,
         )
+        print("Recipe Draft:", new_draft)
         self.db.add(new_draft)
         await self.db.flush()
 
@@ -313,6 +318,8 @@ class RecipeService:
             draft.instructions_markdown = draft_data.instructions_markdown
         if draft_data.category_id is not None:
             draft.category_id = draft_data.category_id
+        if draft_data.trimester is not None:
+            draft.trimester = draft_data.trimester
 
         await self.db.flush()
         return await self._build_draft_response(draft)
@@ -386,6 +393,8 @@ class RecipeService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Recipe image is required")
         if draft.category_id is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Recipe category is required")
+        if draft.trimester is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trimester is required")
 
         # Get the category
         category_stmt = select(RecipeCategory).where(RecipeCategory.id == draft.category_id)
@@ -403,6 +412,7 @@ class RecipeService:
             serving_count=draft.serving_count,
             ingredients=draft.ingredients,
             instructions_markdown=draft.instructions_markdown,
+            trimester=draft.trimester,
         )
         self.db.add(new_recipe)
         await self.db.flush()

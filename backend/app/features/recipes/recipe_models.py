@@ -59,13 +59,37 @@ class RecipeDraftResponse(CustomBaseModel):
 class RecipeDraftCreateRequest(CustomBaseModel):
     name: str | None = None
     description: str | None = None
+    ingredients: str | None = None
+    instructions_markdown: str | None = None
     est_calories: str | None = None
     pregnancy_benefit: str | None = None
     serving_count: int | None = None
-    ingredients: str | None = None
-    instructions_markdown: str | None = None
-    category_id: int | None = None
     trimester: int | None = None
+    category_id: int | None = None
+
+
+# def RecipeDraftCreationForm(
+#     name: str | None = Form(...),
+#     description: str | None = Form(...),
+#     ingredients: str | None = Form(...),
+#     instructions_markdown: str | None = Form(...),
+#     est_calories: str | None = Form(...),
+#     pregnancy_benefit: str | None = Form(...),
+#     serving_count: int | None = Form(...),
+#     trimester: int | None = Form(...),
+#     category: str | None = Form(...),
+# ) -> RecipeDraftCreateRequest:
+#     return RecipeDraftCreateRequest(
+#         name=name,
+#         description=description,
+#         ingredients=ingredients,
+#         instructions_markdown=instructions_markdown,
+#         est_calories=est_calories,
+#         pregnancy_benefit=pregnancy_benefit,
+#         serving_count=serving_count,
+#         trimester=trimester,
+#         category=category,
+#     )
 
 
 class RecipeDraftUpdateRequest(CustomBaseModel):

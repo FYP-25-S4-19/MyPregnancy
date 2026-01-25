@@ -49,7 +49,7 @@ class UsersGenerator:
                 first_name=fullname_parts[0],
                 middle_name=fullname_parts[1] if len(fullname_parts) >= 3 else "",
                 last_name=fullname_parts[2] if len(fullname_parts) >= 3 else fullname_parts[1],
-                email=f"{full_name}@gmail.com",
+                email=f"{full_name.lower()}@gmail.com",
                 hashed_password=password_hasher.hash(full_name),
                 created_at=fake_created_at,
                 due_date=(  # 30% chance of the "due date" being null
@@ -102,7 +102,7 @@ class UsersGenerator:
                 middle_name=fullname_parts[1] if len(fullname_parts) >= 3 else "",
                 last_name=fullname_parts[2] if len(fullname_parts) >= 3 else fullname_parts[1],
                 role=UserRole.VOLUNTEER_DOCTOR,
-                email=f"{fullname}@gmail.com",
+                email=f"{fullname.lower()}@gmail.com",
                 hashed_password=password_hasher.hash(fullname),
                 mcr_no=mcr_pool.pop(),
                 specialisation=random.choice(specialisations),
@@ -163,7 +163,7 @@ class UsersGenerator:
                 middle_name=fullname_parts[1] if len(fullname_parts) >= 3 else "",
                 last_name=fullname_parts[2] if len(fullname_parts) >= 3 else fullname_parts[1],
                 role=UserRole.NUTRITIONIST,
-                email=f"{fullname}@gmail.com",
+                email=f"{fullname.lower()}@gmail.com",
                 hashed_password=password_hasher.hash(fullname),
                 created_at=faker.date_time_between(start_date="-3y", end_date="now"),
             )
@@ -214,7 +214,7 @@ class UsersGenerator:
                 last_name=fullname_parts[2] if len(fullname_parts) >= 3 else fullname_parts[1],
                 role=UserRole.MERCHANT,
                 created_at=fake_created_at,
-                email=f"{full_name}@gmail.com",
+                email=f"{full_name.lower()}@gmail.com",
                 hashed_password=password_hasher.hash(full_name),
             )
             db.add(merchant)
@@ -242,7 +242,7 @@ class UsersGenerator:
                     first_name=name_parts[0],
                     last_name=name_parts[1],
                     role=UserRole.ADMIN,
-                    email=f"{fullname_underscore_delim}@gmail.com",
+                    email=f"{fullname_underscore_delim.lower()}@gmail.com",
                     hashed_password=password_hasher.hash(fullname_underscore_delim),
                     created_at=faker.date_time_between(start_date="-3y", end_date="now"),
                 )

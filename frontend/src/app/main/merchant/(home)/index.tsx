@@ -20,6 +20,7 @@ export default function MerchantHomeScreen() {
           <HomePageHeader
             headerText={me ? utils.formatFullname(me) : "Missing name wthelly"}
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname) || "?"}
+            onNotificationPress={() => router.push("/main/merchant/(home)/notifications")}
           />
           <CommunityThreadsSection
             onViewAll={() => router.push("/main/merchant/(home)/threads")}

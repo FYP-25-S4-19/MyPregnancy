@@ -143,6 +143,7 @@ export interface RecipeData {
   img_url: string;
   description: string;
   category: string;
+  trimester: number;
   is_saved: boolean;
 }
 
@@ -158,6 +159,35 @@ export interface ArticlePreviewData {
   id: number;
   title: string;
 }
+//====================================================
+//==================== NOTIFICATIONS =======================
+//====================================================
+export type NotificationType =
+  | "THREAD_LIKE"
+  | "THREAD_COMMENT"
+  | "COMMENT_LIKE"
+  | "COMMENT_REPLY"
+  | "NEW_ARTICLE"
+  | "APPOINTMENT_REMINDER"
+  | "APPOINTMENT_REQUEST"
+  | "PRIVATE_MESSAGE";
+
+export interface AppNotificationData {
+  id: number;
+  recipient_id: string;
+  content: string;
+  sent_at: string;
+  is_seen: boolean;
+  type: NotificationType;
+  data: {
+    thread_id?: number;
+    [key: string]: any;
+  };
+}
+
+export interface AppNotificationListResponse {
+  notifications: AppNotificationData[];
+}
 //=====================================================
 //================== AUTHENTICATION ===================
 //=====================================================
@@ -169,6 +199,10 @@ export interface MeData {
   middle_name: string | null;
   last_name: string;
   role: RoleType;
+    // ---- role-specific ----
+  mcr_no_id?: number;       // Doctor
+  shop_name?: string;       // Merchant
+  date_of_birth?: string;   // Pregnant woman
 }
 
 export interface JwtData {

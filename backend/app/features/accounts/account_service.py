@@ -8,6 +8,7 @@ from app.db.db_schema import (
     DoctorAccountCreationRequest,
     DoctorSpecialisation,
     MCRNumber,
+    Merchant,
     Nutritionist,
     NutritionistAccountCreationRequest,
     PregnantWoman,
@@ -16,9 +17,13 @@ from app.db.db_schema import (
 )
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
+    DoctorUpdateRequest,
     HealthProfileUpdateRequest,
+    MerchantUpdateRequest,
     MyProfileResponse,
+    NutritionistUpdateRequest,
     PregnancyDetailsUpdateRequest,
+    PregnantWomanUpdateRequest,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import is_valid_image
@@ -367,4 +372,64 @@ class AccountService:
 
         acc_creation_req.account_status = AccountCreationRequestStatus.REJECTED
         acc_creation_req.reject_reason = reject_reason
+        await self.db.flush()
+
+    # ....................
+    # User profile updates
+    # ....................
+    async def update_doctor_profile(self, doctor: VolunteerDoctor, data: DoctorUpdateRequest):
+        # Check email uniqueness
+        existing_user = await self.db.execute(
+            select(VolunteerDoctor).where(VolunteerDoctor.email == data.email, VolunteerDoctor.id != doctor.id)
+        )
+        if existing_user.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
+
+        # Update doctor fields
+        doctor.first_name = data.first_name
+        doctor.middle_name = data.middle_name
+        doctor.last_name = data.last_name
+        doctor.email = data.email
+        doctor.mcr_no_id = data.mcr_no_id
+        await self.db.flush()
+
+    async def update_nutritionist_profile(self, nutritionist: Nutritionist, data: NutritionistUpdateRequest):
+        existing_user = await self.db.execute(
+            select(Nutritionist).where(Nutritionist.email == data.email, Nutritionist.id != nutritionist.id)
+        )
+        if existing_user.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
+
+        nutritionist.first_name = data.first_name
+        nutritionist.middle_name = data.middle_name
+        nutritionist.last_name = data.last_name
+        nutritionist.email = data.email
+        await self.db.flush()
+
+    async def update_merchant_profile(self, merchant: Merchant, data: MerchantUpdateRequest):
+        existing_user = await self.db.execute(
+            select(Merchant).where(Merchant.email == data.email, Merchant.id != merchant.id)
+        )
+        if existing_user.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
+
+        merchant.first_name = data.first_name
+        merchant.middle_name = data.middle_name
+        merchant.last_name = data.last_name
+        merchant.email = data.email
+        merchant.shop_name = data.shop_name
+        await self.db.flush()
+
+    async def update_pregnant_woman_profile(self, mother: PregnantWoman, data: PregnantWomanUpdateRequest):
+        existing_user = await self.db.execute(
+            select(PregnantWoman).where(PregnantWoman.email == data.email, PregnantWoman.id != mother.id)
+        )
+        if existing_user.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
+
+        mother.first_name = data.first_name
+        mother.middle_name = data.middle_name
+        mother.last_name = data.last_name
+        mother.email = data.email
+        mother.date_of_birth = data.date_of_birth
         await self.db.flush()

@@ -49,6 +49,7 @@ export default function DoctorHomeScreen() {
           <HomePageHeader
             headerText={displayName}
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
+            onNotificationPress={() => router.push(`/main/doctor/(home)/notifications`)}
           />
 
           <ArticleSection onViewAll={() => router.push("/main/doctor/articles")} />

@@ -44,3 +44,12 @@ async def get_db():
             yield db
         finally:
             await db.close()
+
+
+# Dedicated async session dependency for FastAPI endpoints
+async def get_async_db():
+    async with AsyncSessionLocal() as db:
+        try:
+            yield db
+        finally:
+            await db.close()

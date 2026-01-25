@@ -3,6 +3,7 @@ import useAuthStore from "../authStore";
 import { useEffect } from "react";
 import utils from "../utils";
 import { useGuestGate } from "./useGuestGate";
+import { isDevice } from "expo-device";
 
 export function useProtectedRoute() {
   const segments = useSegments();
@@ -23,6 +24,12 @@ export function useProtectedRoute() {
     const inGuestRoute = segments[1] === "guest"; // /main/guest/...
 
     const attemptedPath = "/" + segments.join("/");
+
+    if (me?.id && isDevice) {
+      console.log("Registering for push notif....");
+      utils.registerForPushNofificationsAsync(me.id);
+      console.log("Registered for push notif");
+    }
 
     // --------- GUEST / NOT LOGGED IN ----------
     if (!accessToken || utils.safeDecodeUnexpiredJWT(accessToken) === null) {

@@ -5,17 +5,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.password_hasher import get_password_hasher
 from app.core.security import require_role
 from app.db.db_config import get_db
-from app.db.db_schema import Admin, PregnantWoman, UserRole
+from app.db.db_schema import Admin, Merchant, Nutritionist, PregnantWoman, UserRole, VolunteerDoctor
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
+    DoctorUpdateRequest,
     HealthProfileUpdateRequest,
+    MerchantUpdateRequest,
     MyProfileResponse,
+    NutritionistUpdateRequest,
     PregnancyDetailsUpdateRequest,
+    PregnantWomanUpdateRequest,
     RejectAccountCreationRequestReason,
 )
 from app.features.accounts.account_service import AccountService
 
-account_router = APIRouter(prefix="/account-requests", tags=["Account Creation Requests"])
+# account_router = APIRouter(prefix="/account-requests", tags=["Account Creation Requests"])
+account_router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 
 def get_account_service(db: AsyncSession = Depends(get_db)) -> AccountService:
@@ -184,6 +189,71 @@ async def reject_nutritionist_account_creation_request(
 ):
     try:
         await service.reject_nutritionist_account_creation_request(request_id, request.reject_reason)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+# .........................
+# User profile updates
+# ..........................
+
+
+@account_router.put("/doctor", response_model=None)
+async def update_doctor(
+    payload: DoctorUpdateRequest,
+    doctor: VolunteerDoctor = Depends(require_role(VolunteerDoctor)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_doctor_profile(doctor, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@account_router.put("/nutritionist", response_model=None)
+async def update_nutritionist(
+    payload: NutritionistUpdateRequest,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_nutritionist_profile(nutritionist, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@account_router.put("/merchant", response_model=None)
+async def update_merchant(
+    payload: MerchantUpdateRequest,
+    merchant: Merchant = Depends(require_role(Merchant)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_merchant_profile(merchant, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@account_router.put("/pregnant-woman", response_model=None)
+async def update_pregnant_woman(
+    payload: PregnantWomanUpdateRequest,
+    mother: PregnantWoman = Depends(require_role(PregnantWoman)),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.update_pregnant_woman_profile(mother, payload)
         await db.commit()
     except:
         await db.rollback()

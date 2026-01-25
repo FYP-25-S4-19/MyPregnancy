@@ -3,10 +3,31 @@ import { colors, sizes, font } from "../../shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 
+// const specializationColors: Record<string, string> = {
+//   "Obstetrics and Gynaecology": "#FF8C00",      // Dark Orange
+//   "Reproductive Endocrinology": "#FF1493",      // Deep Pink
+//   "Prenatal Care": "#1E90FF",                   // Dodger Blue
+//   "Perinatal Medicine": "#20B2AA",              // Light Sea Green
+//   "General Practitioner": "#32CD32",            // Lime Green
+//   "Midwifery": "#673AB7",                       // Deep Purple
+//   "Internal Medicine": "#009688",               // Teal
+//   "Family Medicine": "#FF4500",                 // Orange Red
+//   "High-Risk Pregnancy": "#DC143C",
+//   "Maternal-Fetal Medicine": "#8B4513",
+//   // add all specializations dynamically later if needed
+// };
+
+// const getSpecializationColor = (specialization?: string) => {
+//   if (!specialization) return "#ccc"; // default color
+//   return specializationColors[specialization] || "#ccc"; // fallback
+// };
+
+
 interface DoctorCardProps {
   id: string;
   name: string;
   image: string | null;
+  specialization?: string;
   rating?: number | null;
   ratingCount?: number;
   isFavorite?: boolean;
@@ -17,6 +38,7 @@ interface DoctorCardProps {
 export default function DoctorCard({
   name,
   image,
+  specialization,
   rating,
   ratingCount,
   isFavorite = false,
@@ -35,11 +57,29 @@ export default function DoctorCard({
 
       <View style={styles.contentContainer}>
         <View style={styles.headerRow}>
-          <Text style={styles.name}>{name}</Text>
+          <View>
+            <Text style={styles.name}>{name}</Text>
+
+            {specialization && (
+              <View style={styles.specializationChip}>
+                <Text style={styles.specializationChipText}>
+                  {specialization}
+                </Text>
+              </View>
+
+            )}
+
+          </View>
+
           <TouchableOpacity onPress={onFavoritePress}>
-            <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={sizes.icon + 4} color={colors.primary} />
+            <Ionicons
+              name={isFavorite ? "heart" : "heart-outline"}
+              size={sizes.icon + 4}
+              color={colors.primary}
+            />
           </TouchableOpacity>
         </View>
+
 
         <View style={styles.footerRow}>
           <TouchableOpacity style={styles.chatButton} onPress={onChatPress}>
@@ -52,7 +92,7 @@ export default function DoctorCard({
               {typeof rating === "number" ? rating.toFixed(1) : "-"}
             </Text>
 
-          
+
           </View>
         </View>
       </View>
@@ -92,6 +132,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
+  specializationBadge: {
+    marginTop: 4,
+    alignSelf: "flex-start",
+    paddingHorizontal: sizes.s,
+    paddingVertical: sizes.xs / 2,
+    borderRadius: sizes.s * 2,
+  },
+
+  specializationText: {
+    fontSize: font.xs,
+    fontWeight: "500",
+    color: colors.black,
+  },
+
   footerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -120,4 +174,21 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
+  specializationChip: {
+    marginTop: 4,
+    alignSelf: "flex-start",
+    backgroundColor: colors.white,
+    paddingHorizontal: sizes.s,
+    paddingVertical: sizes.xs / 2,
+    borderRadius: sizes.l,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+  },
+
+  specializationChipText: {
+    fontSize: font.xs,
+    fontWeight: "600",
+    color: colors.text,
+  },
+
 });
