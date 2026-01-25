@@ -46,8 +46,8 @@ const replaceS3Localhost = (data: any, hostIp: string): any => {
   // Handle Strings (The actual fix)
   if (typeof data === "string") {
     // All the pre-signed URLs from S3 start with this as the prefix
-    if (data.includes("http://localhost:4567")) {
-      return data.replace("localhost", hostIp);
+    if (data.includes("http://localstack:4566")) {
+      return data.replace("http://localstack:4566", `http://${hostIp}:4567`);
     }
     return data;
   }
