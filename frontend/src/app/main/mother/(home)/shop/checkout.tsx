@@ -11,8 +11,12 @@ import utils from "@/src/shared/utils";
 type PaymentMethod = "CARD" | "PAYNOW" | "GPAY";
 
 export default function CheckoutScreen() {
-  const items = useCartStore((s) => Object.values(s.items));
-  const subtotalCents = useCartStore((s) => s.getSubtotalCents());
+  const itemsMap = useCartStore((s) => s.items);
+  const items = useMemo(() => Object.values(itemsMap), [itemsMap]);
+  const subtotalCents = useMemo(
+    () => items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0),
+    [items],
+  );
 
   const [address, setAddress] = useState("100 Clementi Rd, #01-01");
   const [postal, setPostal] = useState("234567");

@@ -1,4 +1,3 @@
-import { CallListener } from "@/src/components/CallListener";
 import useAuthStore from "@/src/shared/authStore";
 import { Stack } from "expo-router";
 
@@ -7,8 +6,7 @@ export default function MainLayout() {
 
   return (
     <>
-      {/* Only mount the listener if we are a logged-in user (not a guest) */}
-      {me && <CallListener />}
+      {/* CallListener is mounted inside StreamClientProvider (only when StreamVideo is ready). */}
       <Stack screenOptions={{ headerShown: false }} />
     </>
   );
