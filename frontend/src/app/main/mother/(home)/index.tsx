@@ -25,9 +25,6 @@ export default function MotherHomeScreen() {
             profilePicStrFallback={utils.firstLetterOfEveryWordCapitalized(fullname)}
             onNotificationPress={() => {
               router.push(`/main/mother/(home)/notifications`);
-              // if (me?.id) {
-              //   utils.registerForPushNofificationsAsync(me.id);
-              // }
             }}
           />
           <BabySizeSection />

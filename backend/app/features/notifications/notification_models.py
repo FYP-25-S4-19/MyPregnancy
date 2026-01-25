@@ -29,7 +29,7 @@ class AppNotificationCreateBase(CustomBaseModel):
     recipient_id: UUID
 
 
-class ThreadLikeAppNotificationCreate(AppNotificationCreateBase):
+class ThreadLikeAppNotificationCreate(CustomBaseModel):
     thread_id: int
 
 

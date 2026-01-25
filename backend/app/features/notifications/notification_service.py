@@ -8,7 +8,8 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import ExpoPushToken, Notification, NotificationType, User
+from app.db.db_schema import CommunityThread, ExpoPushToken, Notification, NotificationType, User
+from app.features.notifications.notification_helpers import get_rand_thread_like_notif
 from app.features.notifications.notification_models import (
     AppNotificationCreateBase,
     AppNotificationResponse,
@@ -28,19 +29,28 @@ class NotificationService:
         token_exists = (
             await self.db.execute(select(ExpoPushToken).where(ExpoPushToken.token == token))
         ).scalar_one_or_none()
-        if token_exists is not None:
+        if token_exists:
+            print(f"Push token {token_exists.token} already exists, no need to upsert")
             return
         stmt = insert(ExpoPushToken).values(token=token, user_id=user.id)
         await self.db.execute(stmt)
 
     async def notify_thread_like(self, req: ThreadLikeAppNotificationCreate) -> None:
-        push_token = await self._get_user_push_token(req.recipient_id)
+        thread_stmt = (
+            select(CommunityThread)
+            .options(selectinload(CommunityThread.creator))
+            .where(CommunityThread.id == req.thread_id)
+        )
+        thread = (await self.db.execute(thread_stmt)).scalar_one_or_none()
+        if thread is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thread not found")
+
+        push_token = await self._get_user_push_token(thread.creator_id)
         if push_token is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Push token not found for the recipient")
 
-        expo_notif = ExpoNotificationContent(
-            to=push_token, title="Wahooey!", body="Someone has liked a thread that you created", data={}
-        )
+        notif_data = get_rand_thread_like_notif(thread.title)
+        expo_notif = ExpoNotificationContent(to=push_token, title=notif_data.title, body=notif_data.body, data={})
 
         # If this line fails, then (by right) the next line where we insert the notifications into the
         # table should not execute - since there will be an exception thrown
@@ -50,7 +60,7 @@ class NotificationService:
         notification_data = {"thread_id": req.thread_id}
 
         insert_notif_stmt = insert(Notification).values(
-            recipient_id=req.recipient_id,
+            recipient_id=thread.creator_id,
             content=expo_notif.body,
             sent_at=datetime.now(),
             is_seen=False,

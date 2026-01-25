@@ -20,14 +20,13 @@ def get_notification_service(db: AsyncSession = Depends(get_db)) -> Notification
     return NotificationService(db)
 
 
-@notification_router.get("", response_model=AppNotificationListResponse)
+@notification_router.get("/", response_model=AppNotificationListResponse)
 async def get_notifications(
     user: User = Depends(current_active_user),
     service: NotificationService = Depends(get_notification_service),
     limit: int = 50,
     offset: int = 0,
 ) -> AppNotificationListResponse:
-    """Fetch notifications for the current user."""
     notifications = await service.get_user_notifications(user.id, limit=limit, offset=offset)
     return AppNotificationListResponse(notifications=notifications)
 
@@ -39,7 +38,6 @@ async def mark_notification_seen(
     service: NotificationService = Depends(get_notification_service),
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Mark a notification as seen."""
     try:
         await service.mark_notification_as_seen(notification_id, user.id)
         await db.commit()
