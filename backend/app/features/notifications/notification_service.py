@@ -11,7 +11,6 @@ from sqlalchemy.orm import selectinload
 from app.db.db_schema import CommunityThread, ExpoPushToken, Notification, NotificationType, User
 from app.features.notifications.notification_helpers import get_rand_thread_like_notif
 from app.features.notifications.notification_models import (
-    AppNotificationCreateBase,
     AppNotificationResponse,
     ExpoNotificationContent,
     ThreadLikeAppNotificationCreate,

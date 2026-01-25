@@ -6,7 +6,6 @@ from app.core.users_manager import current_active_user
 from app.db.db_config import get_db
 from app.db.db_schema import Admin, User
 from app.features.notifications.notification_models import (
-    AppNotificationCreateBase,
     AppNotificationListResponse,
     ExpoPushTokenInsert,
     ThreadLikeAppNotificationCreate,

@@ -152,11 +152,7 @@ export default function MotherProductDetailPage() {
             <Text style={styles.descriptionValue}>{product.description}</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.addToCartButton}
-            onPress={() => setShowAddModal(true)}
-            activeOpacity={0.9}
-          >
+          <TouchableOpacity style={styles.addToCartButton} onPress={() => setShowAddModal(true)} activeOpacity={0.9}>
             <Text style={styles.addToCartText}>Add to Cart</Text>
           </TouchableOpacity>
         </View>

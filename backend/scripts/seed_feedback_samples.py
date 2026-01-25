@@ -5,6 +5,7 @@ Usage (from backend folder):
 
 Requires the .env to have SYNC_DATABASE_URL / ASYNC_DATABASE_URL set.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,6 @@ from sqlalchemy import select
 from app.db.db_config import AsyncSessionLocal
 from app.db.db_schema import User, UserAppFeedback
 
-
 SAMPLE_FEEDBACK = [
     (21, "I love this app, it really helps me track everything easily."),
     (22, "Great experience, smooth and informative."),
@@ -27,7 +27,6 @@ SAMPLE_FEEDBACK = [
     (27, "i love this app."),
     (28, "this app help me a lot during my pregnancy time."),
     (28, "this app did not help me at all during my pregnancy time."),
-
 ]
 
 

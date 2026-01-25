@@ -21,7 +21,7 @@ def _guess_fields_from_text(text: str) -> dict[str, str | None]:
     # price patterns: 12.90 / 12,90 / RM12.90 / $12.90
     m_price = re.search(r"(?:(RM|\$)\s*)?(\d{1,6}(?:[.,]\d{2})?)", text or "")
     currency = (m_price.group(1) if m_price else None) or None
-    price = (m_price.group(2) if m_price else None)
+    price = m_price.group(2) if m_price else None
     if price:
         price = price.replace(",", ".")
 

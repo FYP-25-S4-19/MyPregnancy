@@ -1,10 +1,10 @@
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Annotated
 
 from app.db.db_config import get_async_db
 from app.db.db_schema import UserAppFeedback
@@ -33,6 +33,7 @@ class FeedbackResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 feedback_router = APIRouter(prefix="/feedback", tags=["Feedback"])
 sentiment_service = FeedbackSentimentService()
@@ -102,8 +103,10 @@ async def get_feedback_by_sentiment(
     negative: list[dict] = []
 
     for f in feedbacks:
-        compound = round(f.compound_score, 3) if f.compound_score is not None else round(
-            sentiment_service.analyze(f.content)["compound"], 3
+        compound = (
+            round(f.compound_score, 3)
+            if f.compound_score is not None
+            else round(sentiment_service.analyze(f.content)["compound"], 3)
         )
         payload = {"id": f.id, "rating": f.rating, "compound": compound, "content": f.content}
         if compound >= threshold:

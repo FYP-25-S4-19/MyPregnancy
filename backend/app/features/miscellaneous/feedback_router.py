@@ -21,7 +21,7 @@ class FeedbackCreate(BaseModel):
     content: Content
 
 
-router = APIRouter(prefix="/feedback", tags=["Feedback"])
+router = APIRouter(prefix="/feedback", tags=["Feedback YH"])
 
 
 class FeedbackResponse(BaseModel):

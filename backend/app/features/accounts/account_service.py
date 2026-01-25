@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.db_schema import (
     AccountCreationRequestStatus,
     DoctorAccountCreationRequest,
-    Merchant,
     DoctorSpecialisation,
     MCRNumber,
+    Merchant,
     Nutritionist,
     NutritionistAccountCreationRequest,
     PregnantWoman,
