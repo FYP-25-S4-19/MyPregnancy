@@ -25,7 +25,6 @@ from app.features.recipes.recipe_models import (
     RecipePreviewsPaginatedResponse,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
-from app.shared.utils import get_s3_bucket_prefix
 
 
 class RecipeService:
@@ -98,7 +97,6 @@ class RecipeService:
         if not recipe:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
 
-        # presigned_url: str | None = get_s3_bucket_prefix() + recipe.img_key if recipe.img_key else ""
         presigned_url: str | None = (
             S3StorageInterface.get_presigned_url(recipe.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
             if recipe.img_key
@@ -456,7 +454,11 @@ class RecipeService:
             if category:
                 category_label = category.label
 
-        img_url = (get_s3_bucket_prefix() + draft.img_key) if draft.img_key else None
+        presigned_url: str | None = (
+            S3StorageInterface.get_presigned_url(draft.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+            if draft.img_key
+            else None
+        )
 
         return RecipeDraftResponse(
             id=draft.id,
@@ -464,7 +466,7 @@ class RecipeService:
             description=draft.description,
             est_calories=draft.est_calories,
             pregnancy_benefit=draft.pregnancy_benefit,
-            img_url=img_url,
+            img_url=presigned_url,
             serving_count=draft.serving_count,
             ingredients=draft.ingredients,
             instructions_markdown=draft.instructions_markdown,
