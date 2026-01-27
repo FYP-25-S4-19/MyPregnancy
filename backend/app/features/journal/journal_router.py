@@ -22,7 +22,7 @@ def get_journal_service(db: AsyncSession = Depends(get_db)) -> JournalService:
 
 @journal_router.get("/metrics/template", response_model=GetJournalEntryResponse)
 async def get_metrics_template(
-    user: User = Depends(require_role(User)),
+    _: User = Depends(require_role(User)),
     service: JournalService = Depends(get_journal_service),
 ) -> GetJournalEntryResponse:
     """

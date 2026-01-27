@@ -2,7 +2,6 @@ import { useJournalPreviewData } from "@/src/shared/hooks/useJournalMetrics";
 import { useHeartRate } from "@/src/shared/hooks/useHealthConnectHeartRate";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import React from "react";
 
 interface JournalSectionProps {
   doFetchMetrics?: boolean;

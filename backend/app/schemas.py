@@ -21,6 +21,7 @@ class UserCreate(schemas.BaseUserCreate):
     middle_name: Optional[str] = None
     last_name: str
     role: UserRole
+    type: str
 
 
 class UserUpdate(schemas.BaseUserUpdate):

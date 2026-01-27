@@ -183,6 +183,7 @@ export default function RegisterScreen() {
       middle_name: "",
       last_name: nameParts.last_name,
       role,
+      type: role.toString().toLocaleLowerCase(),
     };
 
     await api.post("/auth/register", payload);
