@@ -24,7 +24,6 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.fyp_25_s4_19.mypregnancy",
-      "minSdkVersion": 26,
       "permissions": [
         "android.permission.health.READ_HEART_RATE",
         "android.permission.BLUETOOTH",
@@ -112,6 +111,12 @@
       "eas": {
         "projectId": "7bd9fdbf-fc31-479e-81be-8f83f65e7ea6"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7bd9fdbf-fc31-479e-81be-8f83f65e7ea6"
     }
   }
 }

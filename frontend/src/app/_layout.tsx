@@ -4,6 +4,7 @@ import { StreamClientProvider } from "../shared/streamClientProvider";
 import { useProtectedRoute } from "../shared/hooks/useProtectedRoute";
 import { Slot } from "expo-router";
 import "react-native-reanimated";
+import ErrorBoundary from "../components/ErrorBoundary/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -11,12 +12,14 @@ export default function RootLayout() {
   useProtectedRoute();
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <StreamClientProvider>
-          <Slot />
-        </StreamClientProvider>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <StreamClientProvider>
+            <Slot />
+          </StreamClientProvider>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
