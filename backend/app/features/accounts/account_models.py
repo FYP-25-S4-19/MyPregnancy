@@ -76,7 +76,7 @@ class MerchantUpdateRequest(UserUpdateRequest):
 
 # Pregnant woman update (includes DOB)
 class PregnantWomanUpdateRequest(UserUpdateRequest):
-    date_of_birth: date
+    date_of_birth: date | None = None
 
 
 # Response model for any user

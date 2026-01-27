@@ -7,7 +7,7 @@ export type BabySizeInfo = {
 };
 
 export type PregnancySnapshot = {
-  week: number;        // 1..40
+  week: number;        // 1..40 (or more if you want postpartum)
   totalWeeks: number;  // 40
   progressPct: number; // 0..100
   babySize: BabySizeInfo;
@@ -16,8 +16,7 @@ export type PregnancySnapshot = {
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
 /**
- * We keep this lightweight: milestone weeks + interpolation.
- * Comparisons are picked by nearest milestone (so it still feels “human” like Figma).
+ * Milestones for rough “size” mapping.
  */
 const MILESTONES: Array<{ week: number; comparison: string; lengthCm: number; weightG: number }> = [
   { week: 4, comparison: "poppy seed", lengthCm: 0.2, weightG: 0.1 },
@@ -30,7 +29,7 @@ const MILESTONES: Array<{ week: number; comparison: string; lengthCm: number; we
   { week: 18, comparison: "bell pepper", lengthCm: 14.2, weightG: 190.0 },
   { week: 20, comparison: "banana", lengthCm: 16.4, weightG: 300.0 },
   { week: 22, comparison: "papaya", lengthCm: 27.8, weightG: 430.0 },
-  { week: 24, comparison: "corn", lengthCm: 30.0, weightG: 600.0 }, // matches your stub
+  { week: 24, comparison: "corn", lengthCm: 30.0, weightG: 600.0 },
   { week: 26, comparison: "zucchini", lengthCm: 35.6, weightG: 760.0 },
   { week: 28, comparison: "eggplant", lengthCm: 37.6, weightG: 1000.0 },
   { week: 30, comparison: "cabbage", lengthCm: 39.9, weightG: 1310.0 },
@@ -48,7 +47,6 @@ function lerp(a: number, b: number, t: number) {
 function findBracket(week: number) {
   const sorted = [...MILESTONES].sort((x, y) => x.week - y.week);
 
-  // If week is outside range, clamp to endpoints
   if (week <= sorted[0].week) return { left: sorted[0], right: sorted[0] };
   if (week >= sorted[sorted.length - 1].week) return { left: sorted[sorted.length - 1], right: sorted[sorted.length - 1] };
 
@@ -75,39 +73,17 @@ function nearestComparison(week: number) {
   return best.comparison;
 }
 
-/**
- * Calculate week from due date (EDD).
- * Pregnancy is assumed 40 weeks total.
- * week = 40 - weeksUntilDue (rounded)
- */
-export function getPregnancySnapshotFromDueDate(dueDateISO: string, now: Date = new Date()): PregnancySnapshot {
-  const due = new Date(dueDateISO);
-  if (Number.isNaN(due.getTime())) {
-    // fallback safe stub
-    return {
-      week: 24,
-      totalWeeks: 40,
-      progressPct: Math.round((24 / 40) * 100),
-      babySize: { comparison: "corn", lengthCm: 30, weightG: 600 },
-    };
-  }
-
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const daysUntilDue = Math.round((due.getTime() - now.getTime()) / msPerDay);
-  const weeksUntilDue = daysUntilDue / 7;
-
-  const rawWeek = 40 - weeksUntilDue;
-  const week = clamp(Math.round(rawWeek), 1, 40);
+function snapshotFromWeek(weekInput: number): PregnancySnapshot {
+  const totalWeeks = 40;
+  const week = clamp(Math.round(weekInput), 1, totalWeeks);
 
   const { left, right } = findBracket(week);
   const t = left.week === right.week ? 0 : (week - left.week) / (right.week - left.week);
 
-  const lengthCm = Math.round(lerp(left.lengthCm, right.lengthCm, t) * 10) / 10; // 1 decimal
+  const lengthCm = Math.round(lerp(left.lengthCm, right.lengthCm, t) * 10) / 10;
   const weightG = Math.round(lerp(left.weightG, right.weightG, t));
-
   const comparison = nearestComparison(week);
 
-  const totalWeeks = 40;
   const progressPct = clamp(Math.round((week / totalWeeks) * 100), 0, 100);
 
   return {
@@ -116,4 +92,29 @@ export function getPregnancySnapshotFromDueDate(dueDateISO: string, now: Date = 
     progressPct,
     babySize: { comparison, lengthCm, weightG },
   };
+}
+
+/**
+ * Use this when you already have pregnancy_week (e.g. user sets it in profile).
+ */
+export function getPregnancySnapshotFromWeek(week: number): PregnancySnapshot {
+  return snapshotFromWeek(week);
+}
+
+/**
+ * Calculate week from due date (EDD).
+ * Pregnancy assumed 40 weeks.
+ */
+export function getPregnancySnapshotFromDueDate(dueDateISO: string, now: Date = new Date()): PregnancySnapshot {
+  const due = new Date(dueDateISO);
+  if (Number.isNaN(due.getTime())) {
+    return snapshotFromWeek(24);
+  }
+
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const daysUntilDue = Math.round((due.getTime() - now.getTime()) / msPerDay);
+  const weeksUntilDue = daysUntilDue / 7;
+
+  const rawWeek = 40 - weeksUntilDue;
+  return snapshotFromWeek(rawWeek);
 }

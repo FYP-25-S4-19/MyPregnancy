@@ -130,7 +130,7 @@ class PregnantWoman(User):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
     due_date: Mapped[date | None]  # Nullable (may not be expecting)
-    date_of_birth: Mapped[date]
+    date_of_birth: Mapped[date | None] = mapped_column(Date,)
 
     pregnancy_stage: Mapped[str | None] = mapped_column(String(20), nullable=True)
     pregnancy_week: Mapped[int | None] = mapped_column(Integer, nullable=True)

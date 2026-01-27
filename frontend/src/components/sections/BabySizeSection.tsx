@@ -1,14 +1,21 @@
-// frontend/src/components/sections/BabySizeSection.tsx
-
-import React, { useMemo } from "react";
-import { Text, View, StyleSheet } from "react-native";
+import api from "@/src/shared/api";
 import { colors, font, sizes } from "@/src/shared/designSystem";
-import useAuthStore from "@/src/shared/authStore";
 import { getPregnancySnapshotFromDueDate } from "@/src/shared/pregnancyTracker";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { StyleSheet, Text, View } from "react-native";
+
+type PregnancyStage = "planning" | "pregnant" | "postpartum";
+
+type MyProfileResponse = {
+  stage: PregnancyStage | null;
+  pregnancy_week: number | null;
+  expected_due_date: string | null; // "YYYY-MM-DD"
+  baby_date_of_birth: string | null;
+};
 
 function emojiForComparison(comparison: string) {
-  const c = comparison.toLowerCase();
-
+  const c = (comparison || "").toLowerCase();
   if (c.includes("corn")) return "🌽";
   if (c.includes("pumpkin")) return "🎃";
   if (c.includes("watermelon")) return "🍉";
@@ -26,53 +33,70 @@ function emojiForComparison(comparison: string) {
   if (c.includes("squash")) return "🎃";
   if (c.includes("papaya")) return "🥭";
   if (c.includes("cantaloupe")) return "🍈";
-
-  // default cute fallback
   return "👶";
 }
 
 export default function BabySizeSection() {
-  /**
-   * Option A: Due Date (EDD).
-   * If you already have it in `me` from backend, great.
-   * If not yet, we’ll fall back safely to Week 24 stub.
-   *
-   * If your backend uses a different field name, just add it below.
-   */
-  const me = useAuthStore((state) => state.me);
-
-  // Try common keys. Add/adjust if your backend uses another key name.
-  const dueDateISO =
-    // @ts-ignore
-    me?.due_date ??
-    // @ts-ignore
-    me?.expected_due_date ??
-    // @ts-ignore
-    me?.edd ??
-    null;
+  const { data, error } = useQuery({
+    queryKey: ["myProfile"],
+    queryFn: async () => {
+      const res = await api.get<MyProfileResponse>("/accounts/me/profile");
+      return res.data;
+    },
+    staleTime: 30_000,
+  });
 
   const snapshot = useMemo(() => {
-    if (!dueDateISO) {
-      // fallback = your current stub
+    // If not pregnant, show a “neutral” placeholder (or you can hide section instead)
+    if (data?.stage && data.stage !== "pregnant") {
       return {
-        week: 24,
+        week: 0,
         totalWeeks: 40,
-        progressPct: Math.round((24 / 40) * 100),
-        babySize: {
-          comparison: "corn",
-          lengthCm: 30,
-          weightG: 600,
-        },
+        progressPct: 0,
+        babySize: { comparison: "poppy seed", lengthCm: 0.2, weightG: 0 },
       };
     }
-    return getPregnancySnapshotFromDueDate(dueDateISO);
-  }, [dueDateISO]);
+
+    // IMPORTANT: prefer pregnancy_week (slider) if provided
+    if (typeof data?.pregnancy_week === "number") {
+      const w = Math.max(0, Math.min(40, data.pregnancy_week));
+      // Build a snapshot using due date logic only if you want lengths/weights to align with week:
+      // easiest: create a fake due date by shifting now
+      const now = new Date();
+      const due = new Date(now);
+      due.setDate(now.getDate() + (40 - w) * 7);
+      return getPregnancySnapshotFromDueDate(due.toISOString().slice(0, 10), now);
+    }
+
+    // Fallback to due date
+    const dueDateISO = data?.expected_due_date ?? null;
+    if (dueDateISO) {
+      return getPregnancySnapshotFromDueDate(dueDateISO);
+    }
+
+    // Fallback stub (if nothing exists)
+    return {
+      week: 24,
+      totalWeeks: 40,
+      progressPct: Math.round((24 / 40) * 100),
+      babySize: { comparison: "corn", lengthCm: 30, weightG: 600 },
+    };
+  }, [data?.stage, data?.pregnancy_week, data?.expected_due_date]);
 
   const emoji = emojiForComparison(snapshot.babySize.comparison);
 
   return (
     <>
-      {/* Baby Size Card */}
+      {!!error && (
+        <View style={{ marginHorizontal: sizes.m, marginBottom: sizes.s }}>
+          <Text style={{ fontSize: font.xs, color: colors.text }}>
+            Tracker couldn’t load your pregnancy profile.
+            {"\n"}
+            {String((error as any)?.response?.data?.detail || (error as any)?.message || error)}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.babySizeCard}>
         <View style={styles.babyCircle}>
           <Text style={styles.emoji}>{emoji}</Text>
@@ -81,9 +105,7 @@ export default function BabySizeSection() {
 
         <View style={styles.babySizeInfo}>
           <Text style={styles.babySizeTitle}>Your baby is now</Text>
-          <Text style={styles.babySizeSubtitle}>
-            as big as a {snapshot.babySize.comparison}.
-          </Text>
+          <Text style={styles.babySizeSubtitle}>as big as a {snapshot.babySize.comparison}.</Text>
 
           <View style={styles.measurements}>
             <Text style={styles.measurementText}>Approx:</Text>
@@ -93,7 +115,6 @@ export default function BabySizeSection() {
         </View>
       </View>
 
-      {/* Progress Bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${snapshot.progressPct}%` }]} />
@@ -103,9 +124,7 @@ export default function BabySizeSection() {
         </Text>
       </View>
 
-      <Text style={styles.progressLabel}>
-        {snapshot.progressPct}% of your pregnancy journey!
-      </Text>
+      <Text style={styles.progressLabel}>{snapshot.progressPct}% of your pregnancy journey!</Text>
     </>
   );
 }

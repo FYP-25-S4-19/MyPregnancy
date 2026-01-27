@@ -12,9 +12,50 @@ import useAuthStore from "@/src/shared/authStore";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
 
+import MenstrualCycleSection from "@/src/components/sections/MenstrualCycleSection";
+import PrePregnancyPlanningSection from "@/src/components/sections/PrePregnancyPlanningSection";
+
+import { useQuery } from "@tanstack/react-query";
+import api from "@/src/shared/api";
+
+type PregnancyStage = "planning" | "pregnant" | "postpartum";
+
+type MyProfileResponse = {
+  stage: PregnancyStage | null;
+  pregnancy_week: number | null;
+  expected_due_date: string | null;
+  baby_date_of_birth: string | null;
+};
+
+function normalizeStage(profile?: MyProfileResponse | null): PregnancyStage {
+  // Use backend stage if present
+  if (profile?.stage) return profile.stage;
+
+  // Helpful fallback:
+  // If there is an EDD, assume pregnant; else assume planning
+  if (profile?.expected_due_date) return "pregnant";
+
+  return "planning";
+}
+
 export default function MotherHomeScreen() {
   const me = useAuthStore((state) => state.me);
   const fullname = me ? utils.formatFullname(me) : "";
+
+  // Fetch pregnancy stage once (Home decides what to show)
+  const { data: profile } = useQuery({
+    queryKey: ["myProfile"],
+    queryFn: async () => {
+      const res = await api.get<MyProfileResponse>("/accounts/me/profile");
+      return res.data;
+    },
+    staleTime: 30_000,
+  });
+
+  const stage = normalizeStage(profile);
+
+  const showPregnancyTracker = stage === "pregnant";
+  const showMenstrualAndPlanning = stage === "planning" || stage === "postpartum";
 
   return (
     <View style={{ flex: 1 }}>
@@ -29,7 +70,18 @@ export default function MotherHomeScreen() {
               }
             }}
           />
-          <BabySizeSection />
+
+          {/* ====== TRACKER AREA (stage-based) ====== */}
+          {showPregnancyTracker && <BabySizeSection />}
+
+          {showMenstrualAndPlanning && (
+            <>
+              <MenstrualCycleSection onOpen={() => router.push("/main/(notab)/menstrual")} />
+              <PrePregnancyPlanningSection onOpen={() => router.push("/main/(notab)/planning")} />
+            </>
+          )}
+
+          {/* ====== REST OF HOME ====== */}
           <ShopForYouAndBaby onBackPress={() => router.push("/main/mother/shop")} />
           <JournalSection doFetchMetrics onEdit={() => router.push("/main/mother/journal")} />
           <ArticleSection onViewAll={() => router.push("/main/mother/articles")} />
@@ -55,8 +107,5 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  bellIcon: {
-    fontSize: 28,
   },
 });
