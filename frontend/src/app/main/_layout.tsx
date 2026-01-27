@@ -1,6 +1,5 @@
 import { Stack } from "expo-router";
 import useAuthStore from "@/src/shared/authStore";
-import { CallListener } from "@/src/components/CallListener";
 import { useProtectedRoute } from "@/src/shared/hooks/useProtectedRoute";
 import GuestGateModal from "@/src/components/modals/GuestGateModal";
 import React from "react";
@@ -13,12 +12,10 @@ export default function MainLayout() {
 
   return (
     <>
-      {/* Only mount call listener if logged in (not guest) */}
-      {me && <CallListener />}
+      {/* CallListener is mounted inside StreamClientProvider (only when StreamVideo is ready). */}
 
       {/* ✅ Modal is global */}
       <GuestGateModal />
-
       <Stack screenOptions={{ headerShown: false }} />
     </>
   );

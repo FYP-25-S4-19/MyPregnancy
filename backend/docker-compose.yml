@@ -57,7 +57,9 @@ services:
       #
       # As such, the simplest way was to just hardcode it in this specific instance,
       # to the name of the 'postgres' service above
+      SYNC_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
       ASYNC_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}
+      # Inside Docker, reach LocalStack via the service hostname and internal port.
       AWS_ENDPOINT_URL: http://localstack:4566
       LOCALSTACK_ENDPOINT_URL: http://localstack:4566
       GOOGLE_APPLICATION_CREDENTIALS: /app/secrets/gcp-sa.json
