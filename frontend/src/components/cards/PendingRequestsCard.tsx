@@ -1,17 +1,22 @@
-import { Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
-import React from "react";
 
 interface PendingRequestsCardProps {
   count: number;
   onPress?: () => void;
+  isLoading?: boolean;
 }
 
-export default function PendingRequestsCard({ count, onPress }: PendingRequestsCardProps) {
+export default function PendingRequestsCard({ count, onPress, isLoading = false }: PendingRequestsCardProps) {
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} disabled={!onPress} activeOpacity={onPress ? 0.7 : 1}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      disabled={!onPress || isLoading}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
       <Text style={styles.title}>Pending Requests</Text>
-      <Text style={styles.count}>{count}</Text>
+      {isLoading ? <ActivityIndicator size="small" color={colors.text} /> : <Text style={styles.count}>{count}</Text>}
     </TouchableOpacity>
   );
 }

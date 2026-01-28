@@ -1,24 +1,39 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+
+const formatAppointmentDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+const formatAppointmentTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+};
 
 interface Appointment {
-  id: number;
-  date: string;
-  time: string;
-  patientName: string;
-  weekInfo: string;
+  appointment_id: string;
+  doctor_name: string;
+  mother_name: string;
+  start_time: string;
+  status: string;
 }
 
 interface UpcomingAppointmentsSectionProps {
   appointments?: Appointment[];
-  onAppointmentPress?: (appointmentId: number) => void;
+  onAppointmentPress?: (appointmentId: string) => void;
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: Error | null;
 }
 
 export default function UpcomingAppointmentsSection({
   appointments = [],
   onAppointmentPress,
+  isLoading = false,
+  isError = false,
+  error = null,
 }: UpcomingAppointmentsSectionProps) {
   return (
     <View style={styles.section}>
@@ -33,7 +48,16 @@ export default function UpcomingAppointmentsSection({
 
         <View style={styles.divider} />
 
-        {appointments.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : isError ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.errorText}>Failed to load appointments</Text>
+            {error && <Text style={styles.errorDetailText}>{error.message}</Text>}
+          </View>
+        ) : appointments.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No upcoming appointments</Text>
           </View>
@@ -41,18 +65,18 @@ export default function UpcomingAppointmentsSection({
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             {appointments.map((appointment, index) => (
               <TouchableOpacity
-                key={appointment.id}
+                key={appointment.appointment_id}
                 style={[styles.appointmentCard, index === 0 && styles.firstCard]}
-                onPress={() => onAppointmentPress?.(appointment.id)}
+                onPress={() => onAppointmentPress?.(appointment.appointment_id)}
                 activeOpacity={0.7}
               >
                 <View style={styles.appointmentHeader}>
-                  <Text style={styles.appointmentDate}>{appointment.date}</Text>
+                  <Text style={styles.appointmentDate}>{formatAppointmentDate(appointment.start_time)}</Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.text} />
                 </View>
-                <Text style={styles.appointmentTime}>{appointment.time}</Text>
-                <Text style={styles.appointmentInfo}>{appointment.patientName}</Text>
-                <Text style={styles.appointmentWeek}>{appointment.weekInfo}</Text>
+                <Text style={styles.appointmentTime}>{formatAppointmentTime(appointment.start_time)}</Text>
+                <Text style={styles.appointmentInfo}>{appointment.mother_name}</Text>
+                <Text style={styles.appointmentWeek}>{appointment.status}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -146,6 +170,17 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: font.s,
+    color: colors.text,
+    opacity: 0.6,
+  },
+  errorText: {
+    fontSize: font.s,
+    color: "#E74C3C",
+    fontWeight: "600",
+    marginBottom: sizes.s,
+  },
+  errorDetailText: {
+    fontSize: font.xs,
     color: colors.text,
     opacity: 0.6,
   },
