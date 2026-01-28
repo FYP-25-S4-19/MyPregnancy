@@ -3,6 +3,7 @@ import { homeHorizontalScrollStyle } from "@/src/shared/globalStyles";
 import { Text, TouchableOpacity, View } from "react-native";
 import AppointmentCard from "../cards/AppointmentCard";
 import { sizes } from "@/src/shared/designSystem";
+import useAuthStore from "@/src/shared/authStore";
 import { FC } from "react";
 
 interface ConsultationSectionProps {
@@ -10,7 +11,10 @@ interface ConsultationSectionProps {
 }
 
 const ConsultationSection: FC<ConsultationSectionProps> = ({ onFindDoctorPressed }) => {
-  const { data: appointments } = useAppointmentsForMonthQuery();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const isAuthenticated = !!accessToken;
+
+  const { data: appointments } = useAppointmentsForMonthQuery(isAuthenticated);
 
   return (
     <View style={homeHorizontalScrollStyle.section}>

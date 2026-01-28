@@ -1,6 +1,7 @@
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
 import { AddProductSection } from "@/src/components/sections/AddProductSection";
 import { ProductsSection } from "@/src/components/sections/ProductsSection";
+import ArticlesSection from "@/src/components/sections/ArticlesSection";
 import HomePageHeader from "@/src/components/headers/HomePageHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, View, StyleSheet } from "react-native";
@@ -25,6 +26,15 @@ export default function MerchantHomeScreen() {
           <CommunityThreadsSection
             onViewAll={() => router.push("/main/merchant/(home)/threads")}
             onThreadPress={(threadID) => router.push(`/main/(notab)/threads/${threadID}`)}
+          />
+          <ArticlesSection
+            onViewAll={() => router.push("/main/merchant/(home)/articles")}
+            onArticlePress={(articleId) =>
+              router.push({
+                pathname: "/(notab)/articles/[id]",
+                params: { id: String(articleId) },
+              } as any)
+            }
           />
           <AddProductSection />
           <ProductsSection

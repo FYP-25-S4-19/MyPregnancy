@@ -196,6 +196,49 @@ export interface AppNotificationData {
   };
 }
 
+//====================================================
+//=============== EDUCATIONAL ARTICLES ===============
+//====================================================
+export interface EduArticleCategoryData {
+  id: number;
+  label: string;
+}
+
+export interface EduArticlePreviewData {
+  id: number;
+  title: string;
+  author: string;
+  category: EduArticleCategoryData | null;
+  trimester: number;
+  created_at: string;
+  author_id: string;
+}
+
+export interface EduArticleDetailedData {
+  id: number;
+  author_id: string | null;
+  author: string;
+  category: EduArticleCategoryData | null;
+  title: string;
+  content_markdown: string;
+  trimester: number;
+  created_at: string;
+}
+
+export interface CreateEduArticleData {
+  category_id: number;
+  title: string;
+  content_markdown: string;
+  trimester: number;
+}
+
+export interface UpdateEduArticleData {
+  category_id?: number;
+  title?: string;
+  content_markdown?: string;
+  trimester?: number;
+}
+
 export interface AppNotificationListResponse {
   notifications: AppNotificationData[];
 }

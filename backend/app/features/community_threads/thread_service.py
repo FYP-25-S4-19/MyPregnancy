@@ -41,7 +41,7 @@ class ThreadService:
         # Get threads with relationships
         stmt = (
             select(CommunityThread)
-            .where(CommunityThread.is_deleted == False)
+            .where(not CommunityThread.is_deleted)
             .options(
                 selectinload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
@@ -76,7 +76,7 @@ class ThreadService:
     async def get_thread_by_id(self, thread_id: int, current_user: User | None = None) -> ThreadData:
         stmt = (
             select(CommunityThread)
-            .where((CommunityThread.id == thread_id) & (CommunityThread.is_deleted == False))
+            .where((CommunityThread.id == thread_id) & (not CommunityThread.is_deleted))
             .options(
                 joinedload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
@@ -263,7 +263,7 @@ class ThreadService:
         """Get all threads created by the current user."""
         stmt = (
             select(CommunityThread)
-            .where((CommunityThread.creator_id == current_user.id) & (CommunityThread.is_deleted == False))
+            .where((CommunityThread.creator_id == current_user.id) & (not CommunityThread.is_deleted))
             .options(
                 selectinload(CommunityThread.creator),
                 selectinload(CommunityThread.category),

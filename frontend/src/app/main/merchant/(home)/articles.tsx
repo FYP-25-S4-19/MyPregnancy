@@ -1,13 +1,12 @@
 import ArticlesListScreen from "@/src/screens/ArticlesListScreen";
 import { router } from "expo-router";
 
-export default function NutritionistArticlesScreen() {
+export default function MerchantArticlesScreen() {
   return (
     <ArticlesListScreen
-      actor="nutritionist"
+      actor="merchant"
       showBackButton={false}
-      showActionButtons={true}
-      onBack={() => router.dismissTo(`/main/nutritionist/articles`)}
+      onBack={() => router.dismissTo(`/main/merchant/(home)/articles`)}
     />
   );
 }

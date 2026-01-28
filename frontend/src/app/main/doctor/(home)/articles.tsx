@@ -1,10 +1,13 @@
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "react-native";
+import ArticlesListScreen from "@/src/screens/ArticlesListScreen";
+import { router } from "expo-router";
 
 export default function DoctorArticlesScreen() {
   return (
-    <SafeAreaView edges={["top"]}>
-      <Text>TODO: Doctor Articles screen</Text>
-    </SafeAreaView>
+    <ArticlesListScreen
+      actor="doctor"
+      showBackButton={false}
+      showActionButtons={true}
+      onBack={() => router.dismissTo(`/main/doctor/(home)/articles`)}
+    />
   );
 }

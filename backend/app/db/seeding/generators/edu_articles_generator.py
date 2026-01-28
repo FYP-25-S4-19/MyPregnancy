@@ -10,6 +10,7 @@ from app.db.db_schema import (
     EduArticleCategory,
     PregnantWoman,
     SavedEduArticle,
+    User,
 )
 
 
@@ -43,7 +44,7 @@ class EduArticlesGenerator:
 
     @staticmethod
     def generate_edu_articles(
-        db: Session, articles_json_path: str, categories: list[EduArticleCategory]
+        db: Session, articles_json_path: str, categories: list[EduArticleCategory], all_users: list[User]
     ) -> list[EduArticle]:
         print("Generating educational articles.....")
 
@@ -54,6 +55,7 @@ class EduArticlesGenerator:
 
             for article_data in articles_data:
                 article = EduArticle(
+                    author=random.choice(all_users),
                     category=random.choice(categories),
                     trimester=random.randint(1, 3),
                     title=article_data.title,

@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 from enum import Enum
-from multiprocessing import BoundedSemaphore
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import JSON, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, func, text
@@ -83,6 +82,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     comments_liked: Mapped[list["CommentLike"]] = relationship(back_populates="liker")
 
     feedback_given: Mapped["UserAppFeedback"] = relationship(back_populates="author")
+    articles_written: Mapped[list["EduArticle"]] = relationship(back_populates="author")
     saved_edu_articles: Mapped[list["SavedEduArticle"]] = relationship(back_populates="saver")
     notifications: Mapped[list["Notification"]] = relationship(back_populates="recipient")
     saved_recipes: Mapped[list["SavedRecipe"]] = relationship(back_populates="saver")
@@ -221,8 +221,8 @@ class EduArticle(Base):
     # >Nullable
     # Just in case we pull external articles, and they DON'T link
     # to one of the Doctors within our database
-    author_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("volunteer_doctors.id"))
-    author: Mapped["VolunteerDoctor"] = relationship(back_populates="articles_written")
+    author_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    author: Mapped[User] = relationship(back_populates="articles_written")
 
     # Each article has exactly 1 category (for now)
     category_id: Mapped[int] = mapped_column(ForeignKey("edu_article_categories.id"))
@@ -231,9 +231,11 @@ class EduArticle(Base):
     # Trimester (1-3) - which trimester of pregnancy this article is relevant for
     trimester: Mapped[int] = mapped_column(CheckConstraint("trimester >= 1 AND trimester <= 3"))
 
-    img_key: Mapped[str | None] = mapped_column(String(255))
+    # img_key: Mapped[str | None] = mapped_column(String(255)) # Guess we aren't having images anymore
     title: Mapped[str] = mapped_column(String(255), unique=True)
     content_markdown: Mapped[str] = mapped_column(Text)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Keep track of which users "saved" you
     saved_edu_articles: Mapped[list["SavedEduArticle"]] = relationship(back_populates="article")

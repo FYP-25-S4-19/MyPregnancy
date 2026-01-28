@@ -1,3 +1,4 @@
+import { AppointmentPreviewData } from "../typesAndInterfaces";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/src/shared/api";
 
@@ -10,6 +11,20 @@ export interface AppointmentData {
   start_time: string;
   status: "PENDING_ACCEPT_REJECT" | "ACCEPTED" | "REJECTED";
 }
+
+/**
+ * Fetches the appointments for the current month you are in
+ */
+export const useAppointmentsForMonthQuery = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ["Appointments"],
+    queryFn: async () => {
+      const response = await api.get<AppointmentPreviewData[]>("/appointments/month");
+      return response.data;
+    },
+    enabled,
+  });
+};
 
 export const useAllAppointments = () => {
   return useQuery({

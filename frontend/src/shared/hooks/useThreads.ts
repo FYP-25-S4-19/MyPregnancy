@@ -34,7 +34,7 @@ export const useThreadsPreviews = (limit: number = 5) => {
   return useQuery({
     queryKey: ["threads", "preview", limit],
     queryFn: async (): Promise<ThreadPreviewData[]> => {
-      const response = await api.get<ThreadPreviewData[]>("/threads/");
+      const response = await api.get<ThreadPreviewData[]>("/threads");
       return response.data.slice(0, limit);
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
