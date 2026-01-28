@@ -35,7 +35,7 @@ export interface ThreadPreviewData {
   title: string;
   content: string;
   posted_at: string;
-  categories: ThreadCategoryData[];
+  category: ThreadCategoryData | null;
   like_count: number;
   comment_count: number;
   is_liked_by_current_user: boolean;
@@ -59,8 +59,8 @@ export interface ThreadData {
   title: string;
   content: string;
   posted_at: string;
+  category: ThreadCategoryData | null;
   comments: ThreadCommentData[];
-  categories?: ThreadCategoryData[];
   like_count: number;
   comment_count: number;
   is_liked_by_current_user: boolean;
@@ -69,9 +69,20 @@ export interface ThreadData {
 export interface CreateThreadData {
   title: string;
   content: string;
+  category_id?: number | null;
+}
+
+export interface ThreadUpdateData {
+  title?: string;
+  content?: string;
+  category_id?: number | null;
 }
 
 export interface CreateCommentData {
+  content: string;
+}
+
+export interface UpdateCommentData {
   content: string;
 }
 //===================================================
@@ -199,10 +210,10 @@ export interface MeData {
   middle_name: string | null;
   last_name: string;
   role: RoleType;
-    // ---- role-specific ----
-  mcr_no_id?: number;       // Doctor
-  shop_name?: string;       // Merchant
-  date_of_birth?: string;   // Pregnant woman
+  // ---- role-specific ----
+  mcr_no_id?: number; // Doctor
+  shop_name?: string; // Merchant
+  date_of_birth?: string; // Pregnant woman
 }
 
 export interface JwtData {

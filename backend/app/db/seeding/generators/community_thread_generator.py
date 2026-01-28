@@ -10,7 +10,6 @@ from app.db.db_schema import (
     CommunityThreadLike,
     PregnantWoman,
     ThreadCategory,
-    ThreadCategoryAssociation,
     ThreadComment,
     User,
 )
@@ -51,20 +50,11 @@ class CommunityThreadGenerator:
                 title=faker.sentence(nb_words=random.randint(3, 9)),
                 content=faker.paragraph(nb_sentences=random.randint(3, 10)),
                 posted_at=faker.date_time_between(start_date=random_user.created_at, end_date=datetime.now()),
+                category=random.choice(all_thread_categories),  # Assign a random category
             )
-
-            categories_sample: list[ThreadCategory] = random.sample(
-                population=all_thread_categories, k=random.randint(1, len(all_thread_categories) // 3)
-            )
-            for category_from_sample in categories_sample:
-                assoc_obj = ThreadCategoryAssociation(
-                    thread=new_thread,
-                    category=category_from_sample,
-                )
-                new_thread.thread_category_associations.append(assoc_obj)
 
             all_community_threads.append(new_thread)
-            db.add(new_thread)
+        db.add_all(all_community_threads)
         return all_community_threads
 
     @staticmethod

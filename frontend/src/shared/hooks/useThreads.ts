@@ -1,4 +1,10 @@
-import { ThreadPreviewData, ThreadData, CreateCommentData, ThreadCategoryData } from "@/src/shared/typesAndInterfaces";
+import {
+  ThreadPreviewData,
+  ThreadData,
+  CreateCommentData,
+  ThreadCategoryData,
+  CreateThreadData,
+} from "@/src/shared/typesAndInterfaces";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/src/shared/api";
 
@@ -7,6 +13,17 @@ export const useThreads = () => {
     queryKey: ["threads"],
     queryFn: async (): Promise<ThreadPreviewData[]> => {
       const response = await api.get<ThreadPreviewData[]>("/threads/");
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+};
+
+export const useMyThreads = () => {
+  return useQuery({
+    queryKey: ["threads", "my-threads"],
+    queryFn: async (): Promise<ThreadPreviewData[]> => {
+      const response = await api.get<ThreadPreviewData[]>("/threads/my-threads");
       return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -326,6 +343,52 @@ export const useThreadCategories = () => {
     queryFn: async (): Promise<ThreadCategoryData[]> => {
       const response = await api.get<ThreadCategoryData[]>("/threads/categories");
       return response.data;
+    },
+  });
+};
+
+export const useCreateThread = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (threadData: CreateThreadData) => {
+      const response = await api.post("/threads/", threadData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
+      queryClient.invalidateQueries({ queryKey: ["threads", "my-threads"] });
+    },
+  });
+};
+
+export const useUpdateThread = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ threadId, threadData }: { threadId: number; threadData: CreateThreadData }) => {
+      const response = await api.put(`/threads/${threadId}`, threadData);
+      return response.data;
+    },
+    onSuccess: (_, { threadId }) => {
+      queryClient.invalidateQueries({ queryKey: ["threads", threadId] });
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
+      queryClient.invalidateQueries({ queryKey: ["threads", "my-threads"] });
+    },
+  });
+};
+
+export const useDeleteThread = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (threadId: number) => {
+      const response = await api.delete(`/threads/${threadId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
+      queryClient.invalidateQueries({ queryKey: ["threads", "my-threads"] });
     },
   });
 };

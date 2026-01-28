@@ -30,6 +30,12 @@ def upgrade() -> None:
     )
     op.add_column("volunteer_doctors", sa.Column("specialisation_id", sa.Integer(), nullable=False))
     op.create_foreign_key(None, "volunteer_doctors", "doctor_specialisations", ["specialisation_id"], ["id"])
+    op.alter_column(
+        "pregnant_women",
+        "date_of_birth",
+        existing_type=sa.Date(),
+        nullable=True,
+    )
     # ### end Alembic commands ###
 
 
@@ -39,4 +45,10 @@ def downgrade() -> None:
     op.drop_constraint(None, "volunteer_doctors", type_="foreignkey")
     op.drop_column("volunteer_doctors", "specialisation_id")
     op.drop_table("doctor_specialisations")
+    op.alter_column(
+        "pregnant_women",
+        "date_of_birth",
+        existing_type=sa.Date(),
+        nullable=False,
+    )
     # ### end Alembic commands ###

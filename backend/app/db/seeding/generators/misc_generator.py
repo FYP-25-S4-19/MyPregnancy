@@ -100,18 +100,12 @@ class MiscGenerator:
         for mother in all_mothers:
             appointment_count: int = random.randint(5, 15)
             for _ in range(appointment_count):
-                # Generate appointments within the current month
                 now = datetime.now()
-                start_of_month = datetime(now.year, now.month, 1)
-                # Calculate last day of current month
-                if now.month == 12:
-                    end_of_month = datetime(now.year + 1, 1, 1) - timedelta(seconds=1)
-                else:
-                    end_of_month = datetime(now.year, now.month + 1, 1) - timedelta(seconds=1)
+                offset = timedelta(days=random.randint(1, 60))  # Appoints +/- 60 days from now
 
                 rand_time: datetime = faker.date_time_between(
-                    start_date=start_of_month,
-                    end_date=end_of_month,
+                    start_date=now - offset,
+                    end_date=now + offset,
                 )
                 db.add(
                     Appointment(

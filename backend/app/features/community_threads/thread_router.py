@@ -35,6 +35,16 @@ async def get_thread_previews(
     return await service.get_thread_previews(current_user)
 
 
+
+
+@community_threads_router.get("/my-threads", response_model=list[ThreadPreviewData])
+async def get_my_threads(
+    service: ThreadService = Depends(get_threads_service),
+    current_user: User = Depends(current_active_user),
+) -> list[ThreadPreviewData]:
+    return await service.get_my_threads(current_user)
+
+
 @community_threads_router.get("/{thread_id}", response_model=ThreadData)
 async def get_thread_by_id(
     thread_id: int,

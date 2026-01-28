@@ -153,7 +153,8 @@ export default function ThreadScreen({
     );
   }
 
-  const weekRange = "Week 20-27"; // TODO: Extract from categories or thread metadata
+  // Extract category label from thread, default to "General" if not set
+  const categoryLabel = thread?.category?.label ?? "General";
 
   return (
     <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor }]}>
@@ -178,7 +179,7 @@ export default function ThreadScreen({
             <View style={threadStyles.threadMeta}>
               <Text style={threadStyles.metaText}>{thread.creator_fullname}</Text>
               <Text style={threadStyles.metaSeparator}>•</Text>
-              <Text style={threadStyles.metaText}>{weekRange}</Text>
+              <Text style={threadStyles.metaText}>{categoryLabel}</Text>
               <Text style={threadStyles.metaSeparator}>•</Text>
               <Text style={threadStyles.metaText}>{formatTimeAgo(thread.posted_at.toString())}</Text>
             </View>

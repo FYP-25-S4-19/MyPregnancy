@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 from enum import Enum
+from multiprocessing import BoundedSemaphore
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import JSON, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, func, text
@@ -130,7 +131,9 @@ class PregnantWoman(User):
     id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)  # type: ignore
 
     due_date: Mapped[date | None]  # Nullable (may not be expecting)
-    date_of_birth: Mapped[date]
+    date_of_birth: Mapped[date | None] = mapped_column(
+        Date,
+    )
 
     pregnancy_stage: Mapped[str | None] = mapped_column(String(20), nullable=True)
     pregnancy_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -385,7 +388,7 @@ class ThreadCategory(Base):
     __tablename__ = "thread_categories"
     id: Mapped[int] = mapped_column(primary_key=True)
     label: Mapped[str] = mapped_column(String(64), unique=True)
-    thread_category_associations: Mapped[list["ThreadCategoryAssociation"]] = relationship(back_populates="category")
+    threads: Mapped[list["CommunityThread"]] = relationship(back_populates="category")
 
 
 # A 'thread' is what you would usually call a 'forum post'
@@ -399,6 +402,9 @@ class CommunityThread(Base):
     creator_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     creator: Mapped["User"] = relationship(back_populates="threads_created")
 
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("thread_categories.id"), nullable=True)
+    category: Mapped[ThreadCategory] = relationship(back_populates="threads")
+
     title: Mapped[str] = mapped_column(String(255))
     content: Mapped[str] = mapped_column(Text)
     posted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -406,20 +412,9 @@ class CommunityThread(Base):
     comments: Mapped[list["ThreadComment"]] = relationship(back_populates="thread")
     community_thread_likes: Mapped[list["CommunityThreadLike"]] = relationship(back_populates="thread")
 
-    thread_category_associations: Mapped[list["ThreadCategoryAssociation"]] = relationship(back_populates="thread")
+    is_deleted: Mapped[bool] = mapped_column(server_default=text("FALSE"))
 
 
-class ThreadCategoryAssociation(Base):
-    __tablename__ = "thread_category_associations"
-
-    thread_id: Mapped[int] = mapped_column(ForeignKey("community_threads.id"), primary_key=True)
-    thread: Mapped[CommunityThread] = relationship(back_populates="thread_category_associations")
-
-    category_id: Mapped[int] = mapped_column(ForeignKey("thread_categories.id"), primary_key=True)
-    category: Mapped[ThreadCategory] = relationship(back_populates="thread_category_associations")
-
-
-# An association table for when a "user" likes a "community thread"
 class CommunityThreadLike(Base):
     __tablename__ = "community_thread_likes"
 
@@ -444,6 +439,7 @@ class ThreadComment(Base):
     content: Mapped[str] = mapped_column(Text)
 
     comment_likes: Mapped[list["CommentLike"]] = relationship(back_populates="comment")
+    is_deleted: Mapped[bool] = mapped_column(server_default=text("FALSE"))
 
 
 # Assocation table that defines a "user" liking a "comment"

@@ -15,7 +15,7 @@ class ThreadPreviewData(CustomBaseModel):
     title: str
     content: str
     posted_at: str
-    categories: list[ThreadCategoryData] = []
+    category: ThreadCategoryData | None = None
     like_count: int = 0
     comment_count: int = 0
     is_liked_by_current_user: bool = False
@@ -44,6 +44,7 @@ class ThreadData(CustomBaseModel):
     content: str
     posted_at: datetime
 
+    category: ThreadCategoryData | None = None
     like_count: int = 0
     is_liked_by_current_user: bool = False
 
@@ -53,11 +54,13 @@ class ThreadData(CustomBaseModel):
 class CreateThreadData(CustomBaseModel):
     title: str
     content: str
+    category_id: int | None = None
 
 
 class ThreadUpdateData(CustomBaseModel):
     title: str
     content: str
+    category_id: int | None = None
 
 
 class CreateCommentData(CustomBaseModel):

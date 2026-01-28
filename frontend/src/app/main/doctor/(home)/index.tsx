@@ -9,38 +9,19 @@ import { colors, sizes } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
-import { useState } from "react";
+import { usePendingAppointmentsCount, useUpcomingAppointments } from "@/src/shared/hooks/useAppointments";
 
 export default function DoctorHomeScreen() {
   const me = useAuthStore((state) => state.me);
   const fullname = me ? utils.formatFullname(me) : "";
   const displayName = me ? `Dr. ${utils.formatFullname(me)}` : "Doctor";
 
-  const [appointments] = useState([
-    {
-      id: 1,
-      date: "Dec 11, 2025",
-      time: "2:00 PM",
-      patientName: "Angie",
-      weekInfo: "Week 27",
-    },
-    {
-      id: 2,
-      date: "Dec 15, 2025",
-      time: "12:00 PM",
-      patientName: "Emily",
-      weekInfo: "Week 2",
-    },
-    {
-      id: 3,
-      date: "Dec 22, 2025",
-      time: "09:00 AM",
-      patientName: "Jane",
-      weekInfo: "Week 15",
-    },
-  ]);
+  const { count: pendingRequestsCount, isLoading: pendingLoading } = usePendingAppointmentsCount();
+  const { appointments, isLoading: appointmentsLoading, isError: appointmentsError, error } = useUpcomingAppointments();
 
-  const pendingRequestsCount = 1;
+  // useEffect(() => {
+  //   router.setParams({ pendingRequests: pendingRequestsCount });
+  // }, [pendingRequestsCount]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -61,11 +42,15 @@ export default function DoctorHomeScreen() {
 
           <PendingRequestsCard
             count={pendingRequestsCount}
+            isLoading={pendingLoading}
             onPress={() => console.log("Navigate to pending requests")}
           />
 
           <UpcomingAppointmentsSection
             appointments={appointments}
+            isLoading={appointmentsLoading}
+            isError={appointmentsError}
+            error={error as Error | null}
             onAppointmentPress={(appointmentId) => console.log("Navigate to appointment:", appointmentId)}
           />
 

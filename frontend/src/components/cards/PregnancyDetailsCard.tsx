@@ -1,7 +1,6 @@
 import { profileStyles } from "@/src/shared/globalStyles";
+import { Text, View } from "react-native";
 import { ProfileCardInput } from "./ProfileCardBase";
-import { View, Text } from "react-native";
-import React from "react";
 
 interface PregnancyDetailsData {
   currentWeek: string;
@@ -10,7 +9,7 @@ interface PregnancyDetailsData {
 
 interface PregnancyDetailsCardProps {
   data: PregnancyDetailsData;
-  onUpdateField?: (field: string, value: string) => void;
+  onUpdateField: (field: keyof PregnancyDetailsData, value: string) => void;
 }
 
 export default function PregnancyDetailsCard({ data, onUpdateField }: PregnancyDetailsCardProps) {
@@ -19,8 +18,19 @@ export default function PregnancyDetailsCard({ data, onUpdateField }: PregnancyD
       <Text style={profileStyles.cardTitle}>Pregnancy Details</Text>
 
       <View style={profileStyles.formContainer}>
-        <ProfileCardInput inputLabel="Current week" fieldValue="" onUpdateField={() => {}} />
-        <ProfileCardInput inputLabel="EDD (Due Date)" fieldValue="" onUpdateField={() => {}} />
+        <ProfileCardInput
+          inputLabel="Current week"
+          placeholder="e.g. 24"
+          fieldValue={data.currentWeek}
+          onUpdateField={(v) => onUpdateField("currentWeek", v)}
+        />
+
+        <ProfileCardInput
+          inputLabel="EDD (Due Date)"
+          placeholder="YYYY-MM-DD"
+          fieldValue={data.dueDate}
+          onUpdateField={(v) => onUpdateField("dueDate", v)}
+        />
       </View>
     </View>
   );
