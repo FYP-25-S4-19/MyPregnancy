@@ -1,204 +1,361 @@
 import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
-import PregnancyDetailsCard from "@/src/components/cards/PregnancyDetailsCard";
 import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
-import useAuthStore from "@/src/shared/authStore";
-import { sizes } from "@/src/shared/designSystem";
-import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import api from "@/src/shared/api";
+import useAuthStore from "@/src/shared/authStore";
+import { colors, sizes } from "@/src/shared/designSystem";
+import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import Slider from "@react-native-community/slider";
+import { useQueryClient } from "@tanstack/react-query";
+
+type PregnancyStage = "planning" | "pregnant" | "postpartum";
+
+type MyProfileResponse = {
+  stage: PregnancyStage | null;
+  pregnancy_week: number | null;
+  expected_due_date: string | null; // "YYYY-MM-DD"
+  baby_date_of_birth: string | null;
+
+  blood_type: string | null;
+  allergies: string[];
+  diet_preferences: string[];
+  medical_conditions: string | null;
+};
+
+function toYYYYMMDD(d: Date) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function parseYYYYMMDD(s: string | null | undefined): Date | null {
+  if (!s) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!m) return null;
+  const yyyy = Number(m[1]);
+  const mm = Number(m[2]);
+  const dd = Number(m[3]);
+  const d = new Date(yyyy, mm - 1, dd);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+}
 
 export default function MotherProfileScreen() {
+  const queryClient = useQueryClient();
+
   const me = useAuthStore((state) => state.me);
   const setMe = useAuthStore((state) => state.setMe);
   const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   // -------------------------
-  // Form state
+  // Basic profile form state
   // -------------------------
   const [firstName, setFirstName] = useState(me?.first_name || "");
   const [middleName, setMiddleName] = useState(me?.middle_name || "");
   const [lastName, setLastName] = useState(me?.last_name || "");
   const [email, setEmail] = useState(me?.email || "");
-  const [dateOfBirth, setDateOfBirth] = useState(
-    me?.date_of_birth || "01/01/1998"
-  );
-  const [isSaving, setIsSaving] = useState(false);
 
-  const memberSince = "2025";
+  const [dobDate, setDobDate] = useState<Date>(() => {
+    const parsed = parseYYYYMMDD((me as any)?.date_of_birth);
+    return parsed ?? new Date(1998, 0, 1);
+  });
+  const [showDobPicker, setShowDobPicker] = useState(false);
+
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const fullName = useMemo(
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
     [firstName, middleName, lastName]
   );
 
-  // Pregnancy UI (unchanged)
-  const [pregnancyData, setPregnancyData] = useState({
-    currentWeek: "24",
-    dueDate: "02/18/2026",
+  // -------------------------
+  // Pregnancy profile state
+  // -------------------------
+  const [isLoadingPregProfile, setIsLoadingPregProfile] = useState(false);
+  const [pregProfileError, setPregProfileError] = useState<string | null>(null);
+
+  const [stage, setStage] = useState<PregnancyStage>("pregnant");
+
+  // Slider week (0..50 as requested)
+  const MAX_WEEKS = 50;
+  const [weekValue, setWeekValue] = useState<number>(20);
+
+  const [eddDate, setEddDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 20 * 7);
+    return d;
   });
+  const [showEddPicker, setShowEddPicker] = useState(false);
 
-  const handlePregnancyUpdate = (field: string, value: string) => {
-    setPregnancyData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const [isSavingPregnancy, setIsSavingPregnancy] = useState(false);
+
+  const memberSince = "2025";
+
+  const loadPregProfile = async () => {
+    setIsLoadingPregProfile(true);
+    setPregProfileError(null);
+
+    try {
+      const res = await api.get<MyProfileResponse>("/accounts/me/profile");
+      const data = res.data;
+
+      const s = (data.stage ?? "pregnant") as PregnancyStage;
+      setStage(s);
+
+      if (data.pregnancy_week != null) {
+        setWeekValue(data.pregnancy_week);
+      }
+
+      const parsedEdd = parseYYYYMMDD(data.expected_due_date);
+      if (parsedEdd) setEddDate(parsedEdd);
+    } catch (e: any) {
+      const msg = e?.response?.data?.detail || e?.message || "Failed to load pregnancy profile.";
+      setPregProfileError(String(msg));
+    } finally {
+      setIsLoadingPregProfile(false);
+    }
   };
 
-  const formatDateForBackend = (dateStr: string) => {
-    // Convert from "MM/DD/YYYY" to "YYYY-MM-DD"
-    const [month, day, year] = dateStr.split('/');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  };
+  useEffect(() => {
+    loadPregProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // -------------------------
   // Actions
   // -------------------------
   const handleSaveProfile = async () => {
     try {
-      setIsSaving(true);
+      setIsSavingProfile(true);
 
       await api.put("/accounts/pregnant-woman", {
         first_name: firstName,
         middle_name: middleName || null,
         last_name: lastName,
         email: email,
-        date_of_birth: formatDateForBackend(dateOfBirth),
+        date_of_birth: toYYYYMMDD(dobDate),
       });
 
-      // ✅ Sync auth store
       setMe({
         ...me!,
         first_name: firstName,
         middle_name: middleName || null,
         last_name: lastName,
         email: email,
-        date_of_birth: dateOfBirth,
+        // @ts-ignore
+        date_of_birth: toYYYYMMDD(dobDate),
       });
 
       Alert.alert("Success", "Profile updated successfully");
     } catch (err: any) {
-      Alert.alert(
-        "Update failed",
-        err?.response?.data?.detail || "Something went wrong"
-      );
+      Alert.alert("Update failed", err?.response?.data?.detail || "Something went wrong");
     } finally {
-      setIsSaving(false);
+      setIsSavingProfile(false);
     }
   };
 
-  const handleChangePhoto = () => {
-    console.log("Change photo pressed");
+  const handleSavePregnancyDetails = async () => {
+    try {
+      setIsSavingPregnancy(true);
+
+      const payload: any = {
+        stage,
+        pregnancy_week: stage === "pregnant" ? weekValue : null,
+        expected_due_date: stage === "pregnant" ? toYYYYMMDD(eddDate) : null,
+        baby_date_of_birth: stage === "postpartum" ? null : null,
+      };
+
+      await api.put("/accounts/me/pregnancy-details", payload);
+
+      setMe({
+        ...me!,
+        // @ts-ignore
+        pregnancy_stage: stage,
+        // @ts-ignore
+        pregnancy_week: stage === "pregnant" ? weekValue : null,
+        // @ts-ignore
+        expected_due_date: stage === "pregnant" ? toYYYYMMDD(eddDate) : null,
+      });
+
+      // KEY FIX: Force BabySizeSection to refetch immediately
+      await queryClient.invalidateQueries({ queryKey: ["myProfile"] });
+
+      // Optional: also refresh this page’s local state (nice sanity)
+      await loadPregProfile();
+
+      Alert.alert("Success", "Pregnancy details saved.");
+    } catch (e: any) {
+      const msg = e?.response?.data?.detail || e?.message || "Failed to save pregnancy details.";
+      Alert.alert("Save failed", String(msg));
+    } finally {
+      setIsSavingPregnancy(false);
+    }
   };
 
-  const handleSendFeedback = () => {
-    router.push("/main/(notab)/feedback");
-  };
-
-  const handleChangePassword = () => {
-    console.log("Change password pressed");
-  };
-
-  const handleDeleteAccount = () => {
-    console.log("Delete account pressed");
-  };
+  const handleSendFeedback = () => router.push("/main/(notab)/feedback");
+  const handleChangePassword = () => console.log("Change password pressed");
+  const handleDeleteAccount = () => console.log("Delete account pressed");
 
   const signOut = () => {
     clearAuthState();
     router.replace("/(intro)/whoAreYouJoiningAs");
   };
 
+  // -------------------------
+  // UI helpers
+  // -------------------------
+  const StageButton = ({ label, value }: { label: string; value: PregnancyStage }) => {
+    const active = stage === value;
+    return (
+      <TouchableOpacity
+        style={[styles.stageBtn, active ? styles.stageBtnActive : styles.stageBtnInactive]}
+        onPress={() => setStage(value)}
+      >
+        <Text style={[styles.stageBtnText, active ? styles.stageBtnTextActive : styles.stageBtnTextInactive]}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const showPregnantFields = stage === "pregnant";
+
   return (
     <SafeAreaView edges={["top"]} style={globalStyles.screenContainer}>
       <ScrollView style={globalStyles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={globalStyles.pageHeader}>
-          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>
-            My Profile
-          </Text>
+          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>My Profile</Text>
         </View>
 
+        {/* Basic Profile Card */}
         <View style={profileStyles.card}>
           <View style={profileStyles.profileHeader}>
             <View style={profileStyles.avatar} />
-
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>{fullName}</Text>
-              <Text style={profileStyles.profileSubtext}>
-                Member since {memberSince}
-              </Text>
+              <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
 
-              <TouchableOpacity
-                style={profileStyles.secondaryButton}
-                onPress={handleChangePhoto}
-              >
-                <Text style={profileStyles.secondaryButtonText}>
-                  Change Photo
-                </Text>
+              <TouchableOpacity style={profileStyles.secondaryButton} onPress={() => console.log("Change photo")}>
+                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* ---------------- Form ---------------- */}
           <View style={profileStyles.formContainer}>
-            <ProfileCardInput
-              inputLabel="First name"
-              fieldValue={firstName}
-              placeholder="First name"
-              onUpdateField={setFirstName}
-            />
+            <ProfileCardInput inputLabel="First name" fieldValue={firstName} onUpdateField={setFirstName} />
+            <ProfileCardInput inputLabel="Middle name" fieldValue={middleName} onUpdateField={setMiddleName} />
+            <ProfileCardInput inputLabel="Last name" fieldValue={lastName} onUpdateField={setLastName} />
+            <ProfileCardInput inputLabel="Email" fieldValue={email} onUpdateField={setEmail} />
 
-            <ProfileCardInput
-              inputLabel="Middle name"
-              fieldValue={middleName}
-              placeholder="Middle name (optional)"
-              onUpdateField={setMiddleName}
-            />
+            <Text style={styles.inlineLabel}>Date of Birth</Text>
+            <TouchableOpacity style={styles.dateField} onPress={() => setShowDobPicker(true)}>
+              <Text style={styles.dateFieldText}>{toYYYYMMDD(dobDate)}</Text>
+            </TouchableOpacity>
 
-            <ProfileCardInput
-              inputLabel="Last name"
-              fieldValue={lastName}
-              placeholder="Last name"
-              onUpdateField={setLastName}
-            />
+            {showDobPicker && (
+              <DateTimePicker
+                value={dobDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                accentColor="#FF8FA3"
+                onChange={(_, selectedDate) => {
+                  setShowDobPicker(false);
+                  if (selectedDate) setDobDate(selectedDate);
+                }}
+              />
+            )}
 
-            <ProfileCardInput
-              inputLabel="Date of Birth"
-              fieldValue={dateOfBirth}
-              placeholder="YYYY-MM-DD"
-              onUpdateField={setDateOfBirth}
-            />
-
-            <ProfileCardInput
-              inputLabel="Email"
-              fieldValue={email}
-              placeholder="your.email@example.com"
-              onUpdateField={setEmail}
-            />
-
-            {/* ✅ Save Button */}
             <TouchableOpacity
-              style={[
-                profileStyles.secondaryButton,
-                { marginTop: sizes.m },
-                isSaving && { opacity: 0.6 },
-              ]}
+              style={[profileStyles.secondaryButton, { marginTop: sizes.m }, isSavingProfile && { opacity: 0.6 }]}
               onPress={handleSaveProfile}
-              disabled={isSaving}
+              disabled={isSavingProfile}
             >
-              <Text style={profileStyles.secondaryButtonText}>
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Text>
+              <Text style={profileStyles.secondaryButtonText}>{isSavingProfile ? "Saving..." : "Save Changes"}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Pregnancy Details Card (unchanged) */}
-        <PregnancyDetailsCard
-          data={pregnancyData}
-          onUpdateField={handlePregnancyUpdate}
-        />
+        {/* Pregnancy Details Card */}
+        <View style={profileStyles.card}>
+          <Text style={profileStyles.cardTitle}>Pregnancy Details</Text>
+
+          {isLoadingPregProfile ? (
+            <Text style={{ marginTop: 10 }}>Loading…</Text>
+          ) : pregProfileError ? (
+            <Text style={{ marginTop: 10 }}>{String(pregProfileError)}</Text>
+          ) : (
+            <View style={profileStyles.formContainer}>
+              <Text style={styles.inlineLabel}>Stage</Text>
+              <View style={styles.stageRow}>
+                <StageButton label="Planning" value="planning" />
+                <StageButton label="Pregnant" value="pregnant" />
+                <StageButton label="Postpartum" value="postpartum" />
+              </View>
+
+              {showPregnantFields ? (
+                <>
+                  <Text style={[styles.inlineLabel, { marginTop: sizes.m }]}>Current week</Text>
+                  <View style={styles.weekRow}>
+                    <Text style={styles.weekValue}>{weekValue}</Text>
+                    <Text style={styles.weekHint}>/ {MAX_WEEKS}</Text>
+                  </View>
+
+                  <Slider
+                    minimumValue={0}
+                    maximumValue={MAX_WEEKS}
+                    step={1}
+                    value={weekValue}
+                    onValueChange={setWeekValue}
+                    minimumTrackTintColor="#FFB3BA"
+                    maximumTrackTintColor="#F3D6DA"
+                    thumbTintColor="#FF8FA3"
+                  />
+
+                  <Text style={[styles.inlineLabel, { marginTop: sizes.m }]}>EDD (Due Date)</Text>
+                  <TouchableOpacity style={styles.dateField} onPress={() => setShowEddPicker(true)}>
+                    <Text style={styles.dateFieldText}>{toYYYYMMDD(eddDate)}</Text>
+                  </TouchableOpacity>
+
+                  {showEddPicker && (
+                    <DateTimePicker
+                      value={eddDate}
+                      mode="date"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      accentColor="#FF8FA3"
+                      onChange={(_, selectedDate) => {
+                        setShowEddPicker(false);
+                        if (selectedDate) setEddDate(selectedDate);
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                <Text style={{ marginTop: sizes.s, color: colors.text }}>
+                  Week and due date appear only when stage is “Pregnant”.
+                </Text>
+              )}
+
+              <TouchableOpacity
+                style={[
+                  profileStyles.secondaryButton,
+                  { marginTop: sizes.m },
+                  isSavingPregnancy && { opacity: 0.6 },
+                ]}
+                onPress={handleSavePregnancyDetails}
+                disabled={isSavingPregnancy}
+              >
+                <Text style={profileStyles.secondaryButtonText}>
+                  {isSavingPregnancy ? "Saving..." : "Save Pregnancy Details"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
 
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
@@ -212,3 +369,73 @@ export default function MotherProfileScreen() {
     </SafeAreaView>
   );
 }
+
+const styles: any = {
+  inlineLabel: {
+    marginTop: sizes.s,
+    marginBottom: sizes.xs,
+    color: colors.text,
+    fontWeight: "600",
+  },
+  dateField: {
+    borderWidth: 1,
+    borderColor: "#F3D6DA",
+    backgroundColor: colors.white,
+    borderRadius: sizes.s,
+    paddingVertical: sizes.s,
+    paddingHorizontal: sizes.m,
+  },
+  dateFieldText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  stageRow: {
+    flexDirection: "row",
+    gap: sizes.s,
+    marginTop: sizes.xs,
+  },
+  stageBtn: {
+    flex: 1,
+    borderRadius: sizes.s,
+    paddingVertical: sizes.s,
+    alignItems: "center",
+    borderWidth: 1,
+  },
+  stageBtnActive: {
+    backgroundColor: "#FFEEF0",
+    borderColor: "#FF8FA3",
+  },
+  stageBtnInactive: {
+    backgroundColor: colors.white,
+    borderColor: "#F3D6DA",
+  },
+  stageBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  stageBtnTextActive: {
+    color: colors.text,
+  },
+  stageBtnTextInactive: {
+    color: colors.text,
+    opacity: 0.75,
+  },
+  weekRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+    marginBottom: sizes.xs,
+  },
+  weekValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  weekHint: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.text,
+    opacity: 0.8,
+  },
+};
