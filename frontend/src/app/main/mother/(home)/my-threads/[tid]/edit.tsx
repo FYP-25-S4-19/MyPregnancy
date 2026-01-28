@@ -1,8 +1,5 @@
-import { useLocalSearchParams } from "expo-router";
-import { View } from "react-native";
+import EditThreadScreen from "@/src/screens/EditThreadScreen";
 
 export default function MotherEditThreadPage() {
-  const { tid } = useLocalSearchParams();
-
-  return <View>Mother Edit Thread Page for thread of ID: {tid}</View>;
+  return <EditThreadScreen />;
 }

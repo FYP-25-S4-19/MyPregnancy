@@ -72,7 +72,17 @@ export interface CreateThreadData {
   category_id?: number | null;
 }
 
+export interface ThreadUpdateData {
+  title?: string;
+  content?: string;
+  category_id?: number | null;
+}
+
 export interface CreateCommentData {
+  content: string;
+}
+
+export interface UpdateCommentData {
   content: string;
 }
 //===================================================
@@ -200,10 +210,10 @@ export interface MeData {
   middle_name: string | null;
   last_name: string;
   role: RoleType;
-    // ---- role-specific ----
-  mcr_no_id?: number;       // Doctor
-  shop_name?: string;       // Merchant
-  date_of_birth?: string;   // Pregnant woman
+  // ---- role-specific ----
+  mcr_no_id?: number; // Doctor
+  shop_name?: string; // Merchant
+  date_of_birth?: string; // Pregnant woman
 }
 
 export interface JwtData {

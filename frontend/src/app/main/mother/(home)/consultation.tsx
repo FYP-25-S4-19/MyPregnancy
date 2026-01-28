@@ -1,9 +1,9 @@
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, ScrollView, Alert } from "react-native";
-import React, { useState, useMemo } from "react";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useState, useMemo } from "react";
+import { router } from "expo-router";
 
 import api from "@/src/shared/api";
 import { colors, sizes, font } from "@/src/shared/designSystem";

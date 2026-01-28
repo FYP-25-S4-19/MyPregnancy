@@ -1,5 +1,5 @@
-import { View } from "react-native";
+import CreateThreadScreen from "@/src/screens/CreateThreadScreen";
 
-export default function MotherCreateThreadScreen() {
-  return <View>New Thread Screen</View>;
+export default function MotherCreateThreadPage() {
+  return <CreateThreadScreen />;
 }

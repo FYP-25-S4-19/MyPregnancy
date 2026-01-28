@@ -41,6 +41,7 @@ class ThreadService:
         # Get threads with relationships
         stmt = (
             select(CommunityThread)
+            .where(CommunityThread.is_deleted == False)
             .options(
                 selectinload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
@@ -59,9 +60,7 @@ class ThreadService:
                 content=thread.content,
                 posted_at=thread.posted_at.isoformat(),
                 category=(
-                    ThreadCategoryData(id=thread.category.id, label=thread.category.label)
-                    if thread.category
-                    else None
+                    ThreadCategoryData(id=thread.category.id, label=thread.category.label) if thread.category else None
                 ),
                 like_count=len(thread.community_thread_likes),
                 comment_count=len(thread.comments),
@@ -77,7 +76,7 @@ class ThreadService:
     async def get_thread_by_id(self, thread_id: int, current_user: User | None = None) -> ThreadData:
         stmt = (
             select(CommunityThread)
-            .where(CommunityThread.id == thread_id)
+            .where((CommunityThread.id == thread_id) & (CommunityThread.is_deleted == False))
             .options(
                 joinedload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
@@ -132,6 +131,7 @@ class ThreadService:
             title=thread_data.title,
             content=thread_data.content,
             category_id=thread_data.category_id,
+            posted_at=datetime.now(),
         )
         self.db.add(new_thread)
         await self.db.commit()
@@ -161,7 +161,7 @@ class ThreadService:
         if thread_result.creator_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this thread")
 
-        await self.db.delete(thread_result)
+        thread_result.is_deleted = True
 
     async def create_comment(self, thread_id: int, comment_data: CreateCommentData, commenter: User) -> ThreadComment:
         stmt = select(CommunityThread).where(CommunityThread.id == thread_id)
@@ -263,7 +263,7 @@ class ThreadService:
         """Get all threads created by the current user."""
         stmt = (
             select(CommunityThread)
-            .where(CommunityThread.creator_id == current_user.id)
+            .where((CommunityThread.creator_id == current_user.id) & (CommunityThread.is_deleted == False))
             .options(
                 selectinload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
@@ -282,9 +282,7 @@ class ThreadService:
                 content=thread.content,
                 posted_at=thread.posted_at.isoformat(),
                 category=(
-                    ThreadCategoryData(id=thread.category.id, label=thread.category.label)
-                    if thread.category
-                    else None
+                    ThreadCategoryData(id=thread.category.id, label=thread.category.label) if thread.category else None
                 ),
                 like_count=len(thread.community_thread_likes),
                 comment_count=len(thread.comments),

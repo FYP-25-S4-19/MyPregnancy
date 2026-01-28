@@ -1,5 +1,5 @@
-import { View } from "react-native";
+import MyThreadsScreen from "@/src/screens/MyThreadsScreen";
 
 export default function MotherMyThreadsPage() {
-  return <View>All My Threads...</View>;
+  return <MyThreadsScreen />;
 }

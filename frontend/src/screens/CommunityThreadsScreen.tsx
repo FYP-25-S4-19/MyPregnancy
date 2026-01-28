@@ -55,6 +55,14 @@ export default function CommunityThreadsScreen({
     }
   };
 
+  const handleMyThreadsPress = (): void => {
+    router.push("/main/mother/(home)/my-threads");
+  };
+
+  const handleCreateThreadPress = (): void => {
+    router.push("/main/mother/(home)/my-threads/create");
+  };
+
   const filteredThreads = useMemo(() => {
     return threads
       ?.filter((thread) => {
@@ -62,8 +70,7 @@ export default function CommunityThreadsScreen({
           thread.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           thread.content.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesFilter =
-          selectedFilter === "All" || thread.category?.label === selectedFilter;
+        const matchesFilter = selectedFilter === "All" || thread.category?.label === selectedFilter;
         return matchesSearch && matchesFilter;
       })
       .sort((a, b) => {
@@ -194,6 +201,17 @@ export default function CommunityThreadsScreen({
           <View style={{ height: sizes.xl }} />
         </ScrollView>
       )}
+
+      {/* Floating Action Buttons */}
+      <View style={styles.floatingButtonsContainer}>
+        <TouchableOpacity style={styles.floatingButtonLeft} onPress={handleMyThreadsPress} activeOpacity={0.8}>
+          <Ionicons name="person" size={28} color={colors.white} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.floatingButtonRight} onPress={handleCreateThreadPress} activeOpacity={0.8}>
+          <Ionicons name="add" size={32} color={colors.white} />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -358,5 +376,41 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: "center",
     opacity: 0.6,
+  },
+  floatingButtonsContainer: {
+    position: "absolute",
+    bottom: sizes.xl,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: sizes.l,
+    zIndex: 10,
+  },
+  floatingButtonLeft: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  floatingButtonRight: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
   },
 });
