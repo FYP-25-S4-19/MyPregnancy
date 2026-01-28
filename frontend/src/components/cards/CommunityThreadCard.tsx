@@ -61,8 +61,8 @@ export default function CommunityThreadCard({
     }
   };
 
-  // Safety check in case categories array is empty, though your backend type likely ensures it isn't.
-  const categoryLabel = thread.categories?.[0]?.label ?? "General";
+  // Get the category label, default to "General" if not set
+  const categoryLabel = thread.category?.label ?? "General";
 
   return (
     <TouchableOpacity

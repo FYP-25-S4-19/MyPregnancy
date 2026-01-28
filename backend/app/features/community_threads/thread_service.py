@@ -11,7 +11,6 @@ from app.db.db_schema import (
     CommunityThread,
     CommunityThreadLike,
     ThreadCategory,
-    ThreadCategoryAssociation,
     ThreadComment,
     User,
 )
@@ -44,9 +43,7 @@ class ThreadService:
             select(CommunityThread)
             .options(
                 selectinload(CommunityThread.creator),
-                selectinload(CommunityThread.thread_category_associations).selectinload(
-                    ThreadCategoryAssociation.category
-                ),
+                selectinload(CommunityThread.category),
                 selectinload(CommunityThread.comments),
                 selectinload(CommunityThread.community_thread_likes),
             )
@@ -61,10 +58,11 @@ class ThreadService:
                 title=thread.title,
                 content=thread.content,
                 posted_at=thread.posted_at.isoformat(),
-                categories=[
-                    ThreadCategoryData(id=association.category.id, label=association.category.label)
-                    for association in thread.thread_category_associations
-                ],
+                category=(
+                    ThreadCategoryData(id=thread.category.id, label=thread.category.label)
+                    if thread.category
+                    else None
+                ),
                 like_count=len(thread.community_thread_likes),
                 comment_count=len(thread.comments),
                 is_liked_by_current_user=(
@@ -82,6 +80,7 @@ class ThreadService:
             .where(CommunityThread.id == thread_id)
             .options(
                 joinedload(CommunityThread.creator),
+                selectinload(CommunityThread.category),
                 selectinload(CommunityThread.comments).joinedload(ThreadComment.commenter),
                 selectinload(CommunityThread.comments).selectinload(ThreadComment.comment_likes),
                 selectinload(CommunityThread.community_thread_likes),
@@ -97,6 +96,11 @@ class ThreadService:
             title=thread_result.title,
             content=thread_result.content,
             posted_at=thread_result.posted_at,
+            category=(
+                ThreadCategoryData(id=thread_result.category.id, label=thread_result.category.label)
+                if thread_result.category
+                else None
+            ),
             like_count=len(thread_result.community_thread_likes),
             is_liked_by_current_user=(
                 any(like.liker_id == current_user.id for like in thread_result.community_thread_likes)
@@ -127,6 +131,7 @@ class ThreadService:
             creator_id=creator.id,
             title=thread_data.title,
             content=thread_data.content,
+            category_id=thread_data.category_id,
         )
         self.db.add(new_thread)
         await self.db.commit()
@@ -144,6 +149,7 @@ class ThreadService:
 
         thread_result.title = thread_data.title
         thread_result.content = thread_data.content
+        thread_result.category_id = thread_data.category_id
 
     async def delete_thread(self, thread_id: int, current_user: User) -> None:
         stmt = select(CommunityThread).where(CommunityThread.id == thread_id)
@@ -252,3 +258,39 @@ class ThreadService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Like not found")
 
         await self.db.delete(like_result)
+
+    async def get_my_threads(self, current_user: User) -> list[ThreadPreviewData]:
+        """Get all threads created by the current user."""
+        stmt = (
+            select(CommunityThread)
+            .where(CommunityThread.creator_id == current_user.id)
+            .options(
+                selectinload(CommunityThread.creator),
+                selectinload(CommunityThread.category),
+                selectinload(CommunityThread.comments),
+                selectinload(CommunityThread.community_thread_likes),
+            )
+            .order_by(CommunityThread.posted_at.desc())
+        )
+        query_results = (await self.db.execute(stmt)).scalars().all()
+
+        return [
+            ThreadPreviewData(
+                id=thread.id,
+                creator_name=thread.creator.first_name,
+                title=thread.title,
+                content=thread.content,
+                posted_at=thread.posted_at.isoformat(),
+                category=(
+                    ThreadCategoryData(id=thread.category.id, label=thread.category.label)
+                    if thread.category
+                    else None
+                ),
+                like_count=len(thread.community_thread_likes),
+                comment_count=len(thread.comments),
+                is_liked_by_current_user=(
+                    any(like.liker_id == current_user.id for like in thread.community_thread_likes)
+                ),
+            )
+            for thread in query_results
+        ]

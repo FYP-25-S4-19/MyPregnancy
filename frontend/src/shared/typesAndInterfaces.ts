@@ -35,7 +35,7 @@ export interface ThreadPreviewData {
   title: string;
   content: string;
   posted_at: string;
-  categories: ThreadCategoryData[];
+  category: ThreadCategoryData | null;
   like_count: number;
   comment_count: number;
   is_liked_by_current_user: boolean;
@@ -59,8 +59,8 @@ export interface ThreadData {
   title: string;
   content: string;
   posted_at: string;
+  category: ThreadCategoryData | null;
   comments: ThreadCommentData[];
-  categories?: ThreadCategoryData[];
   like_count: number;
   comment_count: number;
   is_liked_by_current_user: boolean;
@@ -69,6 +69,7 @@ export interface ThreadData {
 export interface CreateThreadData {
   title: string;
   content: string;
+  category_id?: number | null;
 }
 
 export interface CreateCommentData {

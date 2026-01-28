@@ -63,7 +63,7 @@ export default function CommunityThreadsScreen({
           thread.content.toLowerCase().includes(searchQuery.toLowerCase());
 
         const matchesFilter =
-          selectedFilter === "All" || thread.categories?.some((cat) => cat.label === selectedFilter);
+          selectedFilter === "All" || thread.category?.label === selectedFilter;
         return matchesSearch && matchesFilter;
       })
       .sort((a, b) => {
