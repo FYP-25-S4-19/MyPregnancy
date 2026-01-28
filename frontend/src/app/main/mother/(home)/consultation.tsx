@@ -1,14 +1,15 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, ScrollView } from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, ScrollView, Alert } from "react-native";
 import React, { useState, useMemo } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import api from "@/src/shared/api";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import SearchBar from "@/src/components/SearchBar";
 import DoctorCard from "@/src/components/cards/DoctorCard";
+import RatingModal from "@/src/components/modals/RatingModal";
 
 /* ================= TYPES ================= */
 
@@ -28,6 +29,10 @@ export default function ConsultationsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [selectedSpecialisation, setSelectedSpecialisation] = useState("All");
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<{ id: string; name: string } | null>(null);
+
+  const queryClient = useQueryClient();
 
   const handleSubmitSearch = () => {
     setSubmittedQuery(searchQuery.trim());
@@ -100,6 +105,35 @@ export default function ConsultationsScreen() {
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+  };
+
+  /* ================= RATING MUTATION ================= */
+
+  const rateDoctorMutation = useMutation({
+    mutationFn: async (vars: { doctorId: string; rating: number }) => {
+      await api.post(`/doctors/${vars.doctorId}/rating`, { rating: vars.rating });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+      setRatingModalVisible(false);
+      setSelectedDoctor(null);
+      Alert.alert("Success", "Your rating has been submitted!");
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.detail || "Failed to submit rating";
+      Alert.alert("Error", message);
+    },
+  });
+
+  const handleRatePress = (doctorId: string, doctorName: string) => {
+    setSelectedDoctor({ id: doctorId, name: doctorName });
+    setRatingModalVisible(true);
+  };
+
+  const handleSubmitRating = (rating: number) => {
+    if (selectedDoctor) {
+      rateDoctorMutation.mutate({ doctorId: selectedDoctor.id, rating });
+    }
   };
 
   /* ================= CHAT ================= */
@@ -192,6 +226,7 @@ export default function ConsultationsScreen() {
             ratingCount={item.ratings_count ?? 0}
             onChatPress={() => onChatPress(item.doctor_id)}
             onFavoritePress={() => toggleLikeMutation.mutate({ doctorId: item.doctor_id, nextLike: !item.is_liked })}
+            onRatePress={() => handleRatePress(item.doctor_id, "Dr. " + item.first_name)}
           />
         )}
         ListEmptyComponent={
@@ -205,6 +240,18 @@ export default function ConsultationsScreen() {
           )
         }
         contentContainerStyle={styles.listContent}
+      />
+
+      {/* Rating Modal */}
+      <RatingModal
+        visible={ratingModalVisible}
+        doctorName={selectedDoctor?.name ?? ""}
+        onClose={() => {
+          setRatingModalVisible(false);
+          setSelectedDoctor(null);
+        }}
+        onSubmit={handleSubmitRating}
+        isSubmitting={rateDoctorMutation.isPending}
       />
     </SafeAreaView>
   );

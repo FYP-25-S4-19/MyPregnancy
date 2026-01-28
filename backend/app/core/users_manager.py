@@ -12,13 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.settings import settings
 from app.db.db_config import get_db
 from app.db.db_schema import (
-    User,
-    UserRole,
-    PregnantWoman,
+    Admin,
     Merchant,
     Nutritionist,
+    PregnantWoman,
+    User,
+    UserRole,
     VolunteerDoctor,
-    Admin,
 )
 
 
