@@ -1,3 +1,5 @@
+import CommunityThreadsScreen from "@/src/screens/CommunityThreadsScreen";
+
 export default function MerchantThreadsScreen() {
-  return <></>;
+  return <CommunityThreadsScreen actor="merchant" />;
 }

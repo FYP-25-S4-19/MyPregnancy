@@ -14,12 +14,14 @@ interface CommunityThreadsScreenProps {
   onBack?: () => void;
   onThreadPress?: (threadId: number) => void;
   showBackButton?: boolean;
+  actor?: "mother" | "doctor" | "nutritionist" | "merchant";
 }
 
 export default function CommunityThreadsScreen({
   onBack,
   onThreadPress,
   showBackButton = true,
+  actor = "mother",
 }: CommunityThreadsScreenProps) {
   const { data: threads, isLoading, isError, error, refetch } = useThreads();
   const {
@@ -56,11 +58,11 @@ export default function CommunityThreadsScreen({
   };
 
   const handleMyThreadsPress = (): void => {
-    router.push("/main/mother/(home)/my-threads");
+    router.push(`/main/${actor}/(home)/my-threads`);
   };
 
   const handleCreateThreadPress = (): void => {
-    router.push("/main/mother/(home)/my-threads/create");
+    router.push(`/main/${actor}/(home)/my-threads/create`);
   };
 
   const filteredThreads = useMemo(() => {
