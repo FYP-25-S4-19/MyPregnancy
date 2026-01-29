@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-
-import api from "@/src/shared/api";
 import { colors, sizes } from "@/src/shared/designSystem";
+import { useEffect, useState } from "react";
+import { router } from "expo-router";
+import { Image } from "expo-image";
+import api from "@/src/shared/api";
 
 type DraftRecipe = {
   id: number;

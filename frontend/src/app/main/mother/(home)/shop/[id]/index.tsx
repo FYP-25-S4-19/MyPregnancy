@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   Modal,
   Pressable,
 } from "react-native";
@@ -17,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import utils from "@/src/shared/utils";
 import useCartStore from "@/src/shared/cartStore";
+import { Image } from "expo-image";
 
 const COLOR_OPTIONS = ["White", "Brown"] as const;
 

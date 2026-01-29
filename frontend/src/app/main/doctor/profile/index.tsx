@@ -1,16 +1,18 @@
-import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
-import CertificateUploadCard from "@/src/components/cards/CertificateUploadCard";
+import { Alert, ScrollView, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { ProfileCardInput, ProfileCardReadOnlyInput } from "@/src/components/cards/ProfileCardBase";
-import useAuthStore from "@/src/shared/authStore";
-import { sizes } from "@/src/shared/designSystem";
+import { useGetProfileImgUrl, useUpdateProfileImgMutation } from "@/src/shared/hooks/useProfile";
+import CertificateUploadCard from "@/src/components/cards/CertificateUploadCard";
+import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
-import utils from "@/src/shared/utils";
-import api from "@/src/shared/api";
-import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { sizes, colors } from "@/src/shared/designSystem";
+import useAuthStore from "@/src/shared/authStore";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import utils from "@/src/shared/utils";
+import { router } from "expo-router";
+import { Image } from "expo-image";
+import api from "@/src/shared/api";
 
 export default function DoctorProfileScreen() {
   const me = useAuthStore((state) => state.me);
@@ -26,15 +28,26 @@ export default function DoctorProfileScreen() {
   const [email, setEmail] = useState(me?.email || "");
   const [isSaving, setIsSaving] = useState(false);
 
-  // Certificate image URL
-  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
+  // Profile image
+  const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
+  const { mutate: uploadProfileImage, isPending: isUploadingImage } = useUpdateProfileImgMutation();
 
+  // MCR and Certificate queries
   const { data: mcrNo } = useQuery({
     queryKey: ["doctor-mcr-number"],
     queryFn: async () => {
-      const response = await api.get<{ mcr_no: string | null }>("/accounts/me/mcr-no");
+      const response = await api.get<{ mcr_no: string | null }>("/accounts/doctor/mcr-no");
       return response.data.mcr_no;
     },
+  });
+
+  const { data: certUrl } = useQuery({
+    queryKey: ["doctor-qualification-certificate"],
+    queryFn: async () => {
+      const response = await api.get<{ url: string | null }>("/accounts/doctor/cert-img-url");
+      return response.data.url;
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 
   const memberSince = "2025";
@@ -43,22 +56,6 @@ export default function DoctorProfileScreen() {
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
     [firstName, middleName, lastName],
   );
-
-  // Load qualification certificate on mount
-  useEffect(() => {
-    const loadCertificate = async () => {
-      try {
-        const response = await api.get<{ url: string | null }>("/accounts/me/qualification-image-url");
-        if (response.data.url) {
-          setCertificateUrl(response.data.url);
-        }
-      } catch (err) {
-        console.error("Failed to load qualification certificate:", err);
-      }
-    };
-
-    loadCertificate();
-  }, []);
 
   // -------------------------
   // Actions
@@ -91,13 +88,21 @@ export default function DoctorProfileScreen() {
     }
   };
 
-  const handleChangePhoto = () => utils.handleChangePhoto();
-
-  const handleCertificateView = () => {
-    // Open certificate in a new view or browser
-    if (certificateUrl) {
-      console.log("View certificate:", certificateUrl);
-      // TODO: Open image viewer or browser
+  const handleChangePhoto = async () => {
+    try {
+      const formData = await utils.handleChangePhoto();
+      if (formData) {
+        uploadProfileImage(formData, {
+          onSuccess: () => {
+            Alert.alert("Success", "Profile photo updated successfully");
+          },
+          onError: (error: any) => {
+            Alert.alert("Upload failed", error?.response?.data?.detail || "Failed to upload photo");
+          },
+        });
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Failed to pick image");
     }
   };
 
@@ -120,13 +125,31 @@ export default function DoctorProfileScreen() {
 
         <View style={profileStyles.card}>
           <View style={profileStyles.profileHeader}>
-            <View style={profileStyles.avatar} />
+            {/* Profile Avatar with Image */}
+            <View style={profileStyles.avatar}>
+              {isLoadingProfileImage ? (
+                <ActivityIndicator size="large" color={colors.secondary} />
+              ) : profileImageUrl ? (
+                <Image
+                  source={{ uri: profileImageUrl }}
+                  style={{ width: "100%", height: "100%", borderRadius: 50 }}
+                  resizeMode="cover"
+                />
+              ) : null}
+            </View>
+
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>Dr. {fullName}</Text>
               <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
 
-              <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
-                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+              <TouchableOpacity
+                style={[profileStyles.secondaryButton, isUploadingImage && { opacity: 0.6 }]}
+                onPress={handleChangePhoto}
+                disabled={isUploadingImage}
+              >
+                <Text style={profileStyles.secondaryButtonText}>
+                  {isUploadingImage ? "Uploading..." : "Change Photo"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -161,13 +184,9 @@ export default function DoctorProfileScreen() {
               onUpdateField={setEmail}
             />
 
-            <ProfileCardReadOnlyInput inputLabel="MCR # (Not Editable)" fieldValue={mcrNo || "Not Available"} />
+            <ProfileCardReadOnlyInput inputLabel="MCR No. (View Only)" fieldValue={mcrNo || "Not Available"} />
 
-            <CertificateUploadCard
-              label="Telemedicine Consultation Certificate (View Only)"
-              certificateUri={certificateUrl || undefined}
-              handleCertificateUpload={handleCertificateView}
-            />
+            <CertificateUploadCard label="Telemedicine Certificate (View Only)" certificateUri={certUrl || undefined} />
 
             {/* ✅ Save Button */}
             <TouchableOpacity

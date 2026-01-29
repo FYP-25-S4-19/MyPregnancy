@@ -1,18 +1,19 @@
-import { Text, TouchableOpacity, View, StyleSheet, Image } from "react-native";
+import { Text, TouchableOpacity, View, StyleSheet, ActivityIndicator } from "react-native";
+import { useGetProfileImgUrl } from "@/src/shared/hooks/useProfile";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { FC } from "react";
 
 interface HomePageHeaderProps {
   greetingText?: string;
   headerText: string;
-  profilePicURL?: string;
   profilePicStrFallback?: string;
   onNotificationPress?: () => void;
 }
 
 /**
- * Simple - If there is a profilePicURL, show the image.
+ * Simple - If there is a profilePicURL (fetched internally), show the image.
  *          If not, show the 'profilePicStrFallback' inside a colored circle.
  *
  * You'd probably want the 'profilePicStrFallback' to be initials or something similar
@@ -20,16 +21,19 @@ interface HomePageHeaderProps {
 const HomePageHeader: FC<HomePageHeaderProps> = ({
   greetingText,
   headerText,
-  profilePicURL = null,
   profilePicStrFallback,
   onNotificationPress,
 }) => {
+  const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
+
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
         <View style={styles.avatar}>
-          {profilePicURL ? (
-            <Image source={{ uri: profilePicURL }} style={{ width: 60, height: 60, borderRadius: 30 }} />
+          {isLoadingProfileImage ? (
+            <ActivityIndicator size="small" color={colors.secondary} />
+          ) : profileImageUrl ? (
+            <Image source={{ uri: profileImageUrl }} style={styles.avatarImage} />
           ) : (
             profilePicStrFallback && <Text style={styles.avatarText}>{profilePicStrFallback}</Text>
           )}
@@ -77,6 +81,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFB3BA",
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 30,
   },
   avatarText: {
     fontSize: font.l,

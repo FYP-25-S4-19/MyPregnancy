@@ -225,13 +225,21 @@ async def update_doctor(
         raise
 
 
-@account_router.get("/me/mcr-no")
+@account_router.get("/doctor/mcr-no")
 async def get_my_mcr_no(
     doctor: VolunteerDoctor = Depends(require_role(VolunteerDoctor)),
     service: AccountService = Depends(get_account_service),
 ) -> dict:
     mcr_no: str = await service.get_my_mcr_no(doctor)
     return {"mcr_no": mcr_no}
+
+
+@account_router.get("/doctor/cert-img-url")
+async def get_doctor_cert(
+    doctor: VolunteerDoctor = Depends(require_role(VolunteerDoctor)),
+    service: AccountService = Depends(get_account_service),
+) -> dict:
+    return {"url": await service.get_doctor_cert(doctor)}
 
 
 @account_router.put("/nutritionist")
@@ -273,6 +281,30 @@ async def update_pregnant_woman(
 ) -> None:
     try:
         await service.update_pregnant_woman_profile(mother, payload)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@account_router.get("/me/profile-img-url")
+async def get_profile_img_url(
+    user: User = Depends(current_active_user),
+    service: AccountService = Depends(get_account_service),
+) -> dict:
+    url = await service.get_profile_image_url(user)
+    return {"url": url}
+
+
+@account_router.put("/me/profile-img")
+async def upload_profile_img(
+    profile_img: UploadFile = File(...),
+    user: User = Depends(current_active_user),
+    service: AccountService = Depends(get_account_service),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    try:
+        await service.update_profile_image_url(profile_img, user)
         await db.commit()
     except:
         await db.rollback()

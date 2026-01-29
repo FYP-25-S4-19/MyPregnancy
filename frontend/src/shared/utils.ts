@@ -1,10 +1,11 @@
 import { JwtData, MeData } from "./typesAndInterfaces";
 import { Channel, UserResponse } from "stream-chat";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { Platform, Alert } from "react-native";
 import Constants from "expo-constants";
 import { jwtDecode } from "jwt-decode";
 import * as Device from "expo-device";
+import * as ImagePicker from "expo-image-picker";
 import api from "./api";
 
 const utils = {
@@ -134,9 +135,45 @@ const utils = {
     console.log("Delete account pressed");
     // TODO: Implement account deletion functionality
   },
-  handleChangePhoto() {
-    console.log("Change photo pressed");
-    // TODO: Implement photo change functionality
+  async handleChangePhoto(): Promise<FormData | null> {
+    try {
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "We need permission to access your media library");
+        return null;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) {
+        return null;
+      }
+
+      const asset = result.assets[0];
+      if (!asset.uri) {
+        throw new Error("Failed to get image URI");
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append("profile_img", {
+        uri: asset.uri,
+        type: "image/jpeg",
+        name: "profile.jpg",
+      } as any);
+
+      return formData;
+    } catch (error: any) {
+      console.error("Image picker error:", error);
+      throw error;
+    }
   },
 };
 

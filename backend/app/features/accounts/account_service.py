@@ -417,6 +417,11 @@ class AccountService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MCR number not found")
         return mcr_no_obj.value
 
+    async def get_doctor_cert(self, doctor: VolunteerDoctor) -> str | None:
+        if not doctor.qualification_img_key:
+            return None
+        return S3StorageInterface.get_presigned_url(doctor.qualification_img_key, expires_in_seconds=3600)
+
     async def update_nutritionist_profile(self, nutritionist: Nutritionist, data: NutritionistUpdateRequest):
         existing_user = await self.db.execute(
             select(Nutritionist).where(Nutritionist.email == data.email, Nutritionist.id != nutritionist.id)
@@ -456,4 +461,26 @@ class AccountService:
         mother.last_name = data.last_name
         mother.email = data.email
         mother.date_of_birth = data.date_of_birth
+        await self.db.flush()
+
+    async def get_profile_image_url(self, user: User) -> str | None:
+        if not user.profile_img_key:
+            return None
+        return S3StorageInterface.get_presigned_url(user.profile_img_key, expires_in_seconds=3600)
+
+    async def update_profile_image_url(self, image_file: UploadFile, user: User) -> None:
+        if not is_valid_image(image_file):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Invalid profile image file",
+            )
+
+        new_img_key = S3StorageInterface.put_profile_img(user.id, image_file)
+        if new_img_key is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to upload profile image. Please try again.",
+            )
+
+        user.profile_img_key = new_img_key
         await self.db.flush()

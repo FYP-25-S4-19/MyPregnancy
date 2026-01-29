@@ -10,7 +10,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Alert,
   ActivityIndicator,
 } from "react-native";
@@ -21,6 +20,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { router } from "expo-router";
+import { Image } from "expo-image";
 import api from "@/src/shared/api";
 
 type ScanResponse = {
@@ -56,14 +56,11 @@ export default function AddProductScreen() {
       const type = ext ? `image/${ext}` : "image/jpeg";
 
       const formData = new FormData();
-      formData.append(
-        "img_file",
-        {
-          uri,
-          name: filename,
-          type,
-        } as any,
-      );
+      formData.append("img_file", {
+        uri,
+        name: filename,
+        type,
+      } as any);
 
       const res = await api.post<ScanResponse>("/products/scan", formData, {
         headers: { "Content-Type": "multipart/form-data" },

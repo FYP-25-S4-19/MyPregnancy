@@ -1,8 +1,9 @@
-import React, { useRef, useState, useCallback, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ImageBackground, StatusBar } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ImageBackground, StatusBar } from "react-native";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import { useRouter } from "expo-router";
 import api from "@/src/shared/api";
+import { Image } from "expo-image";
 
 /** ----- slide content ----- */
 type Slide = {
@@ -92,7 +93,7 @@ export default function IntroPagerSinglePage() {
         <View style={styles.illustrationWrap}>
           {/* Note: if your PNG contains big whitespace, it will still look smaller.
              Re-export selection-only artwork to fix that perfectly. */}
-          <Image source={item.image} resizeMode="contain" style={styles.illustration} />
+          <Image source={item.image} style={styles.illustration} />
         </View>
 
         <TouchableOpacity

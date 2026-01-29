@@ -7,11 +7,12 @@ import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Platform, ScrollView, Text, TouchableOpacity, View, Image, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Slider from "@react-native-community/slider";
 import { useQueryClient } from "@tanstack/react-query";
+import { useGetProfileImgUrl, useUpdateProfileImgMutation } from "@/src/shared/hooks/useProfile";
 
 type PregnancyStage = "planning" | "pregnant" | "postpartum";
 
@@ -68,6 +69,10 @@ export default function MotherProfileScreen() {
   const [showDobPicker, setShowDobPicker] = useState(false);
 
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // Profile image
+  const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
+  const { mutate: uploadProfileImage, isPending: isUploadingImage } = useUpdateProfileImgMutation();
 
   const fullName = useMemo(
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
@@ -198,6 +203,24 @@ export default function MotherProfileScreen() {
     }
   };
 
+  const handleChangePhoto = async () => {
+    try {
+      const formData = await utils.handleChangePhoto();
+      if (formData) {
+        uploadProfileImage(formData, {
+          onSuccess: () => {
+            Alert.alert("Success", "Profile photo updated successfully");
+          },
+          onError: (error: any) => {
+            Alert.alert("Upload failed", error?.response?.data?.detail || "Failed to upload photo");
+          },
+        });
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Failed to pick image");
+    }
+  };
+
   const handleSendFeedback = () => router.push("/main/(notab)/feedback");
   const handleChangePassword = () => utils.handleChangePassword();
   const handleDeleteAccount = () => utils.handleDeleteAccount();
@@ -236,13 +259,31 @@ export default function MotherProfileScreen() {
         {/* Basic Profile Card */}
         <View style={profileStyles.card}>
           <View style={profileStyles.profileHeader}>
-            <View style={profileStyles.avatar} />
+            {/* Profile Avatar with Image */}
+            <View style={profileStyles.avatar}>
+              {isLoadingProfileImage ? (
+                <ActivityIndicator size="large" color={colors.secondary} />
+              ) : profileImageUrl ? (
+                <Image
+                  source={{ uri: profileImageUrl }}
+                  style={{ width: "100%", height: "100%", borderRadius: 40 }}
+                  resizeMode="cover"
+                />
+              ) : null}
+            </View>
+
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>{fullName}</Text>
               <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
 
-              <TouchableOpacity style={profileStyles.secondaryButton} onPress={() => utils.handleChangePhoto()}>
-                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+              <TouchableOpacity
+                style={[profileStyles.secondaryButton, isUploadingImage && { opacity: 0.6 }]}
+                onPress={handleChangePhoto}
+                disabled={isUploadingImage}
+              >
+                <Text style={profileStyles.secondaryButtonText}>
+                  {isUploadingImage ? "Uploading..." : "Change Photo"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
