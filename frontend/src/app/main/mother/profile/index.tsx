@@ -4,6 +4,7 @@ import api from "@/src/shared/api";
 import useAuthStore from "@/src/shared/authStore";
 import { colors, sizes } from "@/src/shared/designSystem";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
+import utils from "@/src/shared/utils";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -198,12 +199,12 @@ export default function MotherProfileScreen() {
   };
 
   const handleSendFeedback = () => router.push("/main/(notab)/feedback");
-  const handleChangePassword = () => console.log("Change password pressed");
-  const handleDeleteAccount = () => console.log("Delete account pressed");
+  const handleChangePassword = () => utils.handleChangePassword();
+  const handleDeleteAccount = () => utils.handleDeleteAccount();
 
   const signOut = () => {
     clearAuthState();
-    router.replace("/(intro)");
+    router.push("/(intro)");
   };
 
   // -------------------------
@@ -240,7 +241,7 @@ export default function MotherProfileScreen() {
               <Text style={profileStyles.profileName}>{fullName}</Text>
               <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
 
-              <TouchableOpacity style={profileStyles.secondaryButton} onPress={() => console.log("Change photo")}>
+              <TouchableOpacity style={profileStyles.secondaryButton} onPress={() => utils.handleChangePhoto()}>
                 <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
               </TouchableOpacity>
             </View>

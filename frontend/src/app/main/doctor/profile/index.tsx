@@ -1,14 +1,16 @@
 import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
 import CertificateUploadCard from "@/src/components/cards/CertificateUploadCard";
-import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
+import { ProfileCardInput, ProfileCardReadOnlyInput } from "@/src/components/cards/ProfileCardBase";
 import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
+import utils from "@/src/shared/utils";
 import api from "@/src/shared/api";
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
 
 export default function DoctorProfileScreen() {
   const me = useAuthStore((state) => state.me);
@@ -22,8 +24,18 @@ export default function DoctorProfileScreen() {
   const [middleName, setMiddleName] = useState(me?.middle_name || "");
   const [lastName, setLastName] = useState(me?.last_name || "");
   const [email, setEmail] = useState(me?.email || "");
-  const [mcrNumber, setMcrNumber] = useState(me?.mcr_no_id ? String(me.mcr_no_id) : "");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Certificate image URL
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
+
+  const { data: mcrNo } = useQuery({
+    queryKey: ["doctor-mcr-number"],
+    queryFn: async () => {
+      const response = await api.get<{ mcr_no: string | null }>("/accounts/me/mcr-no");
+      return response.data.mcr_no;
+    },
+  });
 
   const memberSince = "2025";
 
@@ -31,6 +43,22 @@ export default function DoctorProfileScreen() {
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
     [firstName, middleName, lastName],
   );
+
+  // Load qualification certificate on mount
+  useEffect(() => {
+    const loadCertificate = async () => {
+      try {
+        const response = await api.get<{ url: string | null }>("/accounts/me/qualification-image-url");
+        if (response.data.url) {
+          setCertificateUrl(response.data.url);
+        }
+      } catch (err) {
+        console.error("Failed to load qualification certificate:", err);
+      }
+    };
+
+    loadCertificate();
+  }, []);
 
   // -------------------------
   // Actions
@@ -44,7 +72,6 @@ export default function DoctorProfileScreen() {
         middle_name: middleName || null,
         last_name: lastName,
         email: email,
-        mcr_no_id: Number(mcrNumber),
       });
 
       // ✅ Sync auth store
@@ -54,7 +81,6 @@ export default function DoctorProfileScreen() {
         middle_name: middleName || null,
         last_name: lastName,
         email: email,
-        mcr_no_id: Number(mcrNumber),
       });
 
       Alert.alert("Success", "Profile updated successfully");
@@ -65,29 +91,23 @@ export default function DoctorProfileScreen() {
     }
   };
 
-  const handleChangePhoto = () => {
-    console.log("Change photo pressed");
+  const handleChangePhoto = () => utils.handleChangePhoto();
+
+  const handleCertificateView = () => {
+    // Open certificate in a new view or browser
+    if (certificateUrl) {
+      console.log("View certificate:", certificateUrl);
+      // TODO: Open image viewer or browser
+    }
   };
 
-  const handleCertificateUpload = () => {
-    console.log("Certificate upload pressed");
-  };
-
-  const handleSendFeedback = () => {
-    router.push("/main/(notab)/feedback");
-  };
-
-  const handleChangePassword = () => {
-    console.log("Change password pressed");
-  };
-
-  const handleDeleteAccount = () => {
-    console.log("Delete account pressed");
-  };
+  const handleSendFeedback = () => router.push("/main/(notab)/feedback");
+  const handleChangePassword = () => utils.handleChangePassword();
+  const handleDeleteAccount = () => utils.handleDeleteAccount();
 
   const signOut = () => {
     clearAuthState();
-    router.replace("/(intro)");
+    router.push("/(intro)");
   };
 
   return (
@@ -141,16 +161,12 @@ export default function DoctorProfileScreen() {
               onUpdateField={setEmail}
             />
 
-            <ProfileCardInput
-              inputLabel="MCR #"
-              fieldValue={mcrNumber}
-              placeholder="Enter MCR number"
-              onUpdateField={setMcrNumber}
-            />
+            <ProfileCardReadOnlyInput inputLabel="MCR # (Not Editable)" fieldValue={mcrNo || "Not Available"} />
 
             <CertificateUploadCard
-              label="Telemedicine Consultation"
-              handleCertificateUpload={handleCertificateUpload}
+              label="Telemedicine Consultation Certificate (View Only)"
+              certificateUri={certificateUrl || undefined}
+              handleCertificateUpload={handleCertificateView}
             />
 
             {/* ✅ Save Button */}

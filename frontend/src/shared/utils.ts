@@ -123,6 +123,21 @@ const utils = {
       this._alertAndThrowErrorMessage("Must use physical device for push notifications");
     }
   },
+  /**
+   * Common profile action handlers
+   */
+  handleChangePassword() {
+    console.log("Change password pressed");
+    // TODO: Implement password change functionality
+  },
+  handleDeleteAccount() {
+    console.log("Delete account pressed");
+    // TODO: Implement account deletion functionality
+  },
+  handleChangePhoto() {
+    console.log("Change photo pressed");
+    // TODO: Implement photo change functionality
+  },
 };
 
 export default utils;

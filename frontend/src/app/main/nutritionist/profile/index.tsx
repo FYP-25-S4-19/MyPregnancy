@@ -5,7 +5,7 @@ import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import utils from "@/src/shared/utils";
-import api from "@/src/shared/api"; // ✅ your axios instance
+import api from "@/src/shared/api";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -63,21 +63,13 @@ export default function NutritionistProfileScreen() {
     }
   };
 
-  const handleChangePhoto = () => {
-    console.log("Change photo pressed");
-  };
+  const handleChangePhoto = () => utils.handleChangePhoto();
 
-  const handleSendFeedback = () => {
-    router.push("/main/(notab)/feedback");
-  };
+  const handleSendFeedback = () => router.push("/main/(notab)/feedback");
 
-  const handleChangePassword = () => {
-    console.log("Change password pressed");
-  };
+  const handleChangePassword = () => utils.handleChangePassword();
 
-  const handleDeleteAccount = () => {
-    console.log("Delete account pressed");
-  };
+  const handleDeleteAccount = () => utils.handleDeleteAccount();
 
   const handleCertificateUpload = () => {
     console.log("Certificate upload pressed");
@@ -85,7 +77,7 @@ export default function NutritionistProfileScreen() {
 
   const signOut = () => {
     clearAuthState();
-    router.replace("/(intro)");
+    router.push("/(intro)");
   };
 
   return (

@@ -3,6 +3,7 @@ import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
 import useAuthStore from "@/src/shared/authStore";
 import { sizes } from "@/src/shared/designSystem";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
+import utils from "@/src/shared/utils";
 import api from "@/src/shared/api";
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -64,25 +65,17 @@ export default function MerchantProfileScreen() {
     }
   };
 
-  const handleChangePhoto = () => {
-    console.log("Change photo pressed");
-  };
+  const handleChangePhoto = () => utils.handleChangePhoto();
 
-  const handleSendFeedback = () => {
-    router.push("/main/(notab)/feedback");
-  };
+  const handleSendFeedback = () => router.push("/main/(notab)/feedback");
 
-  const handleChangePassword = () => {
-    console.log("Change password pressed");
-  };
+  const handleChangePassword = () => utils.handleChangePassword();
 
-  const handleDeleteAccount = () => {
-    console.log("Delete account pressed");
-  };
+  const handleDeleteAccount = () => utils.handleDeleteAccount();
 
   const signOut = () => {
     clearAuthState();
-    router.replace("/(intro)");
+    router.push("/(intro)");
   };
 
   return (

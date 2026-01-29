@@ -13,6 +13,12 @@ class UserRead(schemas.BaseUser[UUID]):
     last_name: str
     role: UserRole
     profile_img_key: Optional[str] = None
+
+    # Role-specific fields
+    # mcr_no_id: Optional[int] = None  # Doctor/Nutritionist
+    # shop_name: Optional[str] = None  # Merchant
+    # date_of_birth: Optional[date] = None  # Pregnant Woman
+
     model_config = ConfigDict(from_attributes=True)
 
 

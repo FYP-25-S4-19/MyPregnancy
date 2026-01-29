@@ -69,9 +69,9 @@ class UserUpdateRequest(BaseModel):
     email: EmailStr
 
 
-# Doctor-specific update (includes MCR number)
+# Doctor-specific update (MCR number is not editable, so not included)
 class DoctorUpdateRequest(UserUpdateRequest):
-    mcr_no_id: int
+    pass
 
 
 # Nutritionist update (just name and email)
