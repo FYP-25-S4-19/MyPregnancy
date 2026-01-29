@@ -2,7 +2,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import { threadStyles } from "@/src/shared/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   useUnlikeComment,
   useCreateComment,

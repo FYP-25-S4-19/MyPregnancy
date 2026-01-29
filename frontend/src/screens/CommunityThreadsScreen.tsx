@@ -1,11 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useThreadCategories, useThreads } from "@/src/shared/hooks/useThreads";
+import { useThreadCategories, useThreadsPreviews } from "@/src/shared/hooks/useThreads";
 import CommunityThreadCard from "@/src/components/cards/CommunityThreadCard";
 import { ThreadCategoryData } from "@/src/shared/typesAndInterfaces";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState, useMemo } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useState, useMemo } from "react";
 import { router } from "expo-router";
 
 type SortOption = "Latest" | "Popular";
@@ -23,7 +23,7 @@ export default function CommunityThreadsScreen({
   showBackButton = true,
   actor = "mother",
 }: CommunityThreadsScreenProps) {
-  const { data: threads, isLoading, isError, error, refetch } = useThreads();
+  const { data: threads, isLoading, isError, error, refetch } = useThreadsPreviews();
   const {
     data: threadCategories,
     isLoading: categoriesAreLoading,

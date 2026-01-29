@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -41,7 +41,7 @@ class ThreadService:
         # Get threads with relationships
         stmt = (
             select(CommunityThread)
-            .where(not CommunityThread.is_deleted)
+            .where(CommunityThread.is_deleted == False)
             .options(
                 selectinload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
@@ -76,7 +76,7 @@ class ThreadService:
     async def get_thread_by_id(self, thread_id: int, current_user: User | None = None) -> ThreadData:
         stmt = (
             select(CommunityThread)
-            .where((CommunityThread.id == thread_id) & (not CommunityThread.is_deleted))
+            .where(and_(CommunityThread.id == thread_id, CommunityThread.is_deleted == False))
             .options(
                 joinedload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
