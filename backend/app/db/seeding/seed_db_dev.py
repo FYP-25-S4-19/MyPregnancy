@@ -102,8 +102,10 @@ if __name__ == "__main__":
         edu_article_categories: list[EduArticleCategory] = EduArticlesGenerator.generate_edu_article_categories(
             db_session
         )
+
+        doctors_and_nutritionists: list[User] = doctors + nutritionists
         edu_articles: list[EduArticle] = EduArticlesGenerator.generate_edu_articles(
-            db_session, "./seed_data/edu_articles.json", edu_article_categories
+            db_session, "./seed_data/edu_articles.json", edu_article_categories, doctors_and_nutritionists
         )
         EduArticlesGenerator.generate_saved_edu_articles(db_session, edu_articles, preg_women)
         print("Finished seeding educational article content!\n")

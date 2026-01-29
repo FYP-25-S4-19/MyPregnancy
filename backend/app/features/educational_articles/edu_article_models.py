@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -9,6 +10,16 @@ class ArticlePreviewData(CustomBaseModel):
     title: str
 
 
+class MyArticlePreviewData(CustomBaseModel):
+    id: int
+    title: str
+    author: str
+    category: str
+    trimester: int
+    created_at: datetime
+    author_id: Optional[UUID] = None
+
+
 class ArticleOverviewResponse(CustomBaseModel):
     id: int
     title: str
@@ -17,15 +28,22 @@ class ArticleOverviewResponse(CustomBaseModel):
     trimester: int
 
 
+class UpdateArticleRequest(CustomBaseModel):
+    category_id: Optional[int] = None
+    title: Optional[str] = None
+    content_markdown: Optional[str] = None
+    trimester: Optional[int] = None
+
+
 class ArticleDetailedResponse(CustomBaseModel):
     id: int
     author_id: Optional[UUID] = None
     author: str
     category: str
-    img_key: str | None
     title: str
     content_markdown: str
     trimester: int
+    created_at: Optional[datetime] = None
 
 
 class EduArticleCategoryModel(CustomBaseModel):

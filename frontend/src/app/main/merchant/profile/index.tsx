@@ -28,7 +28,7 @@ export default function MerchantProfileScreen() {
 
   const fullName = useMemo(
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
-    [firstName, middleName, lastName]
+    [firstName, middleName, lastName],
   );
 
   // -------------------------
@@ -58,10 +58,7 @@ export default function MerchantProfileScreen() {
 
       Alert.alert("Success", "Profile updated successfully");
     } catch (err: any) {
-      Alert.alert(
-        "Update failed",
-        err?.response?.data?.detail || "Something went wrong"
-      );
+      Alert.alert("Update failed", err?.response?.data?.detail || "Something went wrong");
     } finally {
       setIsSaving(false);
     }
@@ -85,7 +82,7 @@ export default function MerchantProfileScreen() {
 
   const signOut = () => {
     clearAuthState();
-    router.replace("/(intro)/whoAreYouJoiningAs");
+    router.replace("/(intro)");
   };
 
   return (
@@ -93,9 +90,7 @@ export default function MerchantProfileScreen() {
       <ScrollView style={globalStyles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={globalStyles.pageHeader}>
-          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>
-            My Profile
-          </Text>
+          <Text style={[globalStyles.pageHeaderTitle, profileStyles.profilePageHeaderTitle]}>My Profile</Text>
         </View>
 
         <View style={profileStyles.card}>
@@ -103,17 +98,10 @@ export default function MerchantProfileScreen() {
             <View style={profileStyles.avatar} />
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>{fullName}</Text>
-              <Text style={profileStyles.profileSubtext}>
-                Member since {memberSince}
-              </Text>
+              <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
 
-              <TouchableOpacity
-                style={profileStyles.secondaryButton}
-                onPress={handleChangePhoto}
-              >
-                <Text style={profileStyles.secondaryButtonText}>
-                  Change Photo
-                </Text>
+              <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
+                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -157,17 +145,11 @@ export default function MerchantProfileScreen() {
 
             {/* ✅ Save Button */}
             <TouchableOpacity
-              style={[
-                profileStyles.secondaryButton,
-                { marginTop: sizes.m },
-                isSaving && { opacity: 0.6 },
-              ]}
+              style={[profileStyles.secondaryButton, { marginTop: sizes.m }, isSaving && { opacity: 0.6 }]}
               onPress={handleSaveProfile}
               disabled={isSaving}
             >
-              <Text style={profileStyles.secondaryButtonText}>
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Text>
+              <Text style={profileStyles.secondaryButtonText}>{isSaving ? "Saving..." : "Save Changes"}</Text>
             </TouchableOpacity>
           </View>
         </View>

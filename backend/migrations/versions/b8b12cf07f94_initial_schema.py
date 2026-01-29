@@ -1,8 +1,8 @@
-"""Initial revision
+"""Initial schema
 
-Revision ID: 58d852487dd9
+Revision ID: b8b12cf07f94
 Revises:
-Create Date: 2025-12-09 12:53:12.598781
+Create Date: 2026-01-29 16:11:19.840637
 
 """
 
@@ -11,9 +11,10 @@ from typing import Sequence, Union
 import fastapi_users_db_sqlalchemy
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "58d852487dd9"
+revision: str = "b8b12cf07f94"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -58,10 +59,26 @@ def upgrade() -> None:
             server_default=sa.text("'PENDING'"),
             nullable=False,
         ),
+        sa.Column("mcr_no", sa.String(), nullable=False),
+        sa.Column("specialisation", sa.String(), nullable=False),
         sa.Column("reject_reason", sa.String(), nullable=True),
         sa.Column("submitted_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
+    )
+    op.create_table(
+        "doctor_specialisations",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("specialisation", sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("specialisation"),
+    )
+    op.create_table(
+        "edu_article_categories",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("label", sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("label"),
     )
     op.create_table(
         "mcr_numbers",
@@ -90,6 +107,26 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
     )
+    op.create_table(
+        "pages",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("slug", sa.String(length=100), nullable=False),
+        sa.Column("sections", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("background_image", sa.Text(), nullable=True),
+        sa.Column("html", sa.Text(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_pages_id"), "pages", ["id"], unique=False)
+    op.create_index(op.f("ix_pages_slug"), "pages", ["slug"], unique=True)
+    op.create_table(
+        "product_categories",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("label", sa.String(length=255), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_product_categories_label"), "product_categories", ["label"], unique=True)
     op.create_table(
         "recipe_categories",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -122,7 +159,7 @@ def upgrade() -> None:
         sa.Column("last_name", sa.String(length=64), nullable=False),
         sa.Column(
             "role",
-            sa.Enum("ADMIN", "VOLUNTEER_DOCTOR", "PREGNANT_WOMAN", "NUTRITIONIST", name="userrole"),
+            sa.Enum("ADMIN", "VOLUNTEER_DOCTOR", "PREGNANT_WOMAN", "NUTRITIONIST", "MERCHANT", name="userrole"),
             nullable=False,
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
@@ -148,9 +185,15 @@ def upgrade() -> None:
         "community_threads",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("creator_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("category_id", sa.Integer(), nullable=True),
         sa.Column("title", sa.String(length=255), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
-        sa.Column("posted_at", sa.DateTime(), nullable=False),
+        sa.Column("posted_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), server_default=sa.text("FALSE"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["category_id"],
+            ["thread_categories.id"],
+        ),
         sa.ForeignKeyConstraint(
             ["creator_id"],
             ["users.id"],
@@ -158,21 +201,51 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
+        "edu_articles",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("author_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=True),
+        sa.Column("category_id", sa.Integer(), nullable=False),
+        sa.Column("trimester", sa.Integer(), nullable=False),
+        sa.Column("title", sa.String(length=255), nullable=False),
+        sa.Column("content_markdown", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["author_id"],
+            ["users.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["category_id"],
+            ["edu_article_categories.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("title"),
+    )
+    op.create_table(
         "expo_push_tokens",
-        sa.Column("user_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.Column("token", sa.String(), nullable=False),
+        sa.Column("user_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.ForeignKeyConstraint(
             ["user_id"],
             ["users.id"],
         ),
-        sa.PrimaryKeyConstraint("user_id"),
+        sa.PrimaryKeyConstraint("token"),
+    )
+    op.create_index(op.f("ix_expo_push_tokens_user_id"), "expo_push_tokens", ["user_id"], unique=False)
+    op.create_table(
+        "merchants",
+        sa.Column("id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "notifications",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("recipient_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.Column("content", sa.String(), nullable=False),
-        sa.Column("sent_at", sa.DateTime(), nullable=False),
+        sa.Column("sent_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("is_seen", sa.Boolean(), server_default=sa.text("FALSE"), nullable=False),
         sa.Column(
             "type",
@@ -212,7 +285,15 @@ def upgrade() -> None:
         "pregnant_women",
         sa.Column("id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.Column("due_date", sa.Date(), nullable=True),
-        sa.Column("date_of_birth", sa.Date(), nullable=False),
+        sa.Column("date_of_birth", sa.Date(), nullable=True),
+        sa.Column("pregnancy_stage", sa.String(length=20), nullable=True),
+        sa.Column("pregnancy_week", sa.Integer(), nullable=True),
+        sa.Column("expected_due_date", sa.Date(), nullable=True),
+        sa.Column("baby_date_of_birth", sa.Date(), nullable=True),
+        sa.Column("blood_type", sa.String(length=5), nullable=True),
+        sa.Column("allergies", sa.JSON(), nullable=True),
+        sa.Column("diet_preferences", sa.JSON(), nullable=True),
+        sa.Column("medical_conditions", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(
             ["id"],
             ["users.id"],
@@ -225,6 +306,10 @@ def upgrade() -> None:
         sa.Column("author_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.Column("rating", sa.Integer(), nullable=False),
         sa.Column("content", sa.String(), nullable=False),
+        sa.Column("positive_score", sa.Float(), nullable=False),
+        sa.Column("neutral_score", sa.Float(), nullable=False),
+        sa.Column("negative_score", sa.Float(), nullable=False),
+        sa.Column("compound_score", sa.Float(), nullable=False),
         sa.ForeignKeyConstraint(
             ["author_id"],
             ["users.id"],
@@ -235,6 +320,7 @@ def upgrade() -> None:
         "volunteer_doctors",
         sa.Column("id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.Column("mcr_no_id", sa.Integer(), nullable=False),
+        sa.Column("specialisation_id", sa.Integer(), nullable=False),
         sa.Column("qualification_img_key", sa.String(), nullable=True),
         sa.ForeignKeyConstraint(
             ["id"],
@@ -244,6 +330,10 @@ def upgrade() -> None:
             ["mcr_no_id"],
             ["mcr_numbers.id"],
         ),
+        sa.ForeignKeyConstraint(
+            ["specialisation_id"],
+            ["doctor_specialisations.id"],
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -251,12 +341,11 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("volunteer_doctor_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.Column("mother_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
-        sa.Column("start_time", sa.DateTime(), nullable=False),
+        sa.Column("start_time", sa.DateTime(timezone=True), nullable=False),
         sa.Column(
-            "status",
-            sa.Enum("PENDING_ACCEPT_REJECT", "ACCEPTED", "REJECTED", "COMPLETED", name="appointmentstatus"),
-            nullable=False,
+            "status", sa.Enum("PENDING_ACCEPT_REJECT", "ACCEPTED", "REJECTED", name="appointmentstatus"), nullable=False
         ),
+        sa.Column("chat_id", sa.UUID(), nullable=True),
         sa.ForeignKeyConstraint(
             ["mother_id"],
             ["pregnant_women.id"],
@@ -297,36 +386,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("rater_id", "doctor_id"),
     )
     op.create_table(
-        "edu_articles",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("author_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=True),
-        sa.Column(
-            "category",
-            sa.Enum(
-                "NUTRITION",
-                "BODY",
-                "BABY",
-                "FEEL_GOOD",
-                "MEDICAL",
-                "EXERCISE",
-                "LABOUR",
-                "LIFESTYLE",
-                "RELATIONSHIPS",
-                name="eduarticlecategory",
-            ),
-            nullable=False,
-        ),
-        sa.Column("img_key", sa.String(length=255), nullable=True),
-        sa.Column("title", sa.String(length=255), nullable=False),
-        sa.Column("content_markdown", sa.Text(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["author_id"],
-            ["volunteer_doctors.id"],
-        ),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("title"),
-    )
-    op.create_table(
         "journal_entries",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("author_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
@@ -345,11 +404,92 @@ def upgrade() -> None:
         "kick_tracker_sessions",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("mother_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
-        sa.Column("started_at", sa.DateTime(), nullable=False),
-        sa.Column("ended_at", sa.DateTime(), nullable=False),
+        sa.Column("started_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("ended_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
             ["mother_id"],
             ["pregnant_women.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "menstrual_periods",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("mother_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("start_date", sa.Date(), nullable=False),
+        sa.Column("end_date", sa.Date(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["mother_id"],
+            ["pregnant_women.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(op.f("ix_menstrual_periods_start_date"), "menstrual_periods", ["start_date"], unique=False)
+    op.create_table(
+        "product_drafts",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("merchant_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=True),
+        sa.Column("category_id", sa.Integer(), nullable=True),
+        sa.Column("price_cents", sa.Integer(), nullable=True),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.Column("img_key", sa.String(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["category_id"],
+            ["product_categories.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["merchant_id"],
+            ["merchants.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "products",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("merchant_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("category_id", sa.Integer(), nullable=False),
+        sa.Column("price_cents", sa.Integer(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=False),
+        sa.Column("img_key", sa.String(), nullable=True),
+        sa.Column("listed_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["category_id"],
+            ["product_categories.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["merchant_id"],
+            ["merchants.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("name"),
+    )
+    op.create_table(
+        "recipe_drafts",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("trimester", sa.Integer(), nullable=True),
+        sa.Column("nutritionist_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("name", sa.String(), nullable=True),
+        sa.Column("description", sa.String(), nullable=True),
+        sa.Column("est_calories", sa.String(), nullable=True),
+        sa.Column("pregnancy_benefit", sa.String(), nullable=True),
+        sa.Column("img_key", sa.String(), nullable=True),
+        sa.Column("serving_count", sa.Integer(), nullable=True),
+        sa.Column("ingredients", sa.String(), nullable=True),
+        sa.Column("instructions_markdown", sa.String(), nullable=True),
+        sa.Column("category_id", sa.Integer(), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["category_id"],
+            ["recipe_categories.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["nutritionist_id"],
+            ["nutritionists.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -361,14 +501,31 @@ def upgrade() -> None:
         sa.Column("description", sa.String(), nullable=False),
         sa.Column("est_calories", sa.String(), nullable=False),
         sa.Column("pregnancy_benefit", sa.String(), nullable=False),
+        sa.Column("trimester", sa.Integer(), nullable=False),
         sa.Column("img_key", sa.String(), nullable=True),
         sa.Column("serving_count", sa.Integer(), nullable=False),
+        sa.Column("ingredients", sa.String(), nullable=False),
         sa.Column("instructions_markdown", sa.String(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.ForeignKeyConstraint(
             ["nutritionist_id"],
             ["nutritionists.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "saved_edu_articles",
+        sa.Column("saver_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("article_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["article_id"],
+            ["edu_articles.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["saver_id"],
+            ["users.id"],
+        ),
+        sa.PrimaryKeyConstraint("saver_id", "article_id"),
     )
     op.create_table(
         "saved_volunteer_doctors",
@@ -385,26 +542,23 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("mother_id", "volunteer_doctor_id"),
     )
     op.create_table(
-        "thread_category_associations",
-        sa.Column("thread_id", sa.Integer(), nullable=False),
-        sa.Column("category_id", sa.Integer(), nullable=False),
+        "shopping_carts",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("mother_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["category_id"],
-            ["thread_categories.id"],
+            ["mother_id"],
+            ["pregnant_women.id"],
         ),
-        sa.ForeignKeyConstraint(
-            ["thread_id"],
-            ["community_threads.id"],
-        ),
-        sa.PrimaryKeyConstraint("thread_id", "category_id"),
+        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "thread_comments",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("thread_id", sa.Integer(), nullable=False),
         sa.Column("commenter_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
-        sa.Column("commented_at", sa.DateTime(), nullable=False),
+        sa.Column("commented_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
+        sa.Column("is_deleted", sa.Boolean(), server_default=sa.text("FALSE"), nullable=False),
         sa.ForeignKeyConstraint(
             ["commenter_id"],
             ["users.id"],
@@ -462,13 +616,27 @@ def upgrade() -> None:
     op.create_table(
         "kick_tracker_data_points",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("kick_at", sa.DateTime(), nullable=False),
+        sa.Column("kick_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("session_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["session_id"],
             ["kick_tracker_sessions.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "mother_like_products",
+        sa.Column("mother_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
+        sa.Column("product_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["mother_id"],
+            ["pregnant_women.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["product_id"],
+            ["products.id"],
+        ),
+        sa.PrimaryKeyConstraint("mother_id", "product_id"),
     )
     op.create_table(
         "recipe_to_category_associations",
@@ -485,20 +653,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("recipe_id", "category_id"),
     )
     op.create_table(
-        "saved_edu_articles",
-        sa.Column("saver_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
-        sa.Column("article_id", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["article_id"],
-            ["edu_articles.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["saver_id"],
-            ["users.id"],
-        ),
-        sa.PrimaryKeyConstraint("saver_id", "article_id"),
-    )
-    op.create_table(
         "saved_recipes",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("saver_id", fastapi_users_db_sqlalchemy.generics.GUID(), nullable=False),
@@ -513,27 +667,49 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_table(
+        "shopping_cart_items",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("cart_id", sa.Integer(), nullable=False),
+        sa.Column("product_id", sa.Integer(), nullable=False),
+        sa.Column("quantity", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["cart_id"],
+            ["shopping_carts.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["product_id"],
+            ["products.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table("shopping_cart_items")
     op.drop_table("saved_recipes")
-    op.drop_table("saved_edu_articles")
     op.drop_table("recipe_to_category_associations")
+    op.drop_table("mother_like_products")
     op.drop_table("kick_tracker_data_points")
     op.drop_table("journal_scalar_metric_logs")
     op.drop_table("journal_binary_metric_logs")
     op.drop_table("comment_likes")
     op.drop_table("thread_comments")
-    op.drop_table("thread_category_associations")
+    op.drop_table("shopping_carts")
     op.drop_table("saved_volunteer_doctors")
+    op.drop_table("saved_edu_articles")
     op.drop_table("recipes")
+    op.drop_table("recipe_drafts")
+    op.drop_table("products")
+    op.drop_table("product_drafts")
+    op.drop_index(op.f("ix_menstrual_periods_start_date"), table_name="menstrual_periods")
+    op.drop_table("menstrual_periods")
     op.drop_table("kick_tracker_sessions")
     op.drop_index(op.f("ix_journal_entries_logged_on"), table_name="journal_entries")
     op.drop_table("journal_entries")
-    op.drop_table("edu_articles")
     op.drop_table("doctor_ratings")
     op.drop_table("community_thread_likes")
     op.drop_table("appointments")
@@ -544,7 +720,10 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_notifications_recipient_id"), table_name="notifications")
     op.drop_index(op.f("ix_notifications_is_seen"), table_name="notifications")
     op.drop_table("notifications")
+    op.drop_table("merchants")
+    op.drop_index(op.f("ix_expo_push_tokens_user_id"), table_name="expo_push_tokens")
     op.drop_table("expo_push_tokens")
+    op.drop_table("edu_articles")
     op.drop_table("community_threads")
     op.drop_table("admins")
     op.drop_index(op.f("ix_users_email"), table_name="users")
@@ -552,8 +731,15 @@ def downgrade() -> None:
     op.drop_table("thread_categories")
     op.drop_table("scalar_metrics")
     op.drop_table("recipe_categories")
+    op.drop_index(op.f("ix_product_categories_label"), table_name="product_categories")
+    op.drop_table("product_categories")
+    op.drop_index(op.f("ix_pages_slug"), table_name="pages")
+    op.drop_index(op.f("ix_pages_id"), table_name="pages")
+    op.drop_table("pages")
     op.drop_table("nutritionist_account_creation_requests")
     op.drop_table("mcr_numbers")
+    op.drop_table("edu_article_categories")
+    op.drop_table("doctor_specialisations")
     op.drop_table("doctor_account_creation_requests")
     op.drop_table("binary_metrics")
     # ### end Alembic commands ###

@@ -1,18 +1,17 @@
 import re
 
-from fastapi import HTTPException, UploadFile, status
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import EduArticle, EduArticleCategory, VolunteerDoctor
+from app.db.db_schema import EduArticle, EduArticleCategory, SavedEduArticle, User
 from app.features.educational_articles.edu_article_models import (
     ArticleDetailedResponse,
     ArticleOverviewResponse,
     ArticlePreviewData,
     EduArticleCategoryModel,
 )
-from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import format_user_fullname
 
 
@@ -57,7 +56,7 @@ class EduArticleService:
         if limit <= 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-        query = select(EduArticle.id, EduArticle.title).order_by(EduArticle.id.desc()).limit(limit)
+        query = select(EduArticle.id, EduArticle.title).order_by(EduArticle.created_at.desc()).limit(limit)
         result = await self.db.execute(query)
         rows = result.mappings().all()
         return [ArticlePreviewData(id=row["id"], title=row["title"]) for row in rows]
@@ -80,7 +79,7 @@ class EduArticleService:
             )
             .join(EduArticleCategory)
             .where(EduArticle.category_id == cat_obj.id)
-            .order_by(EduArticle.id.desc())
+            .order_by(EduArticle.created_at.desc())
         )
 
         result = await self.db.execute(query)
@@ -119,7 +118,6 @@ class EduArticleService:
             author_id=article.author_id,
             author=author_name,
             category=article.category.label,
-            img_key=article.img_key,
             title=article.title,
             content_markdown=article.content_markdown,
             trimester=article.trimester,
@@ -127,23 +125,22 @@ class EduArticleService:
 
     async def create_article(
         self,
-        category: str,
+        category_id: int,
         title: str,
         content_markdown: str,
         trimester: int,
-        img_data: UploadFile,
-        doctor: VolunteerDoctor,
+        author: User,
     ) -> EduArticle:
         # Check if category exists
-        cat_query = select(EduArticleCategory).where(EduArticleCategory.label == category)
+        cat_query = select(EduArticleCategory).where(EduArticleCategory.id == category_id)
         cat_result = await self.db.execute(cat_query)
         cat_obj = cat_result.scalars().first()
         if not cat_obj:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category not found")
 
         cleaned_title = (title or "").strip()
         if not cleaned_title:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title is required")
 
         if trimester < 1 or trimester > 3:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trimester must be 1, 2, or 3")
@@ -151,12 +148,11 @@ class EduArticleService:
         dup_q = select(EduArticle.id).where(func.lower(EduArticle.title) == func.lower(cleaned_title))
         dup = (await self.db.execute(dup_q)).first()
         if dup is not None:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Article with this title already exists")
 
         article = EduArticle(
-            author_id=doctor.id,
-            category=cat_obj,
-            img_key=None,
+            author_id=author.id,
+            category_id=category_id,
             title=cleaned_title,
             content_markdown=content_markdown or "",
             trimester=trimester,
@@ -165,18 +161,88 @@ class EduArticleService:
         self.db.add(article)
         await self.db.flush()
 
-        article_img_key: str | None = S3StorageInterface.put_article_img(article.id, img_data)
-        article.img_key = article_img_key
-        await self.db.flush()
+        # Note: Articles no longer support images
         return article
 
-    async def delete_article(self, article_id: int, deleter: VolunteerDoctor) -> None:
+    async def delete_article(self, article_id: int, deleter: User) -> None:
         article = await self.db.get(EduArticle, article_id)
         if article is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         if article.author_id != deleter.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only delete your own articles")
         await self.db.delete(article)
+
+    async def get_my_articles(self, author: User) -> list[EduArticle]:
+        """Fetch all articles created by the current user"""
+        query = (
+            select(EduArticle)
+            .options(selectinload(EduArticle.author), selectinload(EduArticle.category))
+            .where(EduArticle.author_id == author.id)
+            .order_by(EduArticle.created_at.desc())
+        )
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
+    async def update_article(
+        self,
+        article_id: int,
+        author: User,
+        category_id: int | None = None,
+        title: str | None = None,
+        content_markdown: str | None = None,
+        trimester: int | None = None,
+    ) -> EduArticle:
+        """Update an article (only by its author)"""
+        article_stmt = (
+            select(EduArticle)
+            .options(selectinload(EduArticle.author), selectinload(EduArticle.category))
+            .where(EduArticle.id == article_id)
+        )
+        article = (await self.db.execute(article_stmt)).scalar_one_or_none()
+        if article is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if article.author_id != author.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only edit your own articles")
+
+        # Validate and update category if provided
+        if category_id is not None:
+            cat_query = select(EduArticleCategory).where(EduArticleCategory.id == category_id)
+            cat_result = await self.db.execute(cat_query)
+            cat_obj = cat_result.scalars().first()
+            if not cat_obj:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category not found")
+            article.category_id = category_id
+
+        # Validate and update title if provided
+        if title is not None:
+            cleaned_title = title.strip()
+            if not cleaned_title:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title cannot be empty")
+
+            # Check for duplicate title (excluding current article)
+            dup_q = select(EduArticle.id).where(
+                func.lower(EduArticle.title) == func.lower(cleaned_title), EduArticle.id != article_id
+            )
+            dup = (await self.db.execute(dup_q)).first()
+            if dup is not None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT, detail="Article with this title already exists"
+                )
+            article.title = cleaned_title
+
+        # Validate and update trimester if provided
+        if trimester is not None:
+            if trimester < 1 or trimester > 3:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trimester must be 1, 2, or 3")
+            article.trimester = trimester
+
+        # Update content if provided
+        if content_markdown is not None:
+            article.content_markdown = content_markdown
+
+        # Note: Articles no longer support images (img_data parameter ignored)
+        await self.db.flush()
+        return article
 
     async def get_all_categories(self) -> list[EduArticleCategoryModel]:
         query = select(EduArticleCategory).order_by(EduArticleCategory.label)
@@ -247,3 +313,74 @@ class EduArticleService:
             )
 
         await self.db.delete(category)
+
+    async def save_article(self, user: User, article_id: int) -> None:
+        """Save an article for a user"""
+        # Check if article exists
+        article = await self.db.get(EduArticle, article_id)
+        if article is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article of not found")
+
+        # Check if already saved
+        query = select(SavedEduArticle).where(
+            SavedEduArticle.saver_id == user.id, SavedEduArticle.article_id == article_id
+        )
+        result = await self.db.execute(query)
+        existing = result.scalars().first()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Article already saved")
+
+        # Create saved article entry
+        saved_article = SavedEduArticle(saver_id=user.id, article_id=article_id)
+        self.db.add(saved_article)
+        await self.db.flush()
+
+    async def unsave_article(self, user: User, article_id: int) -> None:
+        """Unsave an article for a user"""
+        query = select(SavedEduArticle).where(
+            SavedEduArticle.saver_id == user.id, SavedEduArticle.article_id == article_id
+        )
+        result = await self.db.execute(query)
+        saved_article = result.scalars().first()
+        if not saved_article:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not saved")
+
+        await self.db.delete(saved_article)
+
+    async def is_article_saved(self, user: User, article_id: int) -> bool:
+        """Check if an article is saved by a user"""
+        query = select(SavedEduArticle).where(
+            SavedEduArticle.saver_id == user.id, SavedEduArticle.article_id == article_id
+        )
+        result = await self.db.execute(query)
+        return result.scalars().first() is not None
+
+    async def get_saved_articles(self, user: User) -> list[ArticleOverviewResponse]:
+        """Get all articles saved by a user"""
+        query = (
+            select(
+                EduArticle.id,
+                EduArticle.title,
+                EduArticleCategory.label,
+                EduArticle.content_markdown,
+                EduArticle.trimester,
+            )
+            .join(SavedEduArticle, SavedEduArticle.article_id == EduArticle.id)
+            .join(EduArticleCategory, EduArticle.category_id == EduArticleCategory.id)
+            .where(SavedEduArticle.saver_id == user.id)
+            .order_by(EduArticle.created_at.desc())
+        )
+
+        result = await self.db.execute(query)
+        rows = result.mappings().all()
+
+        return [
+            ArticleOverviewResponse(
+                id=row["id"],
+                title=row["title"],
+                category=row["label"],
+                excerpt=_make_excerpt(row["content_markdown"] or ""),
+                trimester=row["trimester"],
+            )
+            for row in rows
+        ]

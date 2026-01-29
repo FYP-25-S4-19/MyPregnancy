@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, sizes } from "@/src/shared/designSystem";
+import { colors, sizes, font } from "@/src/shared/designSystem";
 import { threadStyles } from "@/src/shared/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -12,6 +12,9 @@ import {
   useThread,
 } from "@/src/shared/hooks/useThreads";
 import { router } from "expo-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import useAuthStore from "@/src/shared/authStore";
+import api from "@/src/shared/api";
 import {
   KeyboardAvoidingView,
   ActivityIndicator,
@@ -23,6 +26,7 @@ import {
   Alert,
   Text,
   View,
+  Modal,
 } from "react-native";
 
 interface ThreadScreenProps {
@@ -40,6 +44,12 @@ export default function ThreadScreen({
 }: ThreadScreenProps) {
   const { data: thread, isLoading, isError, error } = useThread(threadId);
   const [commentText, setCommentText] = useState<string>("");
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState<string>("");
+  const [menuVisibleCommentId, setMenuVisibleCommentId] = useState<number | null>(null);
+
+  const me = useAuthStore((state) => state.me);
+  const queryClient = useQueryClient();
 
   // Mutations
   const createCommentMutation = useCreateComment(threadId);
@@ -47,6 +57,37 @@ export default function ThreadScreen({
   const unlikeThreadMutation = useUnlikeThread();
   const likeCommentMutation = useLikeComment(threadId);
   const unlikeCommentMutation = useUnlikeComment(threadId);
+
+  // Update comment mutation
+  const updateCommentMutation = useMutation({
+    mutationFn: async ({ commentId, content }: { commentId: number; content: string }) => {
+      await api.put(`/threads/${threadId}/comments/${commentId}`, { content });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["threads", threadId] });
+      setEditingCommentId(null);
+      setEditingCommentText("");
+    },
+    onError: (error) => {
+      Alert.alert("Error", "Failed to update comment. Please try again.");
+      console.error("Update comment error:", error);
+    },
+  });
+
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      await api.delete(`/threads/${threadId}/comments/${commentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["threads", threadId] });
+      queryClient.invalidateQueries({ queryKey: ["threads"] });
+    },
+    onError: (error) => {
+      Alert.alert("Error", "Failed to delete comment. Please try again.");
+      console.error("Delete comment error:", error);
+    },
+  });
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -130,6 +171,42 @@ export default function ThreadScreen({
     }
   };
 
+  const handleEditComment = (commentId: number, currentContent: string): void => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(currentContent);
+    setMenuVisibleCommentId(null);
+  };
+
+  const handleSaveEditComment = (): void => {
+    if (editingCommentId && editingCommentText.trim()) {
+      updateCommentMutation.mutate({
+        commentId: editingCommentId,
+        content: editingCommentText.trim(),
+      });
+    }
+  };
+
+  const handleCancelEditComment = (): void => {
+    setEditingCommentId(null);
+    setEditingCommentText("");
+  };
+
+  const handleDeleteComment = (commentId: number): void => {
+    setMenuVisibleCommentId(null);
+    Alert.alert("Delete Comment", "Are you sure you want to delete this comment? This action cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => deleteCommentMutation.mutate(commentId),
+      },
+    ]);
+  };
+
+  const isCommentOwner = (commenterId: string): boolean => {
+    return me?.id === commenterId;
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor }]}>
@@ -211,29 +288,104 @@ export default function ThreadScreen({
               thread.comments.map((comment) => (
                 <View key={comment.id} style={threadStyles.commentCard}>
                   <View style={threadStyles.commentHeader}>
-                    <Text style={threadStyles.commentAuthor}>{comment.commenter_fullname}</Text>
-                    <Text style={threadStyles.commentTime}>{formatTimeAgo(comment.commented_at.toString())}</Text>
+                    <View style={localStyles.commentHeaderLeft}>
+                      <Text style={threadStyles.commentAuthor}>{comment.commenter_fullname}</Text>
+                      <Text style={threadStyles.commentTime}>{formatTimeAgo(comment.commented_at.toString())}</Text>
+                    </View>
+                    {isCommentOwner(comment.commenter_id) && (
+                      <TouchableOpacity
+                        onPress={() => setMenuVisibleCommentId(comment.id)}
+                        style={localStyles.menuButton}
+                      >
+                        <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
+                      </TouchableOpacity>
+                    )}
                   </View>
-                  <Text style={threadStyles.commentContent}>{comment.content}</Text>
-                  <TouchableOpacity
-                    onPress={() => handleToggleCommentLike(comment.id, comment.is_liked_by_current_user)}
-                    style={threadStyles.commentLikeButton}
-                    disabled={likeCommentMutation.isPending || unlikeCommentMutation.isPending}
+
+                  {editingCommentId === comment.id ? (
+                    <View style={localStyles.editContainer}>
+                      <TextInput
+                        style={localStyles.editInput}
+                        value={editingCommentText}
+                        onChangeText={setEditingCommentText}
+                        multiline
+                        maxLength={500}
+                        autoFocus
+                      />
+                      <View style={localStyles.editActions}>
+                        <TouchableOpacity onPress={handleCancelEditComment} style={localStyles.cancelButton}>
+                          <Text style={localStyles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={handleSaveEditComment}
+                          style={[
+                            localStyles.saveButton,
+                            (!editingCommentText.trim() || updateCommentMutation.isPending) &&
+                              localStyles.saveButtonDisabled,
+                          ]}
+                          disabled={!editingCommentText.trim() || updateCommentMutation.isPending}
+                        >
+                          {updateCommentMutation.isPending ? (
+                            <ActivityIndicator size="small" color={colors.white} />
+                          ) : (
+                            <Text style={localStyles.saveButtonText}>Save</Text>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <>
+                      <Text style={threadStyles.commentContent}>{comment.content}</Text>
+                      <TouchableOpacity
+                        onPress={() => handleToggleCommentLike(comment.id, comment.is_liked_by_current_user)}
+                        style={threadStyles.commentLikeButton}
+                        disabled={likeCommentMutation.isPending || unlikeCommentMutation.isPending}
+                      >
+                        <Ionicons
+                          name={comment.is_liked_by_current_user ? "heart" : "heart-outline"}
+                          size={16}
+                          color={comment.is_liked_by_current_user ? colors.primary : colors.text}
+                        />
+                        <Text
+                          style={[
+                            threadStyles.commentLikeCount,
+                            comment.is_liked_by_current_user && threadStyles.commentLikeCountActive,
+                          ]}
+                        >
+                          {comment.like_count || 0}
+                        </Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {/* Comment Menu Modal */}
+                  <Modal
+                    visible={menuVisibleCommentId === comment.id}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setMenuVisibleCommentId(null)}
                   >
-                    <Ionicons
-                      name={comment.is_liked_by_current_user ? "heart" : "heart-outline"}
-                      size={16}
-                      color={comment.is_liked_by_current_user ? colors.primary : colors.text}
-                    />
-                    <Text
-                      style={[
-                        threadStyles.commentLikeCount,
-                        comment.is_liked_by_current_user && threadStyles.commentLikeCountActive,
-                      ]}
+                    <TouchableOpacity
+                      style={localStyles.modalOverlay}
+                      activeOpacity={1}
+                      onPress={() => setMenuVisibleCommentId(null)}
                     >
-                      {comment.like_count || 0}
-                    </Text>
-                  </TouchableOpacity>
+                      <View style={localStyles.menuContainer}>
+                        <TouchableOpacity
+                          style={localStyles.menuItem}
+                          onPress={() => handleEditComment(comment.id, comment.content)}
+                        >
+                          <Ionicons name="pencil" size={20} color={colors.text} />
+                          <Text style={localStyles.menuItemText}>Edit</Text>
+                        </TouchableOpacity>
+                        <View style={localStyles.menuDivider} />
+                        <TouchableOpacity style={localStyles.menuItem} onPress={() => handleDeleteComment(comment.id)}>
+                          <Ionicons name="trash" size={20} color="#E74C3C" />
+                          <Text style={[localStyles.menuItemText, localStyles.deleteText]}>Delete</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </TouchableOpacity>
+                  </Modal>
                 </View>
               ))
             ) : (
@@ -292,5 +444,95 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: sizes.m,
+  },
+});
+
+const localStyles = StyleSheet.create({
+  commentHeaderLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.s,
+  },
+  menuButton: {
+    padding: sizes.xs,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuContainer: {
+    backgroundColor: colors.white,
+    borderRadius: sizes.m,
+    padding: sizes.s,
+    minWidth: 200,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: sizes.m,
+    gap: sizes.m,
+  },
+  menuItemText: {
+    fontSize: font.m,
+    color: colors.text,
+  },
+  deleteText: {
+    color: "#E74C3C",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.lightGray,
+  },
+  editContainer: {
+    marginTop: sizes.s,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    borderRadius: sizes.s,
+    padding: sizes.m,
+    fontSize: font.s,
+    color: colors.text,
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  editActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: sizes.s,
+    marginTop: sizes.s,
+  },
+  cancelButton: {
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.s,
+    borderRadius: sizes.s,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+  },
+  cancelButtonText: {
+    fontSize: font.s,
+    color: colors.text,
+  },
+  saveButton: {
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.s,
+    borderRadius: sizes.s,
+    backgroundColor: colors.primary,
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveButtonText: {
+    fontSize: font.s,
+    color: colors.white,
+    fontWeight: "600",
   },
 });

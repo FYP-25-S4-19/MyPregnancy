@@ -1,7 +1,6 @@
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { useArticlePreviewsQuery } from "@/src/shared/hooks/useArticles";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import React from "react";
 
 interface ArticleSectionProps {
   onViewAll?: () => void;

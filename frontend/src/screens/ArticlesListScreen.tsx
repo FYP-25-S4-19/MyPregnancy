@@ -1,12 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-} from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
 import React, { useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -15,9 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/src/shared/api";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import SearchBar from "@/src/components/SearchBar";
+import { useIsArticleSaved, useSaveArticle, useUnsaveArticle } from "@/src/shared/hooks/useArticles";
+import useAuthStore from "@/src/shared/authStore";
 
 /* ================= TYPES ================= */
-
 type ArticleOverview = {
   id: number;
   title: string;
@@ -34,7 +28,7 @@ type ArticleCategory = {
 /* ================= TRIMESTER SETUP ================= */
 
 const TRIMESTERS = [1, 2, 3] as const;
-type Trimester = typeof TRIMESTERS[number];
+type Trimester = (typeof TRIMESTERS)[number];
 
 const getTrimesterColor = (trimester: Trimester) => {
   switch (trimester) {
@@ -49,20 +43,115 @@ const getTrimesterColor = (trimester: Trimester) => {
   }
 };
 
-const goBackSafe = () => {
-  router.replace("/main/mother/(home)");
-};
+/* ================= ARTICLE CARD COMPONENT ================= */
+
+interface ArticleCardProps {
+  item: ArticleOverview;
+  actor: "mother" | "doctor" | "nutritionist" | "merchant";
+}
+
+function ArticleCard({ item, actor }: ArticleCardProps) {
+  const me = useAuthStore((state) => state.me);
+  const { data: isSaved, isLoading: isCheckingSaved } = useIsArticleSaved(item.id);
+  const saveArticle = useSaveArticle();
+  const unsaveArticle = useUnsaveArticle();
+
+  const handleSaveToggle = (e: any) => {
+    e.stopPropagation();
+    if (isSaved) {
+      unsaveArticle.mutate(item.id);
+    } else {
+      saveArticle.mutate(item.id);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={styles.articleCard}
+      activeOpacity={0.9}
+      onPress={() => {
+        const actorPath =
+          actor === "mother"
+            ? "mother"
+            : actor === "doctor"
+              ? "doctor"
+              : actor === "nutritionist"
+                ? "nutritionist"
+                : "merchant";
+        router.push(`/main/${actorPath}/(home)/articles/${item.id}` as any);
+      }}
+    >
+      <View style={styles.articleCardInner}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
+          {me && (
+            <TouchableOpacity onPress={handleSaveToggle} disabled={isCheckingSaved} style={styles.saveButton}>
+              {isCheckingSaved ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={20} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <Text style={styles.articleTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+
+        <Text style={styles.articleExcerpt} numberOfLines={2}>
+          {item.excerpt}
+        </Text>
+
+        <View style={styles.trimesterRow}>
+          <View style={[styles.trimesterChip, { backgroundColor: getTrimesterColor(item.trimester as Trimester) }]}>
+            <Text style={styles.trimesterText}>Trimester {item.trimester}</Text>
+          </View>
+
+          <View style={styles.openRow}>
+            <Text style={styles.openText}>Open</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.tabIcon} />
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+/* ================= COMPONENT PROPS ================= */
+
+interface ArticlesListScreenProps {
+  onBack?: () => void;
+  showBackButton?: boolean;
+  showActionButtons?: boolean;
+  actor?: "mother" | "doctor" | "nutritionist" | "merchant";
+}
 
 /* ================= SCREEN ================= */
 
-export default function ArticlesScreen() {
+export default function ArticlesListScreen({
+  onBack,
+  showBackButton = true,
+  showActionButtons = false,
+  actor = "mother",
+}: ArticlesListScreenProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedTrimesters, setSelectedTrimesters] = useState<Trimester[]>([]);
 
+  const me = useAuthStore((state) => state.me);
+
   const handleSubmitSearch = () => {
     setSubmittedQuery(searchQuery.trim());
+  };
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      router.back();
+    }
   };
 
   /* ================= CATEGORIES ================= */
@@ -89,11 +178,9 @@ export default function ArticlesScreen() {
         const cats = (categoriesQuery.data ?? []).map((c) => c.label);
         const results = await Promise.all(
           cats.map(async (cat) => {
-            const res = await api.get<ArticleOverview[]>(
-              `/articles/?category=${encodeURIComponent(cat)}`
-            );
+            const res = await api.get<ArticleOverview[]>(`/articles/?category=${encodeURIComponent(cat)}`);
             return res.data;
-          })
+          }),
         );
 
         const merged = results.flat();
@@ -102,9 +189,7 @@ export default function ArticlesScreen() {
         return Array.from(map.values());
       }
 
-      const res = await api.get<ArticleOverview[]>(
-        `/articles/?category=${encodeURIComponent(selectedCategory)}`
-      );
+      const res = await api.get<ArticleOverview[]>(`/articles/?category=${encodeURIComponent(selectedCategory)}`);
       return res.data;
     },
     enabled: selectedCategory === "All" ? !!categoriesQuery.data?.length : true,
@@ -123,9 +208,7 @@ export default function ArticlesScreen() {
           .toLowerCase()
           .includes(q);
 
-      const trimesterMatch =
-        selectedTrimesters.length === 0 ||
-        selectedTrimesters.includes(a.trimester as Trimester);
+      const trimesterMatch = selectedTrimesters.length === 0 || selectedTrimesters.includes(a.trimester as Trimester);
 
       return searchMatch && trimesterMatch;
     });
@@ -134,11 +217,25 @@ export default function ArticlesScreen() {
   const isLoading = categoriesQuery.isLoading || articlesQuery.isLoading;
 
   const toggleTrimester = (tri: Trimester) => {
-    setSelectedTrimesters((prev) =>
-      prev.includes(tri)
-        ? prev.filter((t) => t !== tri)
-        : [...prev, tri]
-    );
+    setSelectedTrimesters((prev) => (prev.includes(tri) ? prev.filter((t) => t !== tri) : [...prev, tri]));
+  };
+
+  /* ================= FAB HANDLERS ================= */
+
+  const handleMyArticlesPress = (): void => {
+    if (actor === "doctor" || actor === "nutritionist") {
+      router.push(`/main/${actor}/(home)/my-articles`);
+    }
+  };
+
+  const handleCreateArticlePress = (): void => {
+    if (actor === "doctor" || actor === "nutritionist") {
+      router.push(`/main/${actor}/(home)/my-articles/create`);
+    }
+  };
+
+  const handleSavedArticlesPress = (): void => {
+    router.push(`/main/${actor}/(home)/saved-articles` as any);
   };
 
   /* ================= UI ================= */
@@ -147,9 +244,13 @@ export default function ArticlesScreen() {
     <SafeAreaView edges={["top"]} style={styles.container}>
       {/* ===== TOP BAR ===== */}
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={goBackSafe} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
-        </TouchableOpacity>
+        {showBackButton ? (
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.backBtn} />
+        )}
 
         <Text style={styles.title}>Articles</Text>
         <View style={styles.backBtn} />
@@ -181,9 +282,7 @@ export default function ArticlesScreen() {
                 style={[styles.chip, active && styles.chipActive]}
                 onPress={() => setSelectedCategory(item.label)}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {item.label.toUpperCase()}
-                </Text>
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{item.label.toUpperCase()}</Text>
               </TouchableOpacity>
             );
           }}
@@ -209,14 +308,22 @@ export default function ArticlesScreen() {
                 ]}
                 onPress={() => toggleTrimester(item)}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  TRIMESTER {item}
-                </Text>
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>TRIMESTER {item}</Text>
               </TouchableOpacity>
             );
           }}
         />
       </View>
+
+      {/* ===== SAVED ARTICLES BUTTON ===== */}
+      {me && (
+        <View style={styles.savedButtonWrap}>
+          <TouchableOpacity style={styles.savedButton} onPress={handleSavedArticlesPress} activeOpacity={0.85}>
+            <Ionicons name="bookmark" size={18} color={colors.primary} />
+            <Text style={styles.savedButtonText}>Saved Articles</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* ===== CONTENT ===== */}
       {isLoading ? (
@@ -228,58 +335,22 @@ export default function ArticlesScreen() {
           data={filteredArticles}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.articleCard}
-              activeOpacity={0.9}
-              onPress={() =>
-                router.push({
-                  pathname: "/(notab)/articles/[id]",
-                  params: { id: String(item.id) },
-                } as any)
-              }
-            >
-              <View style={styles.articleCardInner}>
-                <Text style={styles.categoryText}>
-                  {item.category.toUpperCase()}
-                </Text>
-
-                <Text style={styles.articleTitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
-
-                <Text style={styles.articleExcerpt} numberOfLines={2}>
-                  {item.excerpt}
-                </Text>
-
-                <View style={styles.trimesterRow}>
-                  <View
-                    style={[
-                      styles.trimesterChip,
-                      { backgroundColor: getTrimesterColor(item.trimester as Trimester) },
-                    ]}
-                  >
-                    <Text style={styles.trimesterText}>
-                      Trimester {item.trimester}
-                    </Text>
-                  </View>
-
-                  <View style={styles.openRow}>
-                    <Text style={styles.openText}>Open</Text>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={18}
-                      color={colors.tabIcon}
-                    />
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.empty}>No articles found</Text>
-          }
+          renderItem={({ item }) => <ArticleCard item={item} actor={actor} />}
+          ListEmptyComponent={<Text style={styles.empty}>No articles found</Text>}
         />
+      )}
+
+      {/* ===== FLOATING ACTION BUTTONS ===== */}
+      {showActionButtons && (
+        <View style={styles.floatingButtonsContainer}>
+          <TouchableOpacity style={styles.floatingButtonLeft} onPress={handleMyArticlesPress} activeOpacity={0.8}>
+            <Ionicons name="document-text" size={28} color={colors.white} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.floatingButtonRight} onPress={handleCreateArticlePress} activeOpacity={0.8}>
+            <Ionicons name="add" size={32} color={colors.white} />
+          </TouchableOpacity>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -304,6 +375,29 @@ const styles = StyleSheet.create({
 
   chipsWrap: { marginBottom: sizes.s },
   chipsContent: { paddingHorizontal: sizes.m, gap: sizes.s },
+
+  savedButtonWrap: {
+    paddingHorizontal: sizes.m,
+    marginBottom: sizes.s,
+    alignItems: "flex-end",
+  },
+  savedButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.xs,
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.xs,
+    backgroundColor: "#FFE9EC",
+    borderRadius: sizes.l,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+  },
+  savedButtonText: {
+    fontSize: font.xs,
+    color: colors.primary,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
 
   chip: {
     backgroundColor: "#FFE9EC",
@@ -340,12 +434,22 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0,0,0,0.06)",
   },
 
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+
   categoryText: {
     fontSize: 11,
     fontWeight: "900",
     color: colors.primary,
     letterSpacing: 0.8,
-    marginBottom: 4,
+  },
+
+  saveButton: {
+    padding: 4,
   },
 
   articleTitle: {
@@ -394,5 +498,42 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: sizes.xl,
     color: colors.tabIcon,
+  },
+
+  floatingButtonsContainer: {
+    position: "absolute",
+    bottom: sizes.xl,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: sizes.l,
+    zIndex: 10,
+  },
+  floatingButtonLeft: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  floatingButtonRight: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
   },
 });
