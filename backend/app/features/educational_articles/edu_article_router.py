@@ -79,11 +79,64 @@ async def get_my_articles(
     ]
 
 
+@edu_articles_router.get("/saved", response_model=list[ArticleOverviewResponse])
+async def get_saved_articles(
+    user: User = Depends(current_active_user),
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> list[ArticleOverviewResponse]:
+    """Get all articles saved by the current user"""
+    return await service.get_saved_articles(user)
+
+
 @edu_articles_router.get("/{article_id}", response_model=ArticleDetailedResponse)
 async def get_article_detailed(
     article_id: int, service: EduArticleService = Depends(get_edu_articles_service)
 ) -> ArticleDetailedResponse:
     return await service.get_article_detailed(article_id)
+
+
+@edu_articles_router.get("/{article_id}/is-saved", response_model=dict)
+async def check_if_article_is_saved(
+    article_id: int,
+    user: User = Depends(current_active_user),
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> dict:
+    """Check if the current user has saved this article"""
+    is_saved = await service.is_article_saved(user, article_id)
+    return {"is_saved": is_saved}
+
+
+@edu_articles_router.post("/{article_id}/save", status_code=status.HTTP_201_CREATED)
+async def save_article(
+    article_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> dict:
+    """Save an article for the current user"""
+    try:
+        await service.save_article(user, article_id)
+        await db.commit()
+        return {"message": "Article saved successfully"}
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@edu_articles_router.delete("/{article_id}/save", status_code=status.HTTP_204_NO_CONTENT)
+async def unsave_article(
+    article_id: int,
+    user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+    service: EduArticleService = Depends(get_edu_articles_service),
+) -> None:
+    """Unsave an article for the current user"""
+    try:
+        await service.unsave_article(user, article_id)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
 
 @edu_articles_router.post("/", status_code=status.HTTP_201_CREATED)

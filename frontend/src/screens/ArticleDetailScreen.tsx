@@ -6,6 +6,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 import api from "@/src/shared/api";
 import { colors, font, sizes } from "@/src/shared/designSystem";
+import { useIsArticleSaved, useSaveArticle, useUnsaveArticle } from "@/src/shared/hooks/useArticles";
+import useAuthStore from "@/src/shared/authStore";
 
 type ArticleDetail = {
   id: number;
@@ -49,6 +51,11 @@ interface ArticleDetailScreenProps {
 }
 
 export default function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenProps) {
+  const me = useAuthStore((state) => state.me);
+  const { data: isSaved, isLoading: isCheckingSaved } = useIsArticleSaved(Number(articleId));
+  const saveArticle = useSaveArticle();
+  const unsaveArticle = useUnsaveArticle();
+
   const articleQuery = useQuery({
     queryKey: ["article", articleId],
     queryFn: async () => {
@@ -67,6 +74,14 @@ export default function ArticleDetailScreen({ articleId, onBack }: ArticleDetail
     [articleQuery.data?.content_markdown],
   );
 
+  const handleSaveToggle = () => {
+    if (isSaved) {
+      unsaveArticle.mutate(Number(articleId));
+    } else {
+      saveArticle.mutate(Number(articleId));
+    }
+  };
+
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.topBar}>
@@ -76,7 +91,22 @@ export default function ArticleDetailScreen({ articleId, onBack }: ArticleDetail
 
         <Text style={styles.headerTitle}>Article</Text>
 
-        <View style={styles.iconBtn} />
+        {me ? (
+          <TouchableOpacity
+            onPress={handleSaveToggle}
+            disabled={isCheckingSaved}
+            style={styles.iconBtn}
+            activeOpacity={0.85}
+          >
+            {isCheckingSaved ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={22} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.iconBtn} />
+        )}
       </View>
 
       {articleQuery.isLoading ? (

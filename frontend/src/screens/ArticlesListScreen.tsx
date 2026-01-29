@@ -8,9 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/src/shared/api";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import SearchBar from "@/src/components/SearchBar";
+import { useIsArticleSaved, useSaveArticle, useUnsaveArticle } from "@/src/shared/hooks/useArticles";
+import useAuthStore from "@/src/shared/authStore";
 
 /* ================= TYPES ================= */
-
 type ArticleOverview = {
   id: number;
   title: string;
@@ -42,6 +43,81 @@ const getTrimesterColor = (trimester: Trimester) => {
   }
 };
 
+/* ================= ARTICLE CARD COMPONENT ================= */
+
+interface ArticleCardProps {
+  item: ArticleOverview;
+  actor: "mother" | "doctor" | "nutritionist" | "merchant";
+}
+
+function ArticleCard({ item, actor }: ArticleCardProps) {
+  const me = useAuthStore((state) => state.me);
+  const { data: isSaved, isLoading: isCheckingSaved } = useIsArticleSaved(item.id);
+  const saveArticle = useSaveArticle();
+  const unsaveArticle = useUnsaveArticle();
+
+  const handleSaveToggle = (e: any) => {
+    e.stopPropagation();
+    if (isSaved) {
+      unsaveArticle.mutate(item.id);
+    } else {
+      saveArticle.mutate(item.id);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={styles.articleCard}
+      activeOpacity={0.9}
+      onPress={() => {
+        const actorPath =
+          actor === "mother"
+            ? "mother"
+            : actor === "doctor"
+              ? "doctor"
+              : actor === "nutritionist"
+                ? "nutritionist"
+                : "merchant";
+        router.push(`/main/${actorPath}/(home)/articles/${item.id}` as any);
+      }}
+    >
+      <View style={styles.articleCardInner}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
+          {me && (
+            <TouchableOpacity onPress={handleSaveToggle} disabled={isCheckingSaved} style={styles.saveButton}>
+              {isCheckingSaved ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={20} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <Text style={styles.articleTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+
+        <Text style={styles.articleExcerpt} numberOfLines={2}>
+          {item.excerpt}
+        </Text>
+
+        <View style={styles.trimesterRow}>
+          <View style={[styles.trimesterChip, { backgroundColor: getTrimesterColor(item.trimester as Trimester) }]}>
+            <Text style={styles.trimesterText}>Trimester {item.trimester}</Text>
+          </View>
+
+          <View style={styles.openRow}>
+            <Text style={styles.openText}>Open</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.tabIcon} />
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 /* ================= COMPONENT PROPS ================= */
 
 interface ArticlesListScreenProps {
@@ -63,6 +139,8 @@ export default function ArticlesListScreen({
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedTrimesters, setSelectedTrimesters] = useState<Trimester[]>([]);
+
+  const me = useAuthStore((state) => state.me);
 
   const handleSubmitSearch = () => {
     setSubmittedQuery(searchQuery.trim());
@@ -156,6 +234,10 @@ export default function ArticlesListScreen({
     }
   };
 
+  const handleSavedArticlesPress = (): void => {
+    router.push(`/main/${actor}/(home)/saved-articles` as any);
+  };
+
   /* ================= UI ================= */
 
   return (
@@ -233,6 +315,16 @@ export default function ArticlesListScreen({
         />
       </View>
 
+      {/* ===== SAVED ARTICLES BUTTON ===== */}
+      {me && (
+        <View style={styles.savedButtonWrap}>
+          <TouchableOpacity style={styles.savedButton} onPress={handleSavedArticlesPress} activeOpacity={0.85}>
+            <Ionicons name="bookmark" size={18} color={colors.primary} />
+            <Text style={styles.savedButtonText}>Saved Articles</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* ===== CONTENT ===== */}
       {isLoading ? (
         <View style={styles.center}>
@@ -243,48 +335,7 @@ export default function ArticlesListScreen({
           data={filteredArticles}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.articleCard}
-              activeOpacity={0.9}
-              onPress={() => {
-                const actorPath =
-                  actor === "mother"
-                    ? "mother"
-                    : actor === "doctor"
-                      ? "doctor"
-                      : actor === "nutritionist"
-                        ? "nutritionist"
-                        : "merchant";
-                router.push(`/main/${actorPath}/(home)/articles/${item.id}` as any);
-              }}
-            >
-              <View style={styles.articleCardInner}>
-                <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
-
-                <Text style={styles.articleTitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
-
-                <Text style={styles.articleExcerpt} numberOfLines={2}>
-                  {item.excerpt}
-                </Text>
-
-                <View style={styles.trimesterRow}>
-                  <View
-                    style={[styles.trimesterChip, { backgroundColor: getTrimesterColor(item.trimester as Trimester) }]}
-                  >
-                    <Text style={styles.trimesterText}>Trimester {item.trimester}</Text>
-                  </View>
-
-                  <View style={styles.openRow}>
-                    <Text style={styles.openText}>Open</Text>
-                    <Ionicons name="chevron-forward" size={18} color={colors.tabIcon} />
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
+          renderItem={({ item }) => <ArticleCard item={item} actor={actor} />}
           ListEmptyComponent={<Text style={styles.empty}>No articles found</Text>}
         />
       )}
@@ -325,6 +376,29 @@ const styles = StyleSheet.create({
   chipsWrap: { marginBottom: sizes.s },
   chipsContent: { paddingHorizontal: sizes.m, gap: sizes.s },
 
+  savedButtonWrap: {
+    paddingHorizontal: sizes.m,
+    marginBottom: sizes.s,
+    alignItems: "flex-end",
+  },
+  savedButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: sizes.xs,
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.xs,
+    backgroundColor: "#FFE9EC",
+    borderRadius: sizes.l,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+  },
+  savedButtonText: {
+    fontSize: font.xs,
+    color: colors.primary,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+
   chip: {
     backgroundColor: "#FFE9EC",
     paddingHorizontal: sizes.l,
@@ -360,12 +434,22 @@ const styles = StyleSheet.create({
     borderColor: "rgba(0,0,0,0.06)",
   },
 
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+
   categoryText: {
     fontSize: 11,
     fontWeight: "900",
     color: colors.primary,
     letterSpacing: 0.8,
-    marginBottom: 4,
+  },
+
+  saveButton: {
+    padding: 4,
   },
 
   articleTitle: {

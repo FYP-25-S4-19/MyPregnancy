@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.db_schema import EduArticle, EduArticleCategory, User
+from app.db.db_schema import EduArticle, EduArticleCategory, SavedEduArticle, User
 from app.features.educational_articles.edu_article_models import (
     ArticleDetailedResponse,
     ArticleOverviewResponse,
@@ -313,3 +313,74 @@ class EduArticleService:
             )
 
         await self.db.delete(category)
+
+    async def save_article(self, user: User, article_id: int) -> None:
+        """Save an article for a user"""
+        # Check if article exists
+        article = await self.db.get(EduArticle, article_id)
+        if article is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article of not found")
+
+        # Check if already saved
+        query = select(SavedEduArticle).where(
+            SavedEduArticle.saver_id == user.id, SavedEduArticle.article_id == article_id
+        )
+        result = await self.db.execute(query)
+        existing = result.scalars().first()
+        if existing:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Article already saved")
+
+        # Create saved article entry
+        saved_article = SavedEduArticle(saver_id=user.id, article_id=article_id)
+        self.db.add(saved_article)
+        await self.db.flush()
+
+    async def unsave_article(self, user: User, article_id: int) -> None:
+        """Unsave an article for a user"""
+        query = select(SavedEduArticle).where(
+            SavedEduArticle.saver_id == user.id, SavedEduArticle.article_id == article_id
+        )
+        result = await self.db.execute(query)
+        saved_article = result.scalars().first()
+        if not saved_article:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Article not saved")
+
+        await self.db.delete(saved_article)
+
+    async def is_article_saved(self, user: User, article_id: int) -> bool:
+        """Check if an article is saved by a user"""
+        query = select(SavedEduArticle).where(
+            SavedEduArticle.saver_id == user.id, SavedEduArticle.article_id == article_id
+        )
+        result = await self.db.execute(query)
+        return result.scalars().first() is not None
+
+    async def get_saved_articles(self, user: User) -> list[ArticleOverviewResponse]:
+        """Get all articles saved by a user"""
+        query = (
+            select(
+                EduArticle.id,
+                EduArticle.title,
+                EduArticleCategory.label,
+                EduArticle.content_markdown,
+                EduArticle.trimester,
+            )
+            .join(SavedEduArticle, SavedEduArticle.article_id == EduArticle.id)
+            .join(EduArticleCategory, EduArticle.category_id == EduArticleCategory.id)
+            .where(SavedEduArticle.saver_id == user.id)
+            .order_by(EduArticle.created_at.desc())
+        )
+
+        result = await self.db.execute(query)
+        rows = result.mappings().all()
+
+        return [
+            ArticleOverviewResponse(
+                id=row["id"],
+                title=row["title"],
+                category=row["label"],
+                excerpt=_make_excerpt(row["content_markdown"] or ""),
+                trimester=row["trimester"],
+            )
+            for row in rows
+        ]

@@ -225,6 +225,14 @@ export interface EduArticleDetailedData {
   created_at: string;
 }
 
+export interface ArticleOverviewData {
+  id: number;
+  title: string;
+  category: string;
+  excerpt: string;
+  trimester: number;
+}
+
 export interface CreateEduArticleData {
   category_id: number;
   title: string;

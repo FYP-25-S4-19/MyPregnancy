@@ -5,6 +5,7 @@ import {
   CreateEduArticleData,
   UpdateEduArticleData,
   ArticlePreviewData,
+  ArticleOverviewData,
 } from "@/src/shared/typesAndInterfaces";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/src/shared/api";
@@ -128,6 +129,64 @@ export const useArticlePreviewsQuery = (limit: number) => {
     queryFn: async () => {
       const response = await api.get<ArticlePreviewData[]>(`/articles/previews?limit=${limit}`);
       return response.data;
+    },
+  });
+};
+
+export const useSavedArticles = () => {
+  const me = useAuthStore((state) => state.me);
+
+  return useQuery({
+    queryKey: ["articles", "saved"],
+    queryFn: async (): Promise<ArticleOverviewData[]> => {
+      const response = await api.get<ArticleOverviewData[]>("/articles/saved");
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!me,
+  });
+};
+
+export const useIsArticleSaved = (articleId: number) => {
+  const me = useAuthStore((state) => state.me);
+
+  return useQuery({
+    queryKey: ["articles", articleId, "is-saved"],
+    queryFn: async (): Promise<boolean> => {
+      const response = await api.get<{ is_saved: boolean }>(`/articles/${articleId}/is-saved`);
+      return response.data.is_saved;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!me && !!articleId,
+  });
+};
+
+export const useSaveArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (articleId: number) => {
+      const response = await api.post(`/articles/${articleId}/save`);
+      return response.data;
+    },
+    onSuccess: (_, articleId) => {
+      queryClient.invalidateQueries({ queryKey: ["articles", "saved"] });
+      queryClient.invalidateQueries({ queryKey: ["articles", articleId, "is-saved"] });
+    },
+  });
+};
+
+export const useUnsaveArticle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (articleId: number) => {
+      const response = await api.delete(`/articles/${articleId}/save`);
+      return response.data;
+    },
+    onSuccess: (_, articleId) => {
+      queryClient.invalidateQueries({ queryKey: ["articles", "saved"] });
+      queryClient.invalidateQueries({ queryKey: ["articles", articleId, "is-saved"] });
     },
   });
 };
