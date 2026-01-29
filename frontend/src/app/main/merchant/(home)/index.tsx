@@ -27,15 +27,6 @@ export default function MerchantHomeScreen() {
             onViewAll={() => router.push("/main/merchant/(home)/threads")}
             onThreadPress={(threadID) => router.push(`/main/(notab)/threads/${threadID}`)}
           />
-          <ArticlesSection
-            onViewAll={() => router.push("/main/merchant/(home)/articles")}
-            onArticlePress={(articleId) =>
-              router.push({
-                pathname: "/(notab)/articles/[id]",
-                params: { id: String(articleId) },
-              } as any)
-            }
-          />
           <AddProductSection />
           <ProductsSection
             title="My Products"

@@ -247,12 +247,17 @@ export default function ArticlesListScreen({
             <TouchableOpacity
               style={styles.articleCard}
               activeOpacity={0.9}
-              onPress={() =>
-                router.push({
-                  pathname: "/(notab)/articles/[id]",
-                  params: { id: String(item.id) },
-                } as any)
-              }
+              onPress={() => {
+                const actorPath =
+                  actor === "mother"
+                    ? "mother"
+                    : actor === "doctor"
+                      ? "doctor"
+                      : actor === "nutritionist"
+                        ? "nutritionist"
+                        : "merchant";
+                router.push(`/main/${actorPath}/(home)/articles/${item.id}` as any);
+              }}
             >
               <View style={styles.articleCardInner}>
                 <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>

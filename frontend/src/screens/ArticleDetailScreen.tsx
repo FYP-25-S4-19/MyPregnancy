@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -44,21 +43,19 @@ function cleanMarkdown(md?: string | null) {
   return s.trim();
 }
 
-export default function ArticleDetailScreen() {
-  const params = useLocalSearchParams<{ id?: string | string[] }>();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+interface ArticleDetailScreenProps {
+  articleId: string;
+  onBack: () => void;
+}
 
-  const goBackSafe = () => {
-    router.back();
-  };
-
+export default function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenProps) {
   const articleQuery = useQuery({
-    queryKey: ["article", id],
+    queryKey: ["article", articleId],
     queryFn: async () => {
-      const res = await api.get(`/articles/${id}`);
+      const res = await api.get(`/articles/${articleId}`);
       return res.data as ArticleDetail;
     },
-    enabled: !!id,
+    enabled: !!articleId,
   });
 
   const readTime = useMemo(
@@ -73,7 +70,7 @@ export default function ArticleDetailScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={goBackSafe} style={styles.iconBtn} activeOpacity={0.85}>
+        <TouchableOpacity onPress={onBack} style={styles.iconBtn} activeOpacity={0.85}>
           <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
 
