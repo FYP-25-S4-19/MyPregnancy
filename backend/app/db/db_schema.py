@@ -246,7 +246,7 @@ class SavedEduArticle(Base):
     saver_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     saver: Mapped["User"] = relationship(back_populates="saved_edu_articles")
 
-    article_id: Mapped[int] = mapped_column(ForeignKey("edu_articles.id"), primary_key=True)
+    article_id: Mapped[int] = mapped_column(ForeignKey("edu_articles.id", ondelete="CASCADE"), primary_key=True)
     article: Mapped["EduArticle"] = relationship(back_populates="saved_edu_articles")
 
 

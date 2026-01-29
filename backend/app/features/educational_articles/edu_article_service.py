@@ -56,7 +56,7 @@ class EduArticleService:
         if limit <= 0:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
-        query = select(EduArticle.id, EduArticle.title).order_by(EduArticle.id.desc()).limit(limit)
+        query = select(EduArticle.id, EduArticle.title).order_by(EduArticle.created_at.desc()).limit(limit)
         result = await self.db.execute(query)
         rows = result.mappings().all()
         return [ArticlePreviewData(id=row["id"], title=row["title"]) for row in rows]
@@ -79,7 +79,7 @@ class EduArticleService:
             )
             .join(EduArticleCategory)
             .where(EduArticle.category_id == cat_obj.id)
-            .order_by(EduArticle.id.desc())
+            .order_by(EduArticle.created_at.desc())
         )
 
         result = await self.db.execute(query)
@@ -178,7 +178,7 @@ class EduArticleService:
             select(EduArticle)
             .options(selectinload(EduArticle.author), selectinload(EduArticle.category))
             .where(EduArticle.author_id == author.id)
-            .order_by(EduArticle.id.desc())
+            .order_by(EduArticle.created_at.desc())
         )
         result = await self.db.execute(query)
         return list(result.scalars().all())

@@ -70,7 +70,7 @@ export default function MotherProfileScreen() {
 
   const fullName = useMemo(
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
-    [firstName, middleName, lastName]
+    [firstName, middleName, lastName],
   );
 
   // -------------------------
@@ -203,7 +203,7 @@ export default function MotherProfileScreen() {
 
   const signOut = () => {
     clearAuthState();
-    router.replace("/(intro)/whoAreYouJoiningAs");
+    router.replace("/(intro)");
   };
 
   // -------------------------
@@ -341,11 +341,7 @@ export default function MotherProfileScreen() {
               )}
 
               <TouchableOpacity
-                style={[
-                  profileStyles.secondaryButton,
-                  { marginTop: sizes.m },
-                  isSavingPregnancy && { opacity: 0.6 },
-                ]}
+                style={[profileStyles.secondaryButton, { marginTop: sizes.m }, isSavingPregnancy && { opacity: 0.6 }]}
                 onPress={handleSavePregnancyDetails}
                 disabled={isSavingPregnancy}
               >
