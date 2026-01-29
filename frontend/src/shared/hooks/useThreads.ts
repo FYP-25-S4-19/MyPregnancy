@@ -8,16 +8,16 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/src/shared/api";
 
-export const useThreads = () => {
-  return useQuery({
-    queryKey: ["threads"],
-    queryFn: async (): Promise<ThreadPreviewData[]> => {
-      const response = await api.get<ThreadPreviewData[]>("/threads/");
-      return response.data;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-};
+// export const useThreads = () => {
+//   return useQuery({
+//     queryKey: ["threads"],
+//     queryFn: async (): Promise<ThreadPreviewData[]> => {
+//       const response = await api.get<ThreadPreviewData[]>("/threads");
+//       return response.data;
+//     },
+//     staleTime: 1000 * 60 * 5, // 5 minutes
+//   });
+// };
 
 export const useMyThreads = () => {
   return useQuery({

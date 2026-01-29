@@ -3,7 +3,6 @@ import { homeHorizontalScrollStyle } from "@/src/shared/globalStyles";
 import { useThreadsPreviews } from "@/src/shared/hooks/useThreads";
 import CommunityThreadCard from "../cards/CommunityThreadCard";
 import { colors } from "@/src/shared/designSystem";
-import { useEffect } from "react";
 
 interface CommunityThreadsSectionProps {
   onViewAll?: () => void;
@@ -13,16 +12,11 @@ interface CommunityThreadsSectionProps {
 export default function CommunityThreadsSection({ onViewAll, onThreadPress }: CommunityThreadsSectionProps) {
   const { data: threads, isLoading, isError, error, refetch } = useThreadsPreviews(6);
 
-  // useEffect(() => {
-  //   console.log("Thread Data:", threads);
-  // }, [threads]);
-
   if (isLoading) {
     return (
       <View style={homeHorizontalScrollStyle.section}>
         <View style={homeHorizontalScrollStyle.sectionHeader}>
           <Text style={homeHorizontalScrollStyle.sectionTitle}>Threads</Text>
-          {/*<TouchableOpacity onPress={() => refetch()}>Refetch Threads</TouchableOpacity>*/}
         </View>
         <View style={homeHorizontalScrollStyle.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -54,6 +48,9 @@ export default function CommunityThreadsSection({ onViewAll, onThreadPress }: Co
       <View style={homeHorizontalScrollStyle.section}>
         <View style={homeHorizontalScrollStyle.sectionHeader}>
           <Text style={homeHorizontalScrollStyle.sectionTitle}>Threads</Text>
+          {/*<TouchableOpacity onPress={() => refetch()}>
+            <Text>Refetch Threads</Text>
+          </TouchableOpacity>*/}
         </View>
         <View style={homeHorizontalScrollStyle.emptyContainer}>
           <Text style={homeHorizontalScrollStyle.emptyText}>No threads yet. Be the first to start a conversation!</Text>
