@@ -18,12 +18,15 @@ import {
   Image,
   Text,
   View,
-
 } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export default function RecipePreviewsScreen() {
+interface RecipePreviewsScreenProps {
+  actor?: "mother" | "nutritionist";
+}
+
+export default function RecipePreviewsScreen({ actor = "mother" }: RecipePreviewsScreenProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["All"]);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
 
@@ -42,22 +45,17 @@ export default function RecipePreviewsScreen() {
     setCurrentImageIndex(index);
   };
 
-
-  // trimester 
+  // trimester
   const TRIMESTERS = [1, 2, 3] as const;
-  type Trimester = typeof TRIMESTERS[number]; // 1 | 2 | 3
+  type Trimester = (typeof TRIMESTERS)[number]; // 1 | 2 | 3
 
   const [selectedTrimesters, setSelectedTrimesters] = useState<Trimester[]>([]);
 
   const toggleTrimester = (trimester: Trimester): void => {
     setSelectedTrimesters((prev) =>
-      prev.includes(trimester)
-        ? prev.filter((t) => t !== trimester)
-        : [...prev, trimester]
+      prev.includes(trimester) ? prev.filter((t) => t !== trimester) : [...prev, trimester],
     );
   };
-
-
 
   const { data: recipeCategories } = useQuery({
     queryKey: ["Recipe categories"],
@@ -87,18 +85,13 @@ export default function RecipePreviewsScreen() {
 
   const allRecipes: RecipeData[] = recipesData?.pages.flatMap((page) => page.recipes) || [];
   const filteredRecipes = allRecipes.filter((recipe) => {
-    const categoryMatch =
-      selectedCategories.includes("All") ||
-      selectedCategories.includes(recipe.category);
+    const categoryMatch = selectedCategories.includes("All") || selectedCategories.includes(recipe.category);
 
     const trimesterMatch =
-      selectedTrimesters.length === 0 ||
-      selectedTrimesters.includes(recipe.trimester as Trimester);
+      selectedTrimesters.length === 0 || selectedTrimesters.includes(recipe.trimester as Trimester);
 
     return categoryMatch && trimesterMatch;
   });
-
-
 
   const handleLoadMore = (): void => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -158,7 +151,6 @@ export default function RecipePreviewsScreen() {
         </View>
       </View>
 
-
       {/* ================= CATEGORY ================= */}
       <View style={styles.categoryContainer}>
         <View style={styles.sectionHeader}>
@@ -191,41 +183,26 @@ export default function RecipePreviewsScreen() {
         </ScrollView>
       </View>
 
-
       {/* ================= TRIMESTER ================= */}
       <View style={styles.categoryContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Trimester</Text>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryList}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
           {TRIMESTERS.map((tri) => (
             <TouchableOpacity
               key={tri}
-              style={[
-                styles.categoryChip,
-                selectedTrimesters.includes(tri) && styles.categoryChipActive,
-              ]}
+              style={[styles.categoryChip, selectedTrimesters.includes(tri) && styles.categoryChipActive]}
               onPress={() => toggleTrimester(tri)}
             >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selectedTrimesters.includes(tri) && styles.categoryTextActive,
-                ]}
-              >
+              <Text style={[styles.categoryText, selectedTrimesters.includes(tri) && styles.categoryTextActive]}>
                 Trimester {tri}
               </Text>
             </TouchableOpacity>
           ))}
-
         </ScrollView>
       </View>
-
     </>
   );
 
@@ -253,7 +230,7 @@ export default function RecipePreviewsScreen() {
             imgUrl={item.img_url}
             isSaved={item.is_saved}
             trimester={item.trimester}
-            onViewPress={() => router.push(`/main/mother/recipe/${item.id}`)}
+            onViewPress={() => router.push(`/main/${actor}/recipe/${item.id}`)}
             onSavePress={() => handleToggleSave(item.id, item.is_saved)}
           />
         )}

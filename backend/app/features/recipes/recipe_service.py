@@ -145,22 +145,29 @@ class RecipeService:
         if trimester < 1 or trimester > 3:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trimester must be 1, 2, or 3")
 
+        # Validate category exists
+        category_stmt = select(RecipeCategory).where(RecipeCategory.id == category_id)
+        category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+        if not category:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid recipe category")
+
+        # Create recipe without image first
         new_recipe = Recipe(
             nutritionist=nutritionist,
             name=name,
             description=description,
             est_calories=est_calories,
             pregnancy_benefit=pregnancy_benefit,
-            img_key="",
+            img_key=None,
             serving_count=serving_count,
             ingredients=ingredients,
             instructions_markdown=instructions,
             trimester=trimester,
-            category_id=category_id,
         )
         self.db.add(new_recipe)
-        await self.db.flush()
+        await self.db.flush()  # Get the recipe ID
 
+        # Now upload image with real recipe ID
         await image_file.seek(0)
         recipe_img_key = S3StorageInterface.put_recipe_img(new_recipe.id, image_file)
         if recipe_img_key is None:
@@ -346,6 +353,7 @@ class RecipeService:
             )
 
         # Upload to S3 using a special prefix for drafts
+        await img_file.seek(0)
         img_key = S3StorageInterface.put_recipe_draft_img(draft.id, img_file)
         if not img_key:
             raise HTTPException(
@@ -353,6 +361,7 @@ class RecipeService:
                 detail="Failed to upload draft image",
             )
         draft.img_key = img_key
+        await self.db.flush()  # Save the img_key to database
 
     async def delete_recipe_draft(self, draft_id: int, nutritionist_id: UUID) -> None:
         stmt = select(RecipeDraft).where(RecipeDraft.id == draft_id)
@@ -417,22 +426,23 @@ class RecipeService:
             description=draft.description,
             est_calories=draft.est_calories,
             pregnancy_benefit=draft.pregnancy_benefit,
+            img_key=None,  # Will be set after image promotion
             serving_count=draft.serving_count,
             ingredients=draft.ingredients,
             instructions_markdown=draft.instructions_markdown,
             trimester=draft.trimester,
         )
         self.db.add(new_recipe)
-        await self.db.flush()
+        await self.db.flush()  # Get the recipe ID
 
         # Copy/promote the draft image to the recipe image location
-        if draft.img_key:
-            img_key = S3StorageInterface.promote_recipe_draft_img(new_recipe.id, draft.img_key)
-            if img_key:
-                new_recipe.img_key = img_key
-            else:
-                # Fallback: just use the draft img_key if promotion fails
-                new_recipe.img_key = draft.img_key
+        img_key = S3StorageInterface.promote_recipe_draft_img(new_recipe.id, draft.img_key)
+        if not img_key:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to promote draft image. Please try again.",
+            )
+        new_recipe.img_key = img_key
 
         # Create the category association
         category_association = RecipeToCategoryAssociation(

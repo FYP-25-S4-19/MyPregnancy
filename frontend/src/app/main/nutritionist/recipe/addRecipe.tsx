@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { colors, sizes } from "@/src/shared/designSystem";
 import { Dropdown } from "react-native-element-dropdown";
 import React, { useEffect, useState } from "react";
-import useAuthStore from "@/src/shared/authStore";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import api from "@/src/shared/api";
@@ -19,22 +18,40 @@ import {
   Text,
 } from "react-native";
 
+interface RecipeFormState {
+  name: string;
+  description: string;
+  ingredients: string;
+  instructions: string;
+  estCalories: string;
+  pregnancyBenefit: string;
+  servingCount: number;
+  trimester: number;
+  categoryID: number;
+}
+
+interface CategoryOption {
+  label: string;
+  value: string;
+}
+
 export default function AddRecipeScreen() {
   const { draftId: draftIdParam, mode } = useLocalSearchParams();
   const draftId = draftIdParam ? Number(draftIdParam) : undefined;
 
-  const token = useAuthStore((state) => state.accessToken);
+  const [formState, setFormState] = useState<RecipeFormState>({
+    name: "",
+    description: "",
+    ingredients: "",
+    instructions: "",
+    estCalories: "",
+    pregnancyBenefit: "",
+    servingCount: 1,
+    trimester: 1,
+    categoryID: 0,
+  });
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [ingredients, setIngredients] = useState("");
-  const [instructions, setInstructions] = useState("");
-  const [estCalories, setEstCalories] = useState("");
-  const [pregnancyBenefit, setPregnancyBenefit] = useState("");
-  const [servingCount, setServingCount] = useState("");
-  const [trimester, setTrimester] = useState<string>("1");
-  const [categoryID, setCategoryID] = useState<string>("");
-  const [categories, setCategories] = useState<Array<{ label: string; value: string }>>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingDraft, setLoadingDraft] = useState(false);
@@ -47,18 +64,28 @@ export default function AddRecipeScreen() {
     { label: "Trimester 3", value: "3" },
   ];
 
-  /* ---------------- fetch categories on mount ---------------- */
+  /* ==================== HELPER FUNCTIONS ==================== */
+  const updateFormState = <K extends keyof RecipeFormState>(key: K, value: RecipeFormState[K]) => {
+    setFormState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleNumericInput = (value: string): number => {
+    const num = parseInt(value, 10);
+    return isNaN(num) ? 0 : num;
+  };
+
+  /* ==================== FETCH CATEGORIES ==================== */
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await api.get("/recipes/categories");
-        const categoryList = res.data.map((cat: any) => ({
+        const categoryList: CategoryOption[] = res.data.map((cat: any) => ({
           label: cat.label,
           value: cat.id.toString(),
         }));
         setCategories(categoryList);
         if (categoryList.length > 0) {
-          setCategoryID(categoryList[0].value);
+          setFormState((prev) => ({ ...prev, categoryID: parseInt(categoryList[0].value, 10) }));
         }
       } catch (err) {
         console.log("Failed to fetch categories", err);
@@ -67,7 +94,7 @@ export default function AddRecipeScreen() {
     fetchCategories();
   }, []);
 
-  /* ---------------- fetch draft if editing ---------------- */
+  /* ==================== FETCH DRAFT IF EDITING ==================== */
   useEffect(() => {
     if (draftId && mode === "edit") {
       const fetchDraft = async () => {
@@ -75,14 +102,17 @@ export default function AddRecipeScreen() {
           setLoadingDraft(true);
           const res = await api.get(`/recipes/drafts/${draftId}`);
           const draft = res.data;
-          setName(draft.name ?? "");
-          setDescription(draft.description ?? "");
-          setIngredients(draft.ingredients ?? "");
-          setInstructions(draft.instructions_markdown ?? "");
-          setEstCalories(draft.est_calories ?? "");
-          setPregnancyBenefit(draft.pregnancy_benefit ?? "");
-          setServingCount(draft.serving_count?.toString() ?? "");
-          setTrimester(draft.trimester?.toString() ?? "1");
+          setFormState({
+            name: draft.name ?? "",
+            description: draft.description ?? "",
+            ingredients: draft.ingredients ?? "",
+            instructions: draft.instructions_markdown ?? "",
+            estCalories: draft.est_calories ?? "",
+            pregnancyBenefit: draft.pregnancy_benefit ?? "",
+            servingCount: draft.serving_count ?? 1,
+            trimester: draft.trimester ?? 1,
+            categoryID: draft.category_id ?? 0,
+          });
           if (draft.img_key) {
             setImage({ uri: `${process.env.EXPO_PUBLIC_API_URL}/files/${draft.img_key}` } as any);
           }
@@ -96,10 +126,10 @@ export default function AddRecipeScreen() {
     }
   }, [draftId, mode]);
 
-  /* ---------------- pick image ---------------- */
+  /* ==================== PICK IMAGE ==================== */
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // for latest Expo, you might need MediaType instead
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
     });
 
@@ -108,32 +138,26 @@ export default function AddRecipeScreen() {
     }
   };
 
-  /* ---------------- submit draft (JSON body) ---------------- */
+  /* ==================== SUBMIT DRAFT ==================== */
   const submitDraft = async (draftIdToUpdate?: number): Promise<number | null> => {
     try {
       const draftPayload = {
-        name: name || null,
-        description: description || null,
-        ingredients: ingredients || null,
-        instructions_markdown: instructions || null,
-        est_calories: estCalories || null,
-        pregnancy_benefit: pregnancyBenefit || null,
-        serving_count: servingCount ? parseInt(servingCount) : null,
-        trimester: trimester ? parseInt(trimester) : null,
-        category_id: categoryID || null,
+        name: formState.name || null,
+        description: formState.description || null,
+        ingredients: formState.ingredients || null,
+        instructions_markdown: formState.instructions || null,
+        est_calories: formState.estCalories || null,
+        pregnancy_benefit: formState.pregnancyBenefit || null,
+        serving_count: formState.servingCount || null,
+        trimester: formState.trimester || null,
+        category_id: formState.categoryID || null,
       };
 
       let createdDraftId: number | null = null;
 
       if (draftIdToUpdate) {
         // Update existing draft
-        const updatePayload = {
-          ...draftPayload,
-          category: categoryID ? categoryID : null,
-        };
-        delete (updatePayload as any).category;
-
-        await api.patch(`/recipes/drafts/${draftIdToUpdate}`, updatePayload);
+        await api.patch(`/recipes/drafts/${draftIdToUpdate}`, draftPayload);
         createdDraftId = draftIdToUpdate;
       } else {
         // Create new draft
@@ -162,10 +186,10 @@ export default function AddRecipeScreen() {
     }
   };
 
-  /* ---------------- submit recipe (form data) ---------------- */
+  /* ==================== SUBMIT RECIPE ==================== */
   const submitRecipe = async (isDraft: boolean): Promise<void> => {
     if (!isDraft) {
-      if (!name || !description || !ingredients || !instructions) {
+      if (!formState.name || !formState.description || !formState.ingredients || !formState.instructions) {
         Alert.alert("Missing info", "Please fill in all required fields to publish.");
         return;
       }
@@ -189,16 +213,16 @@ export default function AddRecipeScreen() {
         } else {
           // Creating a new recipe directly (not from draft)
           const formData = new FormData();
-          formData.append("name", name);
-          formData.append("description", description);
-          formData.append("ingredients", ingredients);
-          formData.append("instructions", instructions);
-          formData.append("est_calories", estCalories);
-          formData.append("pregnancy_benefit", pregnancyBenefit);
-          formData.append("serving_count", servingCount);
-          formData.append("trimester", trimester);
-          formData.append("category_id", categoryID);
-          if (image && image.uri && !image.uri.startsWith(process.env.EXPO_PUBLIC_API_URL || "")) {
+          formData.append("name", formState.name);
+          formData.append("description", formState.description);
+          formData.append("ingredients", formState.ingredients);
+          formData.append("instructions", formState.instructions);
+          formData.append("est_calories", formState.estCalories);
+          formData.append("pregnancy_benefit", formState.pregnancyBenefit);
+          formData.append("serving_count", formState.servingCount.toString());
+          formData.append("trimester", formState.trimester.toString());
+          formData.append("category_id", formState.categoryID.toString());
+          if (image && image.uri) {
             formData.append("image_file", {
               uri: image.uri,
               name: "recipe.jpg",
@@ -206,6 +230,7 @@ export default function AddRecipeScreen() {
             } as any);
           }
 
+          console.log("About to POST recipe data...", formData);
           await api.post(`/recipes/`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
@@ -234,41 +259,48 @@ export default function AddRecipeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>{draftId ? "Edit Recipe Draft" : "Add New Recipe"}</Text>
         <View style={styles.card}>
-          <Input label="Recipe Name" placeholder="*required" value={name} onChangeText={setName} />
+          <Input
+            label="Recipe Name"
+            placeholder="*required"
+            value={formState.name}
+            onChangeText={(value) => updateFormState("name", value)}
+          />
           <Input
             label="Description"
             placeholder="*required"
-            value={description}
-            onChangeText={setDescription}
+            value={formState.description}
+            onChangeText={(value) => updateFormState("description", value)}
             multiline
           />
           <Input
             label="Ingredients"
             placeholder="*required"
-            value={ingredients}
-            onChangeText={setIngredients}
+            value={formState.ingredients}
+            onChangeText={(value) => updateFormState("ingredients", value)}
             multiline
           />
           <Input
             label="Instructions"
             placeholder="*required"
-            value={instructions}
-            onChangeText={setInstructions}
+            value={formState.instructions}
+            onChangeText={(value) => updateFormState("instructions", value)}
             multiline
           />
           <Input
             label="Estimated Calories"
             placeholder="*required in kcal"
-            value={estCalories}
-            onChangeText={setEstCalories}
+            value={formState.estCalories}
+            onChangeText={(value) => updateFormState("estCalories", value)}
             keyboardType="numeric"
           />
           <Input
             label="Pregnancy Benefit"
             placeholder="*required"
-            value={pregnancyBenefit}
-            onChangeText={setPregnancyBenefit}
+            value={formState.pregnancyBenefit}
+            onChangeText={(value) => updateFormState("pregnancyBenefit", value)}
           />
+
+          {/* Trimester Dropdown */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Trimester</Text>
             <Dropdown
@@ -278,13 +310,15 @@ export default function AddRecipeScreen() {
               labelField="label"
               valueField="value"
               placeholder={!isFocus ? "Select trimester" : "..."}
-              value={trimester}
+              value={formState.trimester.toString()}
               onFocus={() => setIsFocus(true)}
               onBlur={() => setIsFocus(false)}
-              onChange={(item) => setTrimester(item.value)}
+              onChange={(item) => updateFormState("trimester", parseInt(item.value, 10))}
               renderRightIcon={() => <Ionicons name="chevron-down" size={20} color={colors.text} />}
             />
           </View>
+
+          {/* Category Dropdown */}
           <View style={styles.inputWrapper}>
             <Text style={styles.label}>Category</Text>
             <Dropdown
@@ -294,22 +328,32 @@ export default function AddRecipeScreen() {
               labelField="label"
               valueField="value"
               placeholder={!isCategoryFocus ? "Select category" : "..."}
-              value={categoryID}
+              value={formState.categoryID.toString()}
               onFocus={() => setIsCategoryFocus(true)}
               onBlur={() => setIsCategoryFocus(false)}
-              onChange={(item) => setCategoryID(item.value)}
+              onChange={(item) => updateFormState("categoryID", parseInt(item.value, 10))}
               renderRightIcon={() => <Ionicons name="chevron-down" size={20} color={colors.text} />}
             />
           </View>
 
-          <Input
-            label="Serving Count"
-            placeholder="*required per serving"
-            value={servingCount}
-            onChangeText={setServingCount}
-            keyboardType="numeric"
-          />
+          {/* Serving Count Input */}
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Serving Count</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="*required per serving"
+              placeholderTextColor={colors.secondary}
+              value={formState.servingCount.toString()}
+              onChangeText={(value) => {
+                const num = handleNumericInput(value);
+                updateFormState("servingCount", num);
+              }}
+              keyboardType="number-pad"
+              textAlignVertical="center"
+            />
+          </View>
 
+          {/* Image Upload */}
           <TouchableOpacity style={styles.uploadBox} onPress={pickImage}>
             {image ? (
               <Image source={{ uri: image.uri }} style={styles.preview} />
@@ -321,6 +365,7 @@ export default function AddRecipeScreen() {
             )}
           </TouchableOpacity>
 
+          {/* Action Buttons */}
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.submitBtn} onPress={() => submitRecipe(false)} disabled={loading}>
               <Text style={styles.submitText}>
@@ -338,22 +383,35 @@ export default function AddRecipeScreen() {
   );
 }
 
-/* ---------------- reusable input ---------------- */
-function Input({ label, ...props }: any) {
+/* ==================== REUSABLE INPUT COMPONENT ==================== */
+interface InputProps {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  multiline?: boolean;
+  keyboardType?: "numeric" | "number-pad" | "default";
+}
+
+function Input({ label, placeholder, value, onChangeText, multiline = false, keyboardType = "default" }: InputProps) {
   return (
     <View style={styles.inputWrapper}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        {...props}
-        style={[styles.input, props.multiline && { height: 100, textAlignVertical: "top" }]}
+        style={[styles.input, multiline && { height: 100, textAlignVertical: "top" }]}
+        placeholder={placeholder}
         placeholderTextColor={colors.secondary}
-        textAlignVertical={props.multiline ? "top" : "center"}
+        value={value}
+        onChangeText={onChangeText}
+        multiline={multiline}
+        keyboardType={keyboardType}
+        textAlignVertical={multiline ? "top" : "center"}
       />
     </View>
   );
 }
 
-/* ---------------- styles ---------------- */
+/* ==================== STYLES ==================== */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.veryLightPink, paddingHorizontal: sizes.l },
   title: { fontSize: sizes.xl, marginVertical: sizes.l, textAlign: "center" },
