@@ -227,7 +227,7 @@ export default function MotherProfileScreen() {
 
   const signOut = () => {
     clearAuthState();
-    router.push("/(intro)");
+    router.replace("/(intro)");
   };
 
   // -------------------------

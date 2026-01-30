@@ -112,7 +112,7 @@ export default function DoctorProfileScreen() {
 
   const signOut = () => {
     clearAuthState();
-    router.push("/(intro)");
+    router.replace("/(intro)");
   };
 
   return (

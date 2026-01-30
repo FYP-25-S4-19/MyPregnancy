@@ -6,7 +6,7 @@ from app.core.password_hasher import get_password_hasher
 from app.core.security import require_role
 from app.core.users_manager import current_active_user
 from app.db.db_config import get_db
-from app.db.db_schema import Admin, MCRNumber, Merchant, Nutritionist, PregnantWoman, User, UserRole, VolunteerDoctor
+from app.db.db_schema import Admin, Merchant, Nutritionist, PregnantWoman, User, UserRole, VolunteerDoctor
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
     DoctorUpdateRequest,
@@ -240,6 +240,14 @@ async def get_doctor_cert(
     service: AccountService = Depends(get_account_service),
 ) -> dict:
     return {"url": await service.get_doctor_cert(doctor)}
+
+
+@account_router.get("/nutritionist/cert-img-url")
+async def get_nutritionist_cert(
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: AccountService = Depends(get_account_service),
+) -> dict:
+    return {"url": await service.get_nutritionist_cert(nutritionist)}
 
 
 @account_router.put("/nutritionist")

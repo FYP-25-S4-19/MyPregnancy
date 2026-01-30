@@ -11,6 +11,7 @@ import React, { useMemo, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View, Image, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGetProfileImgUrl, useUpdateProfileImgMutation } from "@/src/shared/hooks/useProfile";
+import { useQuery } from "@tanstack/react-query";
 
 export default function NutritionistProfileScreen() {
   const me = useAuthStore((state) => state.me);
@@ -29,6 +30,16 @@ export default function NutritionistProfileScreen() {
   // Profile image
   const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
   const { mutate: uploadProfileImage, isPending: isUploadingImage } = useUpdateProfileImgMutation();
+
+  // Certificate query
+  const { data: certUrl } = useQuery({
+    queryKey: ["nutritionist-qualification-certificate"],
+    queryFn: async () => {
+      const response = await api.get<{ url: string | null }>("/accounts/nutritionist/cert-img-url");
+      return response.data.url;
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
 
   const memberSince = "2025";
 
@@ -92,9 +103,9 @@ export default function NutritionistProfileScreen() {
 
   const handleDeleteAccount = () => utils.handleDeleteAccount();
 
-  const signOut = () => {
+  const signOut = async () => {
     clearAuthState();
-    router.push("/(intro)");
+    router.replace("/(intro)");
   };
 
   return (
@@ -166,7 +177,7 @@ export default function NutritionistProfileScreen() {
               onUpdateField={setEmail}
             />
 
-            <CertificateUploadCard label="Certificate" />
+            <CertificateUploadCard label="Certificate (View Only)" certificateUri={certUrl || undefined} />
 
             {/* ✅ Save Button */}
             <TouchableOpacity

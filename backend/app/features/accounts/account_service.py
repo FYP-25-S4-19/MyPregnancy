@@ -422,6 +422,11 @@ class AccountService:
             return None
         return S3StorageInterface.get_presigned_url(doctor.qualification_img_key, expires_in_seconds=3600)
 
+    async def get_nutritionist_cert(self, nutritionist: Nutritionist) -> str | None:
+        if not nutritionist.qualification_img_key:
+            return None
+        return S3StorageInterface.get_presigned_url(nutritionist.qualification_img_key, expires_in_seconds=3600)
+
     async def update_nutritionist_profile(self, nutritionist: Nutritionist, data: NutritionistUpdateRequest):
         existing_user = await self.db.execute(
             select(Nutritionist).where(Nutritionist.email == data.email, Nutritionist.id != nutritionist.id)

@@ -97,7 +97,7 @@ export default function MerchantProfileScreen() {
 
   const signOut = () => {
     clearAuthState();
-    router.push("/(intro)");
+    router.replace("/(intro)");
   };
 
   return (
