@@ -100,7 +100,7 @@ export default function MotherProfileScreen() {
 
   const [isSavingPregnancy, setIsSavingPregnancy] = useState(false);
 
-  const memberSince = "2025";
+  const memberSince = me?.created_at ? utils.getMemberSinceYear(me.created_at) : "GOING LOW IN CS:GO";
 
   const loadPregProfile = async () => {
     setIsLoadingPregProfile(true);

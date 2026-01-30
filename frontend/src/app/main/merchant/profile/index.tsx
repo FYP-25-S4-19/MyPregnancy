@@ -31,7 +31,7 @@ export default function MerchantProfileScreen() {
   const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
   const { mutate: uploadProfileImage, isPending: isUploadingImage } = useUpdateProfileImgMutation();
 
-  const memberSince = "2025";
+  const memberSince = me?.created_at ? utils.getMemberSinceYear(me.created_at) : "GOING LOW IN CS:GO";
 
   const fullName = useMemo(
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),

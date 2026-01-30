@@ -6,9 +6,22 @@ import Constants from "expo-constants";
 import { jwtDecode } from "jwt-decode";
 import * as Device from "expo-device";
 import * as ImagePicker from "expo-image-picker";
+import useAuthStore from "./authStore";
+import { router } from "expo-router";
 import api from "./api";
 
 const utils = {
+  /**
+   * Extract the year from ISO 8601 datetime string for "member since" display
+   */
+  getMemberSinceYear(createdAt: string): string {
+    try {
+      const date = new Date(createdAt);
+      return date.getFullYear().toString();
+    } catch {
+      return "";
+    }
+  },
   /**
    * Will try to decode the JWT and return null if it FAILS or if is EXPIRED
    */
@@ -127,13 +140,110 @@ const utils = {
   /**
    * Common profile action handlers
    */
-  handleChangePassword() {
-    console.log("Change password pressed");
-    // TODO: Implement password change functionality
+  handleChangePassword(): void {
+    const authStore = useAuthStore.getState();
+    let newPassword = "";
+
+    Alert.prompt(
+      "Change Password",
+      "Enter your new password",
+      [
+        {
+          text: "Cancel",
+          onPress: () => {},
+          style: "cancel",
+        },
+        {
+          text: "Next",
+          onPress: (password?: string) => {
+            if (!password || password.length < 8) {
+              Alert.alert("Invalid Password", "Password must be at least 8 characters long");
+              return;
+            }
+            newPassword = password;
+
+            // Second prompt for confirmation
+            Alert.prompt(
+              "Confirm Password",
+              "Re-enter your new password",
+              [
+                {
+                  text: "Cancel",
+                  onPress: () => {},
+                  style: "cancel",
+                },
+                {
+                  text: "Update",
+                  onPress: async (confirm?: string) => {
+                    if (confirm !== newPassword) {
+                      Alert.alert("Passwords Don't Match", "The passwords you entered do not match");
+                      return;
+                    }
+
+                    try {
+                      const me = authStore.me;
+                      if (!me) {
+                        Alert.alert("Error", "User data not found");
+                        return;
+                      }
+
+                      await api.patch("/users/me", {
+                        password: newPassword,
+                        email: me.email,
+                        first_name: me.first_name,
+                        middle_name: me.middle_name || null,
+                        last_name: me.last_name,
+                        role: me.role,
+                      });
+
+                      Alert.alert("Success", "Your password has been updated successfully");
+                    } catch (error: any) {
+                      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to update password";
+                      Alert.alert("Update Failed", errorMsg);
+                    }
+                  },
+                },
+              ],
+              "secure-text",
+            );
+          },
+        },
+      ],
+      "secure-text",
+    );
   },
-  handleDeleteAccount() {
-    console.log("Delete account pressed");
-    // TODO: Implement account deletion functionality
+
+  handleDeleteAccount(): void {
+    const authStore = useAuthStore.getState();
+
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          onPress: () => {},
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              await api.delete(`/me/delete`);
+
+              authStore.clearAuthState();
+              router.replace("/(intro)");
+
+              Alert.alert("Account Deleted", "Your account has been permanently deleted");
+            } catch (error: any) {
+              const errorMsg = error?.response?.data?.detail || error?.message || "Failed to delete account";
+              Alert.alert("Deletion Failed", errorMsg);
+            }
+          },
+          style: "destructive",
+        },
+      ],
+    );
   },
   async handleChangePhoto(): Promise<FormData | null> {
     try {

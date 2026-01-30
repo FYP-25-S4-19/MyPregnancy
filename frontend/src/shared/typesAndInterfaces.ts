@@ -261,6 +261,7 @@ export interface MeData {
   middle_name: string | null;
   last_name: string;
   role: RoleType;
+  created_at: string; // ISO 8601 datetime
   // ---- role-specific ----
   mcr_no_id?: number; // Doctor
   shop_name?: string; // Merchant

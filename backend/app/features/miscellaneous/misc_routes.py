@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.security import require_role
 from app.core.settings import settings
+from app.core.users_manager import current_active_user
 from app.db.db_config import get_db
 from app.db.db_schema import (
     Admin,
@@ -21,6 +22,7 @@ from app.db.db_schema import (
     Page,
     PregnantWoman,
     SavedVolunteerDoctor,
+    User,
     VolunteerDoctor,
 )
 from app.features.miscellaneous.misc_models import (
@@ -380,6 +382,16 @@ async def unlike_doctor(
     await db.commit()
 
     return {"doctor_id": str(doctor_id), "is_liked": False}
+
+
+@misc_router.delete("/me/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_myself(user: User = Depends(current_active_user), db: AsyncSession = Depends(get_db)) -> None:
+    try:
+        user.is_active = False
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
 
 @misc_router.get("/")

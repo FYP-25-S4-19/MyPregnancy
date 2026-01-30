@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -13,11 +14,7 @@ class UserRead(schemas.BaseUser[UUID]):
     last_name: str
     role: UserRole
     profile_img_key: Optional[str] = None
-
-    # Role-specific fields
-    # mcr_no_id: Optional[int] = None  # Doctor/Nutritionist
-    # shop_name: Optional[str] = None  # Merchant
-    # date_of_birth: Optional[date] = None  # Pregnant Woman
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -41,7 +41,7 @@ export default function NutritionistProfileScreen() {
     staleTime: 60 * 60 * 1000, // 1 hour
   });
 
-  const memberSince = "2025";
+  const memberSince = me?.created_at ? utils.getMemberSinceYear(me.created_at) : "GOING LOW IN CS:GO";
 
   const fullName = useMemo(
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
