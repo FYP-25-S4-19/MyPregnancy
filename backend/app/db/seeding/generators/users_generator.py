@@ -245,6 +245,7 @@ class UsersGenerator:
                     email=f"{fullname_underscore_delim.lower()}@gmail.com",
                     hashed_password=password_hasher.hash(fullname_underscore_delim),
                     created_at=faker.date_time_between(start_date="-3y", end_date="now"),
+                    is_superuser=True,
                 )
                 all_admins.append(admin)
 

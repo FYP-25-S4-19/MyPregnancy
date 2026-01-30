@@ -1,4 +1,5 @@
 import { Text, TouchableOpacity, View, StyleSheet, ActivityIndicator } from "react-native";
+import { useUnreadNotifications } from "@/src/shared/hooks/useNotifications";
 import { useGetProfileImgUrl } from "@/src/shared/hooks/useProfile";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +26,7 @@ const HomePageHeader: FC<HomePageHeaderProps> = ({
   onNotificationPress,
 }) => {
   const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
+  const { data: hasUnreadNotifications } = useUnreadNotifications();
 
   return (
     <View style={styles.header}>
@@ -44,7 +46,7 @@ const HomePageHeader: FC<HomePageHeaderProps> = ({
         </View>
       </View>
       <TouchableOpacity onPress={onNotificationPress ?? onNotificationPress} style={styles.notificationButton}>
-        <View style={styles.notificationDot} />
+        {hasUnreadNotifications && <View style={styles.notificationDot} />}
         <Ionicons name="notifications-outline" size={28} />
       </TouchableOpacity>
     </View>

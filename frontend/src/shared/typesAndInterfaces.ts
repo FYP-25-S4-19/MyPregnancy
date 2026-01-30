@@ -208,7 +208,7 @@ export interface EduArticlePreviewData {
   id: number;
   title: string;
   author: string;
-  category: EduArticleCategoryData | null;
+  category: string;
   trimester: number;
   created_at: string;
   author_id: string;
@@ -218,7 +218,7 @@ export interface EduArticleDetailedData {
   id: number;
   author_id: string | null;
   author: string;
-  category: EduArticleCategoryData | null;
+  category: string;
   title: string;
   content_markdown: string;
   trimester: number;

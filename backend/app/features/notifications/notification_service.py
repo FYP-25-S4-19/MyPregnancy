@@ -68,6 +68,11 @@ class NotificationService:
         )
         await self.db.execute(insert_notif_stmt)
 
+    async def has_unread_notifications(self, user_id: UUID) -> bool:
+        stmt = select(Notification).where(Notification.recipient_id == user_id, Notification.is_seen == False).limit(1)
+        notification = (await self.db.execute(stmt)).scalar_one_or_none()
+        return notification is not None
+
     async def get_user_notifications(
         self, user_id: UUID, limit: int = 50, offset: int = 0
     ) -> list[AppNotificationResponse]:

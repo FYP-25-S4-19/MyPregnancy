@@ -39,15 +39,21 @@ export default function EditArticleScreen({ onBack }: EditArticleScreenProps) {
 
   // Load article data into form when article is fetched
   useEffect(() => {
-    if (article) {
+    if (article && articleCategories && articleCategories.length > 0) {
       setTitle(article.title);
       setContent(article.content_markdown);
       setTrimester(article.trimester);
       if (article.category) {
-        setSelectedCategory(article.category);
+        // Find the category object that matches the category label from the article
+        const matchingCategory = articleCategories.find(
+          (cat) => cat.label.toLowerCase() === article.category.toLowerCase(),
+        );
+        if (matchingCategory) {
+          setSelectedCategory(matchingCategory);
+        }
       }
     }
-  }, [article]);
+  }, [article, articleCategories]);
 
   const handleBack = (): void => {
     if (onBack) {

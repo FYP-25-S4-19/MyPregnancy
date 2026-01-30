@@ -1,3 +1,4 @@
+import { usePendingAppointmentsCount, useUpcomingAppointments } from "@/src/shared/hooks/useAppointments";
 import UpcomingAppointmentsSection from "@/src/components/sections/UpcomingAppointmentsSection";
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
 import PendingRequestsCard from "@/src/components/cards/PendingRequestsCard";
@@ -9,7 +10,6 @@ import { colors, sizes } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
-import { usePendingAppointmentsCount, useUpcomingAppointments } from "@/src/shared/hooks/useAppointments";
 
 export default function DoctorHomeScreen() {
   const me = useAuthStore((state) => state.me);

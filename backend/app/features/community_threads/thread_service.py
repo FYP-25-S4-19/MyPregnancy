@@ -263,7 +263,7 @@ class ThreadService:
         """Get all threads created by the current user."""
         stmt = (
             select(CommunityThread)
-            .where((CommunityThread.creator_id == current_user.id) & (not CommunityThread.is_deleted))
+            .where((CommunityThread.creator_id == current_user.id) & (CommunityThread.is_deleted == False))
             .options(
                 selectinload(CommunityThread.creator),
                 selectinload(CommunityThread.category),
