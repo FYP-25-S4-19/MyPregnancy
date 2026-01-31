@@ -275,13 +275,12 @@ class ProductService:
             select(ProductDraft).where(ProductDraft.merchant_id == merchant_id).order_by(ProductDraft.updated_at.desc())
         )
         drafts = (await self.db.execute(stmt)).scalars().all()
-
         return [await self._build_draft_response(draft) for draft in drafts]
 
     async def update_product_draft(
         self, draft_id: int, merchant_id: UUID, draft_data: ProductDraftUpdateRequest
-    ) -> ProductDraftResponse:
-        stmt = select(ProductDraft).where(ProductDraft.id == draft_id).options(selectinload(ProductDraft.merchant))
+    ) -> None:
+        stmt = select(ProductDraft).options(selectinload(ProductDraft.merchant)).where(ProductDraft.id == draft_id)
         draft = (await self.db.execute(stmt)).scalar_one_or_none()
         if not draft:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
@@ -311,7 +310,7 @@ class ProductService:
 
         await self.db.flush()
         await self.db.refresh(draft)
-        return await self._build_draft_response(draft)
+        # return await self._build_draft_response(draft)
 
     async def upload_product_draft_image(self, draft_id: int, merchant_id: UUID, img_file: UploadFile) -> None:
         stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
@@ -413,7 +412,11 @@ class ProductService:
         """Helper to build a ProductDraftResponse from a ProductDraft entity."""
         category_label = None
         if draft.category_id is not None:
-            category_stmt = select(ProductCategory).where(ProductCategory.id == draft.category_id)
+            category_stmt = (
+                select(ProductCategory)
+                .options(selectinload(ProductCategory.products))
+                .where(ProductCategory.id == draft.category_id)
+            )
             category = (await self.db.execute(category_stmt)).scalar_one_or_none()
             if category:
                 category_label = category.label

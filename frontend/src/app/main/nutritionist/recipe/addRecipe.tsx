@@ -113,8 +113,8 @@ export default function AddRecipeScreen() {
             trimester: draft.trimester ?? 1,
             categoryID: draft.category_id ?? 0,
           });
-          if (draft.img_key) {
-            setImage({ uri: `${process.env.EXPO_PUBLIC_API_URL}/files/${draft.img_key}` } as any);
+          if (draft.img_url) {
+            setImage({ uri: draft.img_url } as any);
           }
         } catch (err) {
           console.log("Failed to fetch draft", err);
@@ -165,8 +165,8 @@ export default function AddRecipeScreen() {
         createdDraftId = response.data.id;
       }
 
-      // Upload image if selected
-      if (image && image.uri && !image.uri.startsWith(process.env.EXPO_PUBLIC_API_URL || "")) {
+      // Upload image if selected and it's a new local file (not an existing S3 URL)
+      if (image && image.uri && !image.uri.startsWith("http://") && !image.uri.startsWith("https://")) {
         const imageFormData = new FormData();
         imageFormData.append("img_file", {
           uri: image.uri,
@@ -230,7 +230,7 @@ export default function AddRecipeScreen() {
             } as any);
           }
 
-          console.log("About to POST recipe data...", formData);
+          // console.log("About to POST recipe data...", formData);
           await api.post(`/recipes/`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });

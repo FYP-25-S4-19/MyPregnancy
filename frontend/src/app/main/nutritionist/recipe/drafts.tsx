@@ -23,13 +23,6 @@ type DraftRecipe = {
   created_at: string;
 };
 
-const getImageUrl = (imgKey: string | null) => {
-  if (!imgKey) {
-    return "https://via.placeholder.com/150";
-  }
-  return `${process.env.EXPO_PUBLIC_API_URL}/files/${imgKey}`;
-};
-
 export default function NutritionistRecipeDraftsScreen() {
   const [drafts, setDrafts] = useState<DraftRecipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +55,7 @@ export default function NutritionistRecipeDraftsScreen() {
         })
       }
     >
-      <Image source={{ uri: getImageUrl(item.img_url) }} style={styles.image} />
+      <Image source={{ uri: item.img_url || "" }} style={styles.image} />
 
       <View style={styles.content}>
         <Text style={styles.title}>{item.name ?? "Untitled Recipe"}</Text>

@@ -197,18 +197,17 @@ async def get_product_draft(
     return await service.get_product_draft(draft_id, merchant.id)
 
 
-@product_router.patch("/drafts/{draft_id}", response_model=ProductDraftResponse)
+@product_router.patch("/drafts/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update_product_draft(
     draft_id: int,
     draft_data: ProductDraftUpdateRequest,
     merchant: Merchant = Depends(require_role(Merchant)),
     service: ProductService = Depends(get_product_service),
     db: AsyncSession = Depends(get_db),
-) -> ProductDraftResponse:
+) -> None:
     try:
-        draft = await service.update_product_draft(draft_id, merchant.id, draft_data)
+        await service.update_product_draft(draft_id, merchant.id, draft_data)
         await db.commit()
-        return draft
     except:
         await db.rollback()
         raise
