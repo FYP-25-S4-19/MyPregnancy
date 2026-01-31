@@ -24,11 +24,11 @@ export default function MotherTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="appointment"
+        name="chats"
         options={{
-          title: "Appointment",
+          title: "Chats",
           tabBarIcon: ({ color, size = TAB_BAR_ICON_SIZE }) => (
-            <MaterialCommunityIcons name="calendar" size={size} color={color} />
+            <MaterialCommunityIcons name="message-text" size={size} color={color} />
           ),
         }}
       />
