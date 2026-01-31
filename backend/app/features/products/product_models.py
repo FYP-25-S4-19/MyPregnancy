@@ -61,3 +61,10 @@ class ProductDraftUpdateRequest(CustomBaseModel):
     category_id: int | None = None
     price_cents: int | None = None
     description: str | None = None
+
+
+class ProductUpdateRequest(CustomBaseModel):
+    name: str | None = None
+    category_id: int | None = None
+    price_cents: int | None = None
+    description: str | None = None

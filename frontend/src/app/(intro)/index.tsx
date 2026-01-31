@@ -47,12 +47,12 @@ export default function IntroPagerSinglePage() {
   const [index, setIndex] = useState(0);
 
   // keep your original ping
-  useEffect(() => {
-    try {
-      console.log("BaseURI:", api.getUri());
-      api.get("/").then((res) => console.log("Ping:", res.data));
-    } catch {}
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     console.log("BaseURI:", api.getUri());
+  //     api.get("/").then((res) => console.log("Ping:", res.data));
+  //   } catch {}
+  // }, []);
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     const i = viewableItems?.[0]?.index;

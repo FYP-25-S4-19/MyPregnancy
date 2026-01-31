@@ -1,4 +1,4 @@
-import { useProductCategories, useProductPreviews } from "@/src/shared/hooks/useProducts";
+import { useProductCategories, useAllProducts } from "@/src/shared/hooks/useProducts";
 import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import { CategoryPills } from "@/src/components/CategoryPills";
@@ -15,7 +15,7 @@ const ShopScreen: FC<ShopScreenProps> = ({ onProductIdPress }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const { data: productCategories } = useProductCategories();
-  const { data: productPreviews } = useProductPreviews(20);
+  const { data: productPreviews } = useAllProducts();
 
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
@@ -38,7 +38,7 @@ const ShopScreen: FC<ShopScreenProps> = ({ onProductIdPress }) => {
         <View style={styles.categorySection}>
           <View style={styles.categoryHeader}>
             <Text style={styles.categoryTitle}>Category</Text>
-            <Ionicons name="heart-outline" size={28} color={colors.text} />
+            {/*<Ionicons name="heart-outline" size={28} color={colors.text} />*/}
           </View>
 
           {/* Category Pills */}

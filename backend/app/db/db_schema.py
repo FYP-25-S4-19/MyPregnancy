@@ -546,30 +546,6 @@ class SavedRecipe(Base):
     recipe: Mapped["Recipe"] = relationship(back_populates="saved_recipes")
 
 
-# class Ingredient(Base):
-#     __tablename__ = "ingredients"
-#     id: Mapped[int] = mapped_column(primary_key=True)
-#     name: Mapped[str]
-#     protein_per_100g: Mapped[float | None]
-#     carbs_per_100g: Mapped[float | None]
-#     fats_per_100g: Mapped[float | None]
-#     recipe_ingredients: Mapped[list["RecipeIngredient"]] = relationship(back_populates="ingredient")
-
-
-# # The actual association table linking "recipe" and "ingredient"
-# class RecipeIngredient(Base):
-#     __tablename__ = "recipe_ingredients"
-
-#     recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), primary_key=True)
-#     recipe: Mapped["Recipe"] = relationship(back_populates="recipe_ingredients")
-
-#     ingredient_id: Mapped[int] = mapped_column(ForeignKey("ingredients.id"), primary_key=True)
-#     ingredient: Mapped["Ingredient"] = relationship(back_populates="recipe_ingredients")
-
-#     amount: Mapped[int]
-#     unit_of_measurement: Mapped[str]
-
-
 # ===========================================
 # ============= KICK TRACKER ================
 # ===========================================
@@ -613,8 +589,10 @@ class Product(Base):
     img_key: Mapped[str | None]
     listed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    liked_by_mothers: Mapped[list["MotherLikeProduct"]] = relationship(back_populates="product")
-    cart_items: Mapped[list["ShoppingCartItem"]] = relationship(back_populates="product")
+    liked_by_mothers: Mapped[list["MotherLikeProduct"]] = relationship(
+        back_populates="product", cascade="all, delete-orphan"
+    )
+    cart_items: Mapped[list["ShoppingCartItem"]] = relationship(back_populates="product", cascade="all, delete-orphan")
 
 
 class ProductCategory(Base):
