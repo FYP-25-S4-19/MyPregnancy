@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
-import { useProductDrafts } from "@/src/shared/hooks/useProducts";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { useProductDrafts, useDeleteProductDraftMutation } from "@/src/shared/hooks/useProducts";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { DraftCard } from "@/src/components/DraftCard";
@@ -7,9 +7,31 @@ import { router } from "expo-router";
 
 export default function DraftsScreen() {
   const { data: drafts, isLoading } = useProductDrafts();
+  const deleteProductDraftMutation = useDeleteProductDraftMutation();
 
   const handleDraftCardPress = (draftId: number): void => {
     router.push(`/main/merchant/shop/drafts/${draftId}`);
+  };
+
+  const handleDeleteDraft = (draftId: number): void => {
+    Alert.alert("Delete Draft", "Are you sure you want to delete this draft?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          deleteProductDraftMutation.mutate(draftId, {
+            onSuccess: () => {
+              Alert.alert("Success", "Draft deleted successfully");
+            },
+            onError: (err: any) => {
+              console.log("Failed to delete draft", err);
+              Alert.alert("Error", err.response?.data?.detail || "Failed to delete draft");
+            },
+          });
+        },
+      },
+    ]);
   };
 
   return (
@@ -37,6 +59,7 @@ export default function DraftsScreen() {
                 img_url={draft.img_url}
                 isVisible={true}
                 onPress={handleDraftCardPress}
+                onDelete={handleDeleteDraft}
               />
             ))}
           </View>

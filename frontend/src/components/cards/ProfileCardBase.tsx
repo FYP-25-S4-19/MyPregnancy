@@ -25,6 +25,22 @@ export const ProfileCardInput: FC<ProfileCardInputProps> = ({ inputLabel, fieldV
   );
 };
 
+export interface ProfileCardReadOnlyInputProps {
+  inputLabel: string;
+  fieldValue: string;
+}
+
+export const ProfileCardReadOnlyInput: FC<ProfileCardReadOnlyInputProps> = ({ inputLabel, fieldValue }) => {
+  return (
+    <View style={profileStyles.inputGroup}>
+      <Text style={profileStyles.inputLabel}>{inputLabel}</Text>
+      <View style={[profileStyles.input, { backgroundColor: "#F5F5F5", justifyContent: "center" }]}>
+        <Text style={{ color: colors.text, opacity: 0.7 }}>{fieldValue || "N/A"}</Text>
+      </View>
+    </View>
+  );
+};
+
 interface ProfileCardContainerProps {
   children?: ReactNode;
 }

@@ -15,6 +15,7 @@ from app.features.products.product_models import (
     ProductDraftUpdateRequest,
     ProductPreviewResponse,
     ProductPreviewsPaginatedResponse,
+    ProductUpdateRequest,
 )
 from app.shared.s3_storage_interface import S3StorageInterface
 from app.shared.utils import format_user_fullname
@@ -90,6 +91,37 @@ class ProductService:
             img_url=presigned_url,
             is_liked=is_liked,
         )
+
+    async def update_product(self, product_id: int, merchant_id: UUID, update_data: ProductUpdateRequest) -> None:
+        stmt = select(Product).where(Product.id == product_id)
+        product = (await self.db.execute(stmt)).scalars().first()
+        if not product:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+        if product.merchant_id != merchant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this product",
+            )
+
+        # Validate category if being updated
+        if update_data.category_id is not None:
+            category_stmt = select(ProductCategory).where(ProductCategory.id == update_data.category_id)
+            category = (await self.db.execute(category_stmt)).scalar_one_or_none()
+            if not category:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid product category")
+
+        # Update fields (only if provided in request)
+        if update_data.name is not None:
+            product.name = update_data.name
+        if update_data.description is not None:
+            product.description = update_data.description
+        if update_data.price_cents is not None:
+            product.price_cents = update_data.price_cents
+        if update_data.category_id is not None:
+            product.category_id = update_data.category_id
+
+        await self.db.flush()
 
     async def delete_product(self, product_id: int, merchant_id: UUID) -> None:
         stmt = select(Product).where(Product.id == product_id)
@@ -229,6 +261,41 @@ class ProductService:
             for product in products
         ]
 
+    async def get_merchant_products(self, merchant_id: UUID) -> list[ProductPreviewResponse]:
+        """Get all products created by a specific merchant"""
+        stmt = (
+            select(Product)
+            .options(
+                selectinload(Product.merchant),
+                selectinload(Product.category),
+                selectinload(Product.liked_by_mothers),
+            )
+            .where(Product.merchant_id == merchant_id)
+            .order_by(Product.listed_at.desc())
+        )
+
+        products = (await self.db.execute(stmt)).scalars().all()
+
+        # Build preview responses
+        product_previews = [
+            ProductPreviewResponse(
+                id=product.id,
+                name=product.name,
+                merchant_name=format_user_fullname(product.merchant),
+                category=product.category.label,
+                price_cents=product.price_cents,
+                img_url=(
+                    S3StorageInterface.get_presigned_url(product.img_key, settings.PRESIGNED_URL_EXP_SECONDS)
+                    if product.img_key
+                    else ""
+                ),
+                is_liked=False,  # Merchants don't like their own products
+            )
+            for product in products
+        ]
+
+        return product_previews
+
     # =================================================================
     # ====================== DRAFT METHODS ============================
     # =================================================================
@@ -275,13 +342,12 @@ class ProductService:
             select(ProductDraft).where(ProductDraft.merchant_id == merchant_id).order_by(ProductDraft.updated_at.desc())
         )
         drafts = (await self.db.execute(stmt)).scalars().all()
-
         return [await self._build_draft_response(draft) for draft in drafts]
 
     async def update_product_draft(
         self, draft_id: int, merchant_id: UUID, draft_data: ProductDraftUpdateRequest
-    ) -> ProductDraftResponse:
-        stmt = select(ProductDraft).where(ProductDraft.id == draft_id).options(selectinload(ProductDraft.merchant))
+    ) -> None:
+        stmt = select(ProductDraft).options(selectinload(ProductDraft.merchant)).where(ProductDraft.id == draft_id)
         draft = (await self.db.execute(stmt)).scalar_one_or_none()
         if not draft:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product draft not found")
@@ -311,7 +377,7 @@ class ProductService:
 
         await self.db.flush()
         await self.db.refresh(draft)
-        return await self._build_draft_response(draft)
+        # return await self._build_draft_response(draft)
 
     async def upload_product_draft_image(self, draft_id: int, merchant_id: UUID, img_file: UploadFile) -> None:
         stmt = select(ProductDraft).where(ProductDraft.id == draft_id)
@@ -413,7 +479,11 @@ class ProductService:
         """Helper to build a ProductDraftResponse from a ProductDraft entity."""
         category_label = None
         if draft.category_id is not None:
-            category_stmt = select(ProductCategory).where(ProductCategory.id == draft.category_id)
+            category_stmt = (
+                select(ProductCategory)
+                .options(selectinload(ProductCategory.products))
+                .where(ProductCategory.id == draft.category_id)
+            )
             category = (await self.db.execute(category_stmt)).scalar_one_or_none()
             if category:
                 category_label = category.label

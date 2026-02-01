@@ -2,19 +2,20 @@ import AccountActionsCard from "@/src/components/cards/AccountActionsCard";
 import CertificateUploadCard from "@/src/components/cards/CertificateUploadCard";
 import { ProfileCardInput } from "@/src/components/cards/ProfileCardBase";
 import useAuthStore from "@/src/shared/authStore";
-import { sizes } from "@/src/shared/designSystem";
+import { sizes, colors } from "@/src/shared/designSystem";
 import { globalStyles, profileStyles } from "@/src/shared/globalStyles";
 import utils from "@/src/shared/utils";
-import api from "@/src/shared/api"; // ✅ your axios instance
+import api from "@/src/shared/api";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Alert, ScrollView, Text, TouchableOpacity, View, Image, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useGetProfileImgUrl, useUpdateProfileImgMutation } from "@/src/shared/hooks/useProfile";
+import { useQuery } from "@tanstack/react-query";
 
 export default function NutritionistProfileScreen() {
   const me = useAuthStore((state) => state.me);
   const setMe = useAuthStore((state) => state.setMe);
-  const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   // -------------------------
   // Form state
@@ -25,7 +26,21 @@ export default function NutritionistProfileScreen() {
   const [email, setEmail] = useState(me?.email || "");
   const [isSaving, setIsSaving] = useState(false);
 
-  const memberSince = "2025";
+  // Profile image
+  const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
+  const { mutate: uploadProfileImage, isPending: isUploadingImage } = useUpdateProfileImgMutation();
+
+  // Certificate query
+  const { data: certUrl } = useQuery({
+    queryKey: ["nutritionist-qualification-certificate"],
+    queryFn: async () => {
+      const response = await api.get<{ url: string | null }>("/accounts/nutritionist/cert-img-url");
+      return response.data.url;
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+
+  const memberSince = me?.created_at ? utils.getMemberSinceYear(me.created_at) : "GOING LOW IN CS:GO";
 
   const fullName = useMemo(
     () => `${firstName} ${middleName ? middleName + " " : ""}${lastName}`.trim(),
@@ -63,30 +78,29 @@ export default function NutritionistProfileScreen() {
     }
   };
 
-  const handleChangePhoto = () => {
-    console.log("Change photo pressed");
+  const handleChangePhoto = async () => {
+    try {
+      const formData = await utils.handleChangePhoto();
+      if (formData) {
+        uploadProfileImage(formData, {
+          onSuccess: () => {
+            Alert.alert("Success", "Profile photo updated successfully");
+          },
+          onError: (error: any) => {
+            Alert.alert("Upload failed", error?.response?.data?.detail || "Failed to upload photo");
+          },
+        });
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Failed to pick image");
+    }
   };
 
-  const handleSendFeedback = () => {
-    router.push("/main/(notab)/feedback");
-  };
+  const handleSendFeedback = () => router.push("/main/(notab)/feedback");
 
-  const handleChangePassword = () => {
-    console.log("Change password pressed");
-  };
+  const handleChangePassword = () => utils.handleChangePassword();
 
-  const handleDeleteAccount = () => {
-    console.log("Delete account pressed");
-  };
-
-  const handleCertificateUpload = () => {
-    console.log("Certificate upload pressed");
-  };
-
-  const signOut = () => {
-    clearAuthState();
-    router.replace("/(intro)");
-  };
+  const handleDeleteAccount = () => utils.handleDeleteAccount();
 
   return (
     <SafeAreaView edges={["top"]} style={globalStyles.screenContainer}>
@@ -98,13 +112,31 @@ export default function NutritionistProfileScreen() {
 
         <View style={profileStyles.card}>
           <View style={profileStyles.profileHeader}>
-            <View style={profileStyles.avatar} />
+            {/* Profile Avatar with Image */}
+            <View style={profileStyles.avatar}>
+              {isLoadingProfileImage ? (
+                <ActivityIndicator size="large" color={colors.secondary} />
+              ) : profileImageUrl ? (
+                <Image
+                  source={{ uri: profileImageUrl }}
+                  style={{ width: "100%", height: "100%", borderRadius: 40 }}
+                  resizeMode="cover"
+                />
+              ) : null}
+            </View>
+
             <View style={profileStyles.profileInfo}>
               <Text style={profileStyles.profileName}>{fullName}</Text>
               <Text style={profileStyles.profileSubtext}>Member since {memberSince}</Text>
 
-              <TouchableOpacity style={profileStyles.secondaryButton} onPress={handleChangePhoto}>
-                <Text style={profileStyles.secondaryButtonText}>Change Photo</Text>
+              <TouchableOpacity
+                style={[profileStyles.secondaryButton, isUploadingImage && { opacity: 0.6 }]}
+                onPress={handleChangePhoto}
+                disabled={isUploadingImage}
+              >
+                <Text style={profileStyles.secondaryButtonText}>
+                  {isUploadingImage ? "Uploading..." : "Change Photo"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -139,7 +171,7 @@ export default function NutritionistProfileScreen() {
               onUpdateField={setEmail}
             />
 
-            <CertificateUploadCard label="Certificate" handleCertificateUpload={handleCertificateUpload} />
+            <CertificateUploadCard label="Certificate (View Only)" certificateUri={certUrl || undefined} />
 
             {/* ✅ Save Button */}
             <TouchableOpacity
@@ -155,7 +187,7 @@ export default function NutritionistProfileScreen() {
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
           onChangePassword={handleChangePassword}
-          onLogOut={signOut}
+          onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />
 

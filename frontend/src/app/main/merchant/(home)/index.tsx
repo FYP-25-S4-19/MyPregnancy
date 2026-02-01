@@ -1,7 +1,6 @@
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
 import { AddProductSection } from "@/src/components/sections/AddProductSection";
 import { ProductsSection } from "@/src/components/sections/ProductsSection";
-import ArticlesSection from "@/src/components/sections/ArticlesSection";
 import HomePageHeader from "@/src/components/headers/HomePageHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, View, StyleSheet } from "react-native";

@@ -1,6 +1,6 @@
 import { TAB_BAR_ICON_SIZE, tabScreenOptions } from "@/src/shared/globalStyles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 
 export default function NutritionistTabLayout() {
   return (
@@ -21,6 +21,12 @@ export default function NutritionistTabLayout() {
           tabBarIcon: ({ color, size = TAB_BAR_ICON_SIZE }) => (
             <MaterialCommunityIcons name="food-fork-drink" size={size} color={color} />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.navigate("/main/nutritionist/recipe");
+          },
         }}
       />
       <Tabs.Screen

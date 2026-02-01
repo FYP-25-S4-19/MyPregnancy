@@ -12,6 +12,7 @@ from app.db.db_schema import (
     Nutritionist,
     NutritionistAccountCreationRequest,
     PregnantWoman,
+    User,
     UserRole,
     VolunteerDoctor,
 )
@@ -32,6 +33,25 @@ from app.shared.utils import is_valid_image
 class AccountService:
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    async def get_qualification_image_url(self, user: User) -> str | None:
+        """Get presigned URL for user's qualification image (doctors and nutritionists only)"""
+        qualification_img_key = None
+
+        if isinstance(user, VolunteerDoctor):
+            qualification_img_key = user.qualification_img_key
+        elif isinstance(user, Nutritionist):
+            qualification_img_key = user.qualification_img_key
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Only doctors and nutritionists have qualification images"
+            )
+
+        if not qualification_img_key:
+            return None
+
+        # Generate presigned URL valid for 1 hour
+        return S3StorageInterface.get_presigned_url(qualification_img_key, expires_in_seconds=3600)
 
     async def update_pregnancy_details(self, mother: PregnantWoman, data: PregnancyDetailsUpdateRequest) -> None:
         mother.pregnancy_stage = data.stage
@@ -383,13 +403,29 @@ class AccountService:
         if existing_user.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
 
-        # Update doctor fields
+        # Update doctor fields (MCR number is not editable)
         doctor.first_name = data.first_name
         doctor.middle_name = data.middle_name
         doctor.last_name = data.last_name
         doctor.email = data.email
-        doctor.mcr_no_id = data.mcr_no_id
         await self.db.flush()
+
+    async def get_my_mcr_no(self, doctor: VolunteerDoctor) -> str:
+        stmt = select(MCRNumber).where(MCRNumber.id == doctor.mcr_no_id)
+        mcr_no_obj = (await self.db.execute(stmt)).scalar_one_or_none()
+        if not mcr_no_obj:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MCR number not found")
+        return mcr_no_obj.value
+
+    async def get_doctor_cert(self, doctor: VolunteerDoctor) -> str | None:
+        if not doctor.qualification_img_key:
+            return None
+        return S3StorageInterface.get_presigned_url(doctor.qualification_img_key, expires_in_seconds=3600)
+
+    async def get_nutritionist_cert(self, nutritionist: Nutritionist) -> str | None:
+        if not nutritionist.qualification_img_key:
+            return None
+        return S3StorageInterface.get_presigned_url(nutritionist.qualification_img_key, expires_in_seconds=3600)
 
     async def update_nutritionist_profile(self, nutritionist: Nutritionist, data: NutritionistUpdateRequest):
         existing_user = await self.db.execute(
@@ -430,4 +466,26 @@ class AccountService:
         mother.last_name = data.last_name
         mother.email = data.email
         mother.date_of_birth = data.date_of_birth
+        await self.db.flush()
+
+    async def get_profile_image_url(self, user: User) -> str | None:
+        if not user.profile_img_key:
+            return None
+        return S3StorageInterface.get_presigned_url(user.profile_img_key, expires_in_seconds=3600)
+
+    async def update_profile_image_url(self, image_file: UploadFile, user: User) -> None:
+        if not is_valid_image(image_file):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Invalid profile image file",
+            )
+
+        new_img_key = S3StorageInterface.put_profile_img(user.id, image_file)
+        if new_img_key is None:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to upload profile image. Please try again.",
+            )
+
+        user.profile_img_key = new_img_key
         await self.db.flush()

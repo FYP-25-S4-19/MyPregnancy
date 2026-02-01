@@ -111,7 +111,9 @@ if __name__ == "__main__":
         print("Finished seeding educational article content!\n")
 
         # -------- Generation of recipe data ---------
-        RecipesGenerator.generate_all_recipes(db_session, preg_women, nutritionists, "./seed_data/recipes/_data.json")
+        RecipesGenerator.generate_all_recipes(
+            db_session, preg_women, nutritionists, faker, "./seed_data/recipes/_data.json"
+        )
         print("Finished seeding all recipes!\n")
 
         # ------- Generation of miscellaneous content -------

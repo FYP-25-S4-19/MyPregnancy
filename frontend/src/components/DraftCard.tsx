@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from "react-native";
 import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import { FC } from "react";
 import utils from "@/src/shared/utils";
 
 export const DraftCard: FC<{
@@ -13,7 +12,8 @@ export const DraftCard: FC<{
   img_url: string | null;
   isVisible: boolean;
   onPress: (draftId: number) => void;
-}> = ({ id, name, category, price_cents, img_url, isVisible, onPress }) => {
+  onDelete?: (draftId: number) => void;
+}> = ({ id, name, category, price_cents, img_url, isVisible, onPress, onDelete }) => {
   const opacity = useRef(new Animated.Value(1)).current;
   const [shouldRender, setShouldRender] = useState(true);
 
@@ -58,6 +58,18 @@ export const DraftCard: FC<{
           </Text>
           <Text style={styles.productPrice}>${displayPrice}</Text>
         </View>
+        {onDelete && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              onDelete(id);
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="trash-outline" size={20} color={colors.fail} />
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
@@ -97,5 +109,17 @@ const styles = StyleSheet.create({
     fontSize: font.xs,
     color: colors.text,
     marginTop: 4,
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    ...shadows.medium,
   },
 });

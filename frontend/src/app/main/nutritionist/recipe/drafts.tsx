@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-
-import api from "@/src/shared/api";
 import { colors, sizes } from "@/src/shared/designSystem";
+import { useEffect, useState, useCallback } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { Image } from "expo-image";
+import api from "@/src/shared/api";
 
 type DraftRecipe = {
   id: number;
@@ -23,30 +23,33 @@ type DraftRecipe = {
   created_at: string;
 };
 
-const getImageUrl = (imgKey: string | null) => {
-  if (!imgKey) {
-    return "https://via.placeholder.com/150";
-  }
-  return `${process.env.EXPO_PUBLIC_API_URL}/files/${imgKey}`;
-};
-
 export default function NutritionistRecipeDraftsScreen() {
   const [drafts, setDrafts] = useState<DraftRecipe[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDrafts = async () => {
-      try {
-        const res = await api.get<DraftRecipe[]>("/recipes/drafts/");
-        setDrafts(res.data);
-      } catch (err) {
-        console.log("Failed to fetch drafts", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDrafts();
+  const fetchDrafts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.get<DraftRecipe[]>("/recipes/drafts/");
+      setDrafts(res.data);
+    } catch (err) {
+      console.log("Failed to fetch drafts", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch drafts on initial mount
+  useEffect(() => {
+    fetchDrafts();
+  }, [fetchDrafts]);
+
+  // Refresh drafts when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchDrafts();
+    }, [fetchDrafts]),
+  );
 
   const renderItem = ({ item }: { item: DraftRecipe }) => (
     <TouchableOpacity
@@ -62,7 +65,7 @@ export default function NutritionistRecipeDraftsScreen() {
         })
       }
     >
-      <Image source={{ uri: getImageUrl(item.img_url) }} style={styles.image} />
+      <Image source={{ uri: item.img_url || "" }} style={styles.image} />
 
       <View style={styles.content}>
         <Text style={styles.title}>{item.name ?? "Untitled Recipe"}</Text>

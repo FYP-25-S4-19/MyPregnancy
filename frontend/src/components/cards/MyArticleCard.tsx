@@ -1,9 +1,8 @@
-import { useDeleteArticle } from "@/src/shared/hooks/useArticles";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { EduArticlePreviewData } from "@/src/shared/typesAndInterfaces";
+import { useDeleteArticle } from "@/src/shared/hooks/useArticles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React from "react";
 import { router } from "expo-router";
 
 interface MyArticleCardProps {
@@ -63,7 +62,7 @@ export default function MyArticleCard({ article, onPress, actor, isFirst, isLast
     }
   };
 
-  const categoryLabel = article.category?.label ?? "General";
+  const categoryLabel = article.category ?? "General";
   const trimesterLabel = `Trimester ${article.trimester}`;
 
   return (

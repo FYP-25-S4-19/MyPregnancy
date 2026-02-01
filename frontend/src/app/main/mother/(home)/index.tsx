@@ -1,6 +1,9 @@
+import PrePregnancyPlanningSection from "@/src/components/sections/PrePregnancyPlanningSection";
 import CommunityThreadsSection from "@/src/components/sections/CommunityThreadsSection";
+import MenstrualCycleSection from "@/src/components/sections/MenstrualCycleSection";
 import ConsultationSection from "@/src/components/sections/ConsultationSection";
 import { ShopForYouAndBaby } from "@/src/components/sections/ShopForYouAndBaby";
+import { ProductsSection } from "@/src/components/sections/ProductsSection";
 import BabySizeSection from "@/src/components/sections/BabySizeSection";
 import JournalSection from "@/src/components/sections/JournalSection";
 import ArticleSection from "@/src/components/sections/ArticleSection";
@@ -9,14 +12,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { colors, sizes } from "@/src/shared/designSystem";
 import useAuthStore from "@/src/shared/authStore";
+import { useQuery } from "@tanstack/react-query";
 import utils from "@/src/shared/utils";
 import { router } from "expo-router";
-import { ProductsSection } from "@/src/components/sections/ProductsSection";
-
-import MenstrualCycleSection from "@/src/components/sections/MenstrualCycleSection";
-import PrePregnancyPlanningSection from "@/src/components/sections/PrePregnancyPlanningSection";
-
-import { useQuery } from "@tanstack/react-query";
 import api from "@/src/shared/api";
 
 type PregnancyStage = "planning" | "pregnant" | "postpartum";

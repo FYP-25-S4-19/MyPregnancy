@@ -49,6 +49,7 @@ COPY ./migrations /app/migrations
 COPY ./alembic.ini /app/
 COPY ./Makefile /app/
 COPY ./seed_data /app/seed_data
+COPY ./secrets /app/secrets
 
 ENV PATH="/app/venv/bin:$PATH"
 

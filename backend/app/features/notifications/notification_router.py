@@ -19,6 +19,15 @@ def get_notification_service(db: AsyncSession = Depends(get_db)) -> Notification
     return NotificationService(db)
 
 
+@notification_router.get("/has-unread", response_model=dict)
+async def check_has_unread_notifications(
+    user: User = Depends(current_active_user),
+    service: NotificationService = Depends(get_notification_service),
+) -> dict:
+    has_unread = await service.has_unread_notifications(user.id)
+    return {"has_unread": has_unread}
+
+
 @notification_router.get("/", response_model=AppNotificationListResponse)
 async def get_notifications(
     user: User = Depends(current_active_user),

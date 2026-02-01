@@ -4,6 +4,7 @@ import {
   ProductDetailedResponse,
   ProductMutationData,
   ProductDraft,
+  ProductPreview,
 } from "../typesAndInterfaces";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
@@ -34,11 +35,22 @@ export const useProductPreviews = (limit: number = 6) => {
   });
 };
 
+export const useAllProducts = () => {
+  return useQuery({
+    queryKey: ["All Products"],
+    queryFn: async () => {
+      // Fetch products with a very high limit to get all products
+      const response = await api.get<ProductPreviewPaginatedResponse>(`/products/previews?limit=1000`);
+      return response.data;
+    },
+  });
+};
+
 export const useProductDrafts = () => {
   return useQuery({
     queryKey: ["Product Drafts"],
     queryFn: async () => {
-      const response = await api.get<ProductDraft[]>("/products/drafts/");
+      const response = await api.get<ProductDraft[]>("/products/drafts");
       return response.data;
     },
   });
@@ -66,6 +78,7 @@ export const useAddNewProductMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["Product Previews"] });
+      queryClient.invalidateQueries({ queryKey: ["All Products"] });
     },
     onError: (error) => {
       console.error("Failed to add product:", error);
@@ -94,6 +107,7 @@ export const useLikeProductMutation = () => {
     onSuccess: (_, productId) => {
       queryClient.invalidateQueries({ queryKey: ["Product Detail", productId] });
       queryClient.invalidateQueries({ queryKey: ["Product Previews"] });
+      queryClient.invalidateQueries({ queryKey: ["All Products"] });
     },
     onError: (error) => {
       console.error("Failed to like product:", error);
@@ -112,6 +126,7 @@ export const useUnlikeProductMutation = () => {
     onSuccess: (_, productId) => {
       queryClient.invalidateQueries({ queryKey: ["Product Detail", productId] });
       queryClient.invalidateQueries({ queryKey: ["Product Previews"] });
+      queryClient.invalidateQueries({ queryKey: ["All Products"] });
     },
     onError: (error) => {
       console.error("Failed to unlike product:", error);
@@ -129,7 +144,7 @@ export const useCreateProductDraftMutation = () => {
       price_cents: number | null;
       description: string | null;
     }) => {
-      const response = await api.post("/products/drafts/", data);
+      const response = await api.post("/products/drafts", data);
       return response.data;
     },
     onSuccess: () => {
@@ -184,7 +199,7 @@ export const useUpdateProductDraftMutation = () => {
       price_cents: number | null;
       description: string | null;
     }) => {
-      const response = await api.patch(`/products/drafts/${data.draftId}/`, {
+      const response = await api.patch(`/products/drafts/${data.draftId}`, {
         name: data.name,
         category_id: data.category_id,
         price_cents: data.price_cents,
@@ -212,9 +227,88 @@ export const usePublishProductDraftMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["Product Drafts"] });
       queryClient.invalidateQueries({ queryKey: ["Product Previews"] });
+      queryClient.invalidateQueries({ queryKey: ["All Products"] });
     },
     onError: (error) => {
       console.error("Failed to publish product draft:", error);
+    },
+  });
+};
+
+export const useDeleteProductDraftMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (draftId: number) => {
+      const response = await api.delete(`/products/drafts/${draftId}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["Product Drafts"] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete product draft:", error);
+    },
+  });
+};
+
+export const useUpdateProductMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      productId: number;
+      name: string;
+      category_id: number;
+      price_cents: number;
+      description: string;
+    }) => {
+      const response = await api.patch(`/products/${data.productId}`, {
+        name: data.name,
+        category_id: data.category_id,
+        price_cents: data.price_cents,
+        description: data.description,
+      });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["Product Detail", variables.productId] });
+      queryClient.invalidateQueries({ queryKey: ["Product Previews"] });
+      queryClient.invalidateQueries({ queryKey: ["All Products"] });
+      queryClient.invalidateQueries({ queryKey: ["My Products"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update product:", error);
+    },
+  });
+};
+
+export const useDeleteProductMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: number) => {
+      const response = await api.delete(`/products/${productId}`);
+      return response.data;
+    },
+    onSuccess: (_, productId) => {
+      queryClient.invalidateQueries({ queryKey: ["Product Detail", productId] });
+      queryClient.invalidateQueries({ queryKey: ["Product Previews"] });
+      queryClient.invalidateQueries({ queryKey: ["All Products"] });
+      queryClient.invalidateQueries({ queryKey: ["My Products"] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete product:", error);
+    },
+  });
+};
+
+export const useMyProducts = () => {
+  return useQuery({
+    queryKey: ["My Products"],
+    queryFn: async () => {
+      const response = await api.get<ProductPreview[]>("/products/merchant/my-products");
+      return response.data;
     },
   });
 };

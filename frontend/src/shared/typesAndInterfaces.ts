@@ -160,7 +160,7 @@ export interface RecipeData {
 
 export interface RecipePaginatedResponse {
   recipes: RecipeData[];
-  next_cursor: number;
+  next_cursor: string | null;
   has_more: boolean;
 }
 //====================================================
@@ -208,7 +208,7 @@ export interface EduArticlePreviewData {
   id: number;
   title: string;
   author: string;
-  category: EduArticleCategoryData | null;
+  category: string;
   trimester: number;
   created_at: string;
   author_id: string;
@@ -218,7 +218,7 @@ export interface EduArticleDetailedData {
   id: number;
   author_id: string | null;
   author: string;
-  category: EduArticleCategoryData | null;
+  category: string;
   title: string;
   content_markdown: string;
   trimester: number;
@@ -261,6 +261,7 @@ export interface MeData {
   middle_name: string | null;
   last_name: string;
   role: RoleType;
+  created_at: string; // ISO 8601 datetime
   // ---- role-specific ----
   mcr_no_id?: number; // Doctor
   shop_name?: string; // Merchant

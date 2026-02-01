@@ -7,14 +7,13 @@ import { FC } from "react";
 interface CertificateUploadCardProps {
   label: string;
   certificateUri?: string;
-  handleCertificateUpload: () => void;
 }
 
-const CertificateUploadCard: FC<CertificateUploadCardProps> = ({ label, certificateUri, handleCertificateUpload }) => {
+const CertificateUploadCard: FC<CertificateUploadCardProps> = ({ label, certificateUri }) => {
   return (
     <View style={profileStyles.inputGroup}>
       <Text style={profileStyles.inputLabel}>{label}</Text>
-      <TouchableOpacity
+      <View
         style={{
           borderRadius: sizes.borderRadius,
           borderWidth: 1,
@@ -24,7 +23,6 @@ const CertificateUploadCard: FC<CertificateUploadCardProps> = ({ label, certific
           justifyContent: "center",
           backgroundColor: "#FAFAFA",
         }}
-        onPress={handleCertificateUpload}
       >
         {certificateUri ? (
           <Image
@@ -38,7 +36,7 @@ const CertificateUploadCard: FC<CertificateUploadCardProps> = ({ label, certific
         ) : (
           <Ionicons name="images-outline" size={48} color={colors.lightGray} />
         )}
-      </TouchableOpacity>
+      </View>
     </View>
   );
 };

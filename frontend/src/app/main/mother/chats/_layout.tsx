@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
 
-export default function MotherAppointmentStackLayout() {
+export default function MotherChatsStackLayout() {
   return <Stack screenOptions={{ headerShown: false }} />;
 }

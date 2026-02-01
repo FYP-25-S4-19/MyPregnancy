@@ -20,7 +20,7 @@ class RecipePreviewResponse(CustomBaseModel):
 
 class RecipePreviewsPaginatedResponse(CustomBaseModel):
     recipes: list[RecipePreviewResponse]
-    next_cursor: int | None
+    next_cursor: str | None
     has_more: bool
 
 
