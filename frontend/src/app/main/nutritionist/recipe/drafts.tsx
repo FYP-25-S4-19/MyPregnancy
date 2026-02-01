@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, sizes } from "@/src/shared/designSystem";
-import { useEffect, useState } from "react";
-import { router } from "expo-router";
+import { useEffect, useState, useCallback } from "react";
+import { router, useFocusEffect } from "expo-router";
 import { Image } from "expo-image";
 import api from "@/src/shared/api";
 
@@ -27,19 +27,29 @@ export default function NutritionistRecipeDraftsScreen() {
   const [drafts, setDrafts] = useState<DraftRecipe[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDrafts = async () => {
-      try {
-        const res = await api.get<DraftRecipe[]>("/recipes/drafts/");
-        setDrafts(res.data);
-      } catch (err) {
-        console.log("Failed to fetch drafts", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDrafts();
+  const fetchDrafts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.get<DraftRecipe[]>("/recipes/drafts/");
+      setDrafts(res.data);
+    } catch (err) {
+      console.log("Failed to fetch drafts", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch drafts on initial mount
+  useEffect(() => {
+    fetchDrafts();
+  }, [fetchDrafts]);
+
+  // Refresh drafts when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchDrafts();
+    }, [fetchDrafts]),
+  );
 
   const renderItem = ({ item }: { item: DraftRecipe }) => (
     <TouchableOpacity

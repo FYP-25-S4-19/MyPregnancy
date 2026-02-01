@@ -160,7 +160,7 @@ export interface RecipeData {
 
 export interface RecipePaginatedResponse {
   recipes: RecipeData[];
-  next_cursor: number;
+  next_cursor: string | null;
   has_more: boolean;
 }
 //====================================================

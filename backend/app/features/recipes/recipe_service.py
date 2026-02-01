@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile, status
@@ -37,7 +38,7 @@ class RecipeService:
         return [RecipeCategoryResponse(id=category.id, label=category.label) for category in categories]
 
     async def get_recipe_previews(
-        self, limit: int, user: User | None, cursor: int | None = None
+        self, limit: int, user: User | None, cursor: str | None = None
     ) -> RecipePreviewsPaginatedResponse:
         query_stmt = (
             select(Recipe)
@@ -45,10 +46,14 @@ class RecipeService:
                 selectinload(Recipe.saved_recipes),
                 selectinload(Recipe.recipe_category_associations).selectinload(RecipeToCategoryAssociation.category),
             )
-            .order_by(Recipe.id)
+            .order_by(Recipe.created_at.desc())
         )
         if cursor is not None:
-            query_stmt = query_stmt.where(Recipe.id > cursor)
+            # cursor is a timestamp string; recipes created before this timestamp are fetched
+            # Handle both space and + in timezone offset (some versions use space instead of +)
+            cursor_normalized = cursor.replace(" ", "+")
+            cursor_dt = datetime.fromisoformat(cursor_normalized)
+            query_stmt = query_stmt.where(Recipe.created_at < cursor_dt)
 
         query_stmt = query_stmt.limit(limit + 1)
         recipes = (await self.db.execute(query_stmt)).scalars().all()
@@ -58,8 +63,9 @@ class RecipeService:
         if has_more:
             recipes = recipes[:limit]
 
-        # Determine the next cursor (the id of the last recipe)
-        next_cursor = recipes[-1].id if recipes and has_more else None
+        # Determine the next cursor (the created_at timestamp of the last recipe)
+        # Replace space with '+' to ensure proper ISO format for timezone offset
+        next_cursor = recipes[-1].created_at.isoformat().replace(" ", "+") if recipes and has_more else None
 
         recipe_previews = [
             RecipePreviewResponse(
@@ -267,7 +273,9 @@ class RecipeService:
         self.db.add(new_draft)
         await self.db.flush()
 
-        return await self._build_draft_response(new_draft)
+        # Build response before detaching object from session
+        response = await self._build_draft_response(new_draft)
+        return response
 
     async def get_recipe_draft(self, draft_id: int, nutritionist_id: UUID) -> RecipeDraftResponse:
         stmt = select(RecipeDraft).where(RecipeDraft.id == draft_id)
@@ -336,8 +344,10 @@ class RecipeService:
         if draft_data.trimester is not None:
             draft.trimester = draft_data.trimester
 
+        # Build response before flushing to avoid greenlet errors with detached instances
+        response = await self._build_draft_response(draft)
         await self.db.flush()
-        return await self._build_draft_response(draft)
+        return response
 
     async def upload_recipe_draft_image(self, draft_id: int, nutritionist_id: UUID, img_file: UploadFile) -> None:
         stmt = select(RecipeDraft).where(RecipeDraft.id == draft_id)

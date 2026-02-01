@@ -2,6 +2,7 @@ import json
 import random
 from pathlib import Path
 
+from faker import Faker
 from sqlalchemy.orm import Session
 
 from app.core.custom_base_model import CustomBaseModel
@@ -34,15 +35,16 @@ class RecipesGenerator:
         db: Session,
         all_mothers: list[PregnantWoman],
         all_nutritionists: list[Nutritionist],
+        faker: Faker,
         recipe_data_file: str,
     ) -> None:
         print("Generating Recipes....")
-        recipes = RecipesGenerator.generate_fake_recipes(db, all_nutritionists, recipe_data_file)
+        recipes = RecipesGenerator.generate_fake_recipes(db, all_nutritionists, faker, recipe_data_file)
         RecipesGenerator.generate_saved_recipes(db, all_mothers, recipes)
 
     @staticmethod
     def generate_fake_recipes(
-        db: Session, all_nutritionists: list[Nutritionist], recipe_data_file: str
+        db: Session, all_nutritionists: list[Nutritionist], faker: Faker, recipe_data_file: str
     ) -> list[Recipe]:
         # --------- Validating that the image files match the recipe data ---------
         recipes_path: Path = Path(recipe_data_file).parent
@@ -86,6 +88,7 @@ class RecipesGenerator:
                 serving_count=recipe_json.serving,
                 ingredients=recipe_json.ingredients,
                 instructions_markdown=recipe_json.instructions_markdown,
+                created_at=faker.date_between(start_date="-1y", end_date="today"),
             )
             recipe_cat_assocs_to_add: list[RecipeToCategoryAssociation] = []
             for category_name in recipe_json.categories:

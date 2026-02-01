@@ -15,7 +15,6 @@ import { Image } from "expo-image";
 export default function MerchantProfileScreen() {
   const me = useAuthStore((state) => state.me);
   const setMe = useAuthStore((state) => state.setMe);
-  const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   // -------------------------
   // Form state
@@ -94,11 +93,6 @@ export default function MerchantProfileScreen() {
   const handleChangePassword = () => utils.handleChangePassword();
 
   const handleDeleteAccount = () => utils.handleDeleteAccount();
-
-  const signOut = () => {
-    clearAuthState();
-    router.replace("/(intro)");
-  };
 
   return (
     <SafeAreaView edges={["top"]} style={globalStyles.screenContainer}>
@@ -186,7 +180,7 @@ export default function MerchantProfileScreen() {
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
           onChangePassword={handleChangePassword}
-          onLogOut={signOut}
+          onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />
 

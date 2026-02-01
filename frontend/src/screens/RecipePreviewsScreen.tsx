@@ -155,7 +155,7 @@ export default function RecipePreviewsScreen({ actor = "mother" }: RecipePreview
       <View style={styles.categoryContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Category</Text>
-          <MaterialCommunityIcons name="heart-multiple-outline" size={24} color={colors.primary} />
+          {/*<MaterialCommunityIcons name="heart-multiple-outline" size={24} color={colors.primary} />*/}
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>

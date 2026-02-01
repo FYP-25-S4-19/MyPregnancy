@@ -245,6 +245,13 @@ const utils = {
       ],
     );
   },
+
+  handleSignOut(): void {
+    const { clearAuthState } = useAuthStore.getState();
+    clearAuthState();
+    router.replace("/(intro)/onboarding");
+  },
+
   async handleChangePhoto(): Promise<FormData | null> {
     try {
       // Request permissions

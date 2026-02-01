@@ -17,7 +17,6 @@ import api from "@/src/shared/api";
 export default function DoctorProfileScreen() {
   const me = useAuthStore((state) => state.me);
   const setMe = useAuthStore((state) => state.setMe);
-  const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   // -------------------------
   // Form state
@@ -110,11 +109,6 @@ export default function DoctorProfileScreen() {
   const handleChangePassword = () => utils.handleChangePassword();
   const handleDeleteAccount = () => utils.handleDeleteAccount();
 
-  const signOut = () => {
-    clearAuthState();
-    router.replace("/(intro)");
-  };
-
   return (
     <SafeAreaView edges={["top"]} style={globalStyles.screenContainer}>
       <ScrollView style={globalStyles.scrollView} showsVerticalScrollIndicator={false}>
@@ -202,7 +196,7 @@ export default function DoctorProfileScreen() {
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
           onChangePassword={handleChangePassword}
-          onLogOut={signOut}
+          onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />
 

@@ -34,20 +34,55 @@ async def get_recipe_categories(
 
 @recipe_router.get("/all", response_model=list[str])
 async def get_all_recipes(db: AsyncSession = Depends(get_db)) -> list[str]:
-    stmt = select(Recipe)
+    stmt = select(Recipe.name)
     results = await db.execute(stmt)
-    recipes = results.scalars().all()
-    return [recipe.name for recipe in recipes]
+    return list(results.scalars().all())
 
 
 @recipe_router.get("/previews", response_model=RecipePreviewsPaginatedResponse)
 async def get_recipe_previews(
     limit: int = 6,
-    cursor: int | None = None,
+    cursor: str | None = None,
     user: User | None = Depends(optional_current_active_user),
     service: RecipeService = Depends(get_recipe_service),
 ) -> RecipePreviewsPaginatedResponse:
     return await service.get_recipe_previews(limit, user, cursor)
+
+
+@recipe_router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_recipe(
+    name: str = Form(...),
+    instructions: str = Form(...),
+    ingredients: str = Form(...),
+    description: str = Form(...),
+    est_calories: str = Form(...),
+    pregnancy_benefit: str = Form(...),
+    serving_count: int = Form(...),
+    trimester: int = Form(...),
+    category_id: int = Form(...),
+    image_file: UploadFile = File(),
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    db: AsyncSession = Depends(get_db),
+    service: RecipeService = Depends(get_recipe_service),
+):
+    try:
+        await service.create_recipe(
+            name,
+            instructions,
+            ingredients,
+            description,
+            est_calories,
+            pregnancy_benefit,
+            int(serving_count),
+            int(trimester),
+            int(category_id),
+            image_file,
+            nutritionist,
+        )
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
 
 
 @recipe_router.get("/{recipe_id}", response_model=RecipeDetailedResponse)
@@ -98,42 +133,6 @@ async def unsave_recipe(
 ):
     try:
         await service.unsave_recipe(recipe_id, user.id)
-        await db.commit()
-    except:
-        await db.rollback()
-        raise
-
-
-@recipe_router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_recipe(
-    name: str = Form(...),
-    instructions: str = Form(...),
-    ingredients: str = Form(...),
-    description: str = Form(...),
-    est_calories: str = Form(...),
-    pregnancy_benefit: str = Form(...),
-    serving_count: int = Form(...),
-    trimester: int = Form(...),
-    category_id: int = Form(...),
-    image_file: UploadFile = File(),
-    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
-    db: AsyncSession = Depends(get_db),
-    service: RecipeService = Depends(get_recipe_service),
-):
-    try:
-        await service.create_recipe(
-            name,
-            instructions,
-            ingredients,
-            description,
-            est_calories,
-            pregnancy_benefit,
-            int(serving_count),
-            int(trimester),
-            int(category_id),
-            image_file,
-            nutritionist,
-        )
         await db.commit()
     except:
         await db.rollback()

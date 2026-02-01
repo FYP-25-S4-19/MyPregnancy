@@ -189,8 +189,41 @@ export default function AddRecipeScreen() {
   /* ==================== SUBMIT RECIPE ==================== */
   const submitRecipe = async (isDraft: boolean): Promise<void> => {
     if (!isDraft) {
+      // Validation for publishing (not draft)
       if (!formState.name || !formState.description || !formState.ingredients || !formState.instructions) {
         Alert.alert("Missing info", "Please fill in all required fields to publish.");
+        return;
+      }
+
+      if (!formState.estCalories) {
+        Alert.alert("Missing info", "Please provide estimated calories to publish.");
+        return;
+      }
+
+      if (!formState.pregnancyBenefit) {
+        Alert.alert("Missing info", "Please provide pregnancy benefit information to publish.");
+        return;
+      }
+
+      if (!formState.servingCount || formState.servingCount <= 0) {
+        Alert.alert("Missing info", "Please provide a valid serving count to publish.");
+        return;
+      }
+
+      if (!formState.categoryID || formState.categoryID === 0) {
+        Alert.alert("Missing info", "Please select a category to publish.");
+        return;
+      }
+
+      if (!formState.trimester || formState.trimester < 1 || formState.trimester > 3) {
+        Alert.alert("Missing info", "Please select a valid trimester to publish.");
+        return;
+      }
+
+      // Check if image exists (required for publishing)
+      // This covers both new local images and existing S3 URLs from drafts
+      if (!image || !image.uri || image.uri.length === 0) {
+        Alert.alert("Missing image", "Please upload an image before publishing the recipe.");
         return;
       }
     }
@@ -202,14 +235,14 @@ export default function AddRecipeScreen() {
         // Handle draft submission
         await submitDraft(draftId);
         Alert.alert("Success", draftId ? "Draft updated successfully" : "Draft created successfully");
-        router.back();
+        router.replace("/main/nutritionist/recipe/drafts");
       } else {
         // Handle recipe publication or creation
         if (draftId && mode === "edit") {
           // Publishing an existing draft
           await api.post(`/recipes/drafts/${draftId}/publish`, null);
           Alert.alert("Success", "Draft published successfully");
-          router.back();
+          router.replace("/main/nutritionist/recipe/drafts");
         } else {
           // Creating a new recipe directly (not from draft)
           const formData = new FormData();

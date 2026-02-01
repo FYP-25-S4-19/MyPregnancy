@@ -52,7 +52,6 @@ export default function MotherProfileScreen() {
 
   const me = useAuthStore((state) => state.me);
   const setMe = useAuthStore((state) => state.setMe);
-  const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   // -------------------------
   // Basic profile form state
@@ -225,11 +224,6 @@ export default function MotherProfileScreen() {
   const handleChangePassword = () => utils.handleChangePassword();
   const handleDeleteAccount = () => utils.handleDeleteAccount();
 
-  const signOut = () => {
-    clearAuthState();
-    router.replace("/(intro)");
-  };
-
   // -------------------------
   // UI helpers
   // -------------------------
@@ -398,7 +392,7 @@ export default function MotherProfileScreen() {
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
           onChangePassword={handleChangePassword}
-          onLogOut={signOut}
+          onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />
 

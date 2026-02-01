@@ -16,7 +16,6 @@ import { useQuery } from "@tanstack/react-query";
 export default function NutritionistProfileScreen() {
   const me = useAuthStore((state) => state.me);
   const setMe = useAuthStore((state) => state.setMe);
-  const clearAuthState = useAuthStore((state) => state.clearAuthState);
 
   // -------------------------
   // Form state
@@ -103,11 +102,6 @@ export default function NutritionistProfileScreen() {
 
   const handleDeleteAccount = () => utils.handleDeleteAccount();
 
-  const signOut = async () => {
-    clearAuthState();
-    router.replace("/(intro)");
-  };
-
   return (
     <SafeAreaView edges={["top"]} style={globalStyles.screenContainer}>
       <ScrollView style={globalStyles.scrollView} showsVerticalScrollIndicator={false}>
@@ -193,7 +187,7 @@ export default function NutritionistProfileScreen() {
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
           onChangePassword={handleChangePassword}
-          onLogOut={signOut}
+          onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />
 
