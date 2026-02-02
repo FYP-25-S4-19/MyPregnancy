@@ -15,6 +15,10 @@ Dockerfile
 .docker
 .dockerignore
 
+# Secrets (handled separately in CI/CD, not part of build context)
+secrets/
+gcp-sa.json
+
 # Byte-compiled / optimized / DLL files
 **/__pycache__/
 **/*.py[cod]
