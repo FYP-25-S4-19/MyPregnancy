@@ -19,7 +19,7 @@ import { colors, sizes, font } from "@/src/shared/designSystem";
 import { Calendar, DateData } from "react-native-calendars";
 import { useLocalSearchParams } from "expo-router";
 import useAuthStore from "@/src/shared/authStore";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import utils from "@/src/shared/utils";
 import uuid from "react-native-uuid";
 import api from "@/src/shared/api";
@@ -42,6 +42,12 @@ export default function IndividualChatScreen() {
   const { client } = useChatContext();
   const [channelType, channelID] = (cid as string)?.split(":") || [null, null];
   const streamVideoClient = useStreamVideoClient();
+
+  // Retry mechanism state
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const MAX_RETRIES = 5;
+  const INITIAL_DELAY_MS = 500;
 
   // Rating modal state
   // const [showRatingModal, setShowRatingModal] = useState(false);
@@ -118,10 +124,48 @@ export default function IndividualChatScreen() {
 
   const channel = client.channel(channelType, channelID);
   const otherMember = utils.getOtherMemberInChannel(channel, client.user.id.toString());
+
+  // Retry mechanism for when other member is not found (on first channel creation)
+  useEffect(() => {
+    if (otherMember === undefined && retryCount < MAX_RETRIES) {
+      setIsRetrying(true);
+      const delayMs = INITIAL_DELAY_MS * Math.pow(2, retryCount); // Exponential backoff
+      const timer = setTimeout(() => {
+        setRetryCount((prev) => prev + 1);
+        setIsRetrying(false);
+      }, delayMs);
+
+      return () => clearTimeout(timer);
+    }
+  }, [otherMember, retryCount]);
+
   if (otherMember === undefined) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Other member not found</Text>
+        {retryCount < MAX_RETRIES ? (
+          <>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{ marginTop: sizes.m, color: colors.text }}>Loading chat channel...</Text>
+            <Text style={{ marginTop: sizes.s, color: colors.tabIcon, fontSize: font.s }}>
+              Attempt {retryCount + 1} of {MAX_RETRIES}
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={{ color: colors.text, marginBottom: sizes.m }}>Other member not found</Text>
+            <TouchableOpacity
+              onPress={() => setRetryCount(0)}
+              style={{
+                backgroundColor: colors.primary,
+                paddingHorizontal: sizes.l,
+                paddingVertical: sizes.m,
+                borderRadius: sizes.s,
+              }}
+            >
+              <Text style={{ color: colors.white, fontWeight: "600" }}>Retry</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     );
   }

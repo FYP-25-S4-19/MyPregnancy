@@ -39,7 +39,6 @@ export default function ConsultationsScreen() {
   };
 
   /* ================= DOCTORS QUERY ================= */
-
   const {
     data: doctorsData,
     isLoading,
@@ -62,7 +61,6 @@ export default function ConsultationsScreen() {
   const allDoctors = doctorsData?.pages.flatMap((page) => page.doctors) ?? [];
 
   /* ================= SPECIALISATIONS FROM DOCTORS ================= */
-
   const specialisations = useMemo(() => {
     return Array.from(new Set(allDoctors.map((doc) => doc.specialisation)));
   }, [allDoctors]);

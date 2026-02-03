@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/src/shared/api";
 import useAuthStore from "@/src/shared/authStore";
 
-export const useUnreadNotifications = () => {
+export const useUnreadNotifications = (enabled: boolean = true) => {
   const me = useAuthStore((state) => state.me);
 
   return useQuery({
@@ -13,6 +13,6 @@ export const useUnreadNotifications = () => {
     },
     staleTime: 1000 * 30, // 30 seconds
     refetchInterval: 1000 * 60, // Refetch every minute
-    enabled: !!me, // Only fetch when user is authenticated
+    enabled: enabled && !!me,
   });
 };

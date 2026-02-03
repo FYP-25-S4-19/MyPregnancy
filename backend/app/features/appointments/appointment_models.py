@@ -32,6 +32,7 @@ class AppointmentResponse(CustomBaseModel):
 
     mother_id: UUID
     mother_name: str
+    mother_due_date: datetime | None
 
     start_time: datetime
     status: str

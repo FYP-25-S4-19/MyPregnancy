@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -94,6 +94,7 @@ class AppointmentService:
                     mother_name=" ".join(
                         part for part in [mother.first_name, mother.middle_name, mother.last_name] if part
                     ),
+                    mother_due_date=datetime.combine(mother.due_date, datetime.min.time()) if mother.due_date else None,
                     start_time=appointment.start_time,
                     status=appointment.status.value,
                 )

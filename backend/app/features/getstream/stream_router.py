@@ -6,8 +6,13 @@ from app.core.clients import get_stream_client
 from app.core.security import require_role
 from app.core.users_manager import current_active_user
 from app.db.db_config import get_db
-from app.db.db_schema import PregnantWoman, User
-from app.features.getstream.stream_models import ChannelCreationArgs, ChannelCreationResponse, TokenResponse
+from app.db.db_schema import PregnantWoman, User, VolunteerDoctor
+from app.features.getstream.stream_models import (
+    ChannelCreationArgs,
+    ChannelCreationResponse,
+    GenericChannelCreationArgs,
+    TokenResponse,
+)
 from app.features.getstream.stream_service import StreamService
 
 stream_router = APIRouter(prefix="/stream", tags=["GetStream"])
@@ -35,6 +40,19 @@ async def create_chat_channel(
     stream_service: StreamService = Depends(get_stream_service),
 ) -> ChannelCreationResponse:
     return await stream_service.create_chat_channel(args, mother)
+
+
+@stream_router.post("/chat/channel/generic", status_code=status.HTTP_200_OK, response_model=ChannelCreationResponse)
+async def create_generic_chat_channel(
+    args: GenericChannelCreationArgs,
+    current_user: User = Depends(current_active_user),
+    stream_service: StreamService = Depends(get_stream_service),
+) -> ChannelCreationResponse:
+    """
+    Generic channel creation endpoint that works for both doctors and mothers.
+    Creates a channel between the current user and the specified other_user_id.
+    """
+    return await stream_service.create_generic_chat_channel(args, current_user)
 
 
 # @stream_router.post("/chat/channel/message")

@@ -11,6 +11,7 @@ interface HomePageHeaderProps {
   headerText: string;
   profilePicStrFallback?: string;
   onNotificationPress?: () => void;
+  isGuest?: boolean;
 }
 
 /**
@@ -24,9 +25,10 @@ const HomePageHeader: FC<HomePageHeaderProps> = ({
   headerText,
   profilePicStrFallback,
   onNotificationPress,
+  isGuest = false,
 }) => {
-  const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl();
-  const { data: hasUnreadNotifications } = useUnreadNotifications();
+  const { data: profileImageUrl, isLoading: isLoadingProfileImage } = useGetProfileImgUrl(!isGuest);
+  const { data: hasUnreadNotifications } = useUnreadNotifications(!isGuest);
 
   return (
     <View style={styles.header}>

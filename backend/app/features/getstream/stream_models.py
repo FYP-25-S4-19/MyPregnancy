@@ -11,5 +11,9 @@ class ChannelCreationArgs(CustomBaseModel):
     doctor_id: UUID
 
 
+class GenericChannelCreationArgs(CustomBaseModel):
+    other_user_id: UUID
+
+
 class ChannelCreationResponse(CustomBaseModel):
     channel_id: str

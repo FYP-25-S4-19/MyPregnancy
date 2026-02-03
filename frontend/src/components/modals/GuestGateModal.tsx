@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-} from "react-native";
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
 import { router } from "expo-router";
 import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import { sizes, shadows } from "@/src/shared/designSystem";
@@ -24,24 +17,14 @@ export default function GuestGateModal() {
   };
 
   return (
-    <Modal
-      visible={isOpen}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onCancel}
-    >
+    <Modal visible={isOpen} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
       <View style={styles.backdrop}>
         {/* Tap outside closes modal */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} />
 
         <View style={styles.card}>
           {/* X button (must be ABOVE the Pressable overlay, so it's inside the card) */}
-          <Pressable
-            onPress={onCancel}
-            hitSlop={12}
-            style={styles.closeBtn}
-          >
+          <Pressable onPress={onCancel} hitSlop={12} style={styles.closeBtn}>
             <Text style={styles.closeText}>×</Text>
           </Pressable>
 
@@ -54,19 +37,11 @@ export default function GuestGateModal() {
           </Text>
 
           <View style={styles.actions}>
-            <TouchableOpacity
-              onPress={onCancel}
-              style={[styles.button, styles.cancelBtn]}
-              activeOpacity={0.85}
-            >
+            <TouchableOpacity onPress={onCancel} style={[styles.button, styles.cancelBtn]} activeOpacity={0.85}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={onSignIn}
-              style={[styles.button, styles.signInBtn]}
-              activeOpacity={0.85}
-            >
+            <TouchableOpacity onPress={onSignIn} style={[styles.button, styles.signInBtn]} activeOpacity={0.85}>
               <Text style={styles.signInText}>Sign In</Text>
             </TouchableOpacity>
           </View>
@@ -82,15 +57,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.12)",
     alignItems: "center",
     justifyContent: "center",
-    padding: sizes.lg,
+    padding: sizes.l,
   },
   card: {
     width: "100%",
     maxWidth: 340,
     backgroundColor: "#F6CFCF",
     borderRadius: 16,
-    paddingVertical: sizes.lg,
-    paddingHorizontal: sizes.lg,
+    paddingVertical: sizes.l,
+    paddingHorizontal: sizes.l,
     borderWidth: 1,
     borderColor: "rgba(91,43,43,0.18)",
     ...shadows.small,
@@ -122,7 +97,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#5B2B2B",
     textAlign: "center",
-    marginBottom: sizes.sm,
+    marginBottom: sizes.s,
   },
   body: {
     fontSize: 14,
@@ -130,11 +105,11 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     textAlign: "center",
     lineHeight: 18,
-    marginBottom: sizes.lg,
+    marginBottom: sizes.l,
   },
   actions: {
     flexDirection: "row",
-    gap: sizes.sm,
+    gap: sizes.s,
     justifyContent: "center",
   },
   button: {

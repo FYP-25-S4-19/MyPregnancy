@@ -14,6 +14,7 @@ import {
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useAuthStore from "@/src/shared/authStore";
+import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import api from "@/src/shared/api";
 import {
   KeyboardAvoidingView,
@@ -34,6 +35,7 @@ interface ThreadScreenProps {
   onBack?: () => void;
   showBackButton?: boolean;
   backgroundColor?: string;
+  isGuest?: boolean;
 }
 
 export default function ThreadScreen({
@@ -41,6 +43,7 @@ export default function ThreadScreen({
   onBack,
   showBackButton = true,
   backgroundColor = "#FFE8E8",
+  isGuest = false,
 }: ThreadScreenProps) {
   const { data: thread, isLoading, isError, error } = useThread(threadId);
   const [commentText, setCommentText] = useState<string>("");
@@ -50,6 +53,7 @@ export default function ThreadScreen({
 
   const me = useAuthStore((state) => state.me);
   const queryClient = useQueryClient();
+  const openGuestGate = useGuestGate((state) => state.open);
 
   // Mutations
   const createCommentMutation = useCreateComment(threadId);
@@ -134,6 +138,11 @@ export default function ThreadScreen({
   };
 
   const handleToggleThreadLike = (): void => {
+    if (isGuest) {
+      openGuestGate(`/main/(notab)/threads/${threadId}`);
+      return;
+    }
+
     if (!thread) return;
 
     if (thread.is_liked_by_current_user) {
@@ -154,6 +163,11 @@ export default function ThreadScreen({
   };
 
   const handleToggleCommentLike = (commentId: number, isLiked: boolean): void => {
+    if (isGuest) {
+      openGuestGate(`/main/(notab)/threads/${threadId}`);
+      return;
+    }
+
     if (isLiked) {
       unlikeCommentMutation.mutate(commentId, {
         onError: (error) => {
@@ -400,33 +414,43 @@ export default function ThreadScreen({
         </ScrollView>
 
         {/* Comment Input */}
-        <View style={threadStyles.inputContainer}>
-          <TextInput
-            style={threadStyles.input}
-            placeholder="Write a comment..."
-            placeholderTextColor={colors.lightGray}
-            value={commentText}
-            onChangeText={setCommentText}
-            multiline
-            maxLength={500}
-          />
+        {isGuest ? (
           <TouchableOpacity
-            onPress={handleSendComment}
-            style={[
-              threadStyles.sendButton,
-              (!commentText.trim() || createCommentMutation.isPending) && threadStyles.sendButtonDisabled,
-            ]}
-            disabled={!commentText.trim() || createCommentMutation.isPending}
+            style={localStyles.guestInputContainer}
+            onPress={() => openGuestGate(`/main/(notab)/threads/${threadId}`)}
+            activeOpacity={0.7}
           >
-            {createCommentMutation.isPending ? (
-              <ActivityIndicator size="small" color={colors.white} />
-            ) : (
-              <Text style={[threadStyles.sendButtonText, !commentText.trim() && threadStyles.sendButtonTextDisabled]}>
-                Send
-              </Text>
-            )}
+            <Text style={localStyles.guestInputText}>Sign in to comment...</Text>
           </TouchableOpacity>
-        </View>
+        ) : (
+          <View style={threadStyles.inputContainer}>
+            <TextInput
+              style={threadStyles.input}
+              placeholder="Write a comment..."
+              placeholderTextColor={colors.lightGray}
+              value={commentText}
+              onChangeText={setCommentText}
+              multiline
+              maxLength={500}
+            />
+            <TouchableOpacity
+              onPress={handleSendComment}
+              style={[
+                threadStyles.sendButton,
+                (!commentText.trim() || createCommentMutation.isPending) && threadStyles.sendButtonDisabled,
+              ]}
+              disabled={!commentText.trim() || createCommentMutation.isPending}
+            >
+              {createCommentMutation.isPending ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Text style={[threadStyles.sendButtonText, !commentText.trim() && threadStyles.sendButtonTextDisabled]}>
+                  Send
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -522,17 +546,30 @@ const localStyles = StyleSheet.create({
     color: colors.text,
   },
   saveButton: {
-    paddingHorizontal: sizes.m,
+    backgroundColor: colors.primary,
+    paddingHorizontal: sizes.l,
     paddingVertical: sizes.s,
     borderRadius: sizes.s,
-    backgroundColor: colors.primary,
   },
   saveButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: colors.lightGray,
   },
   saveButtonText: {
     fontSize: font.s,
     color: colors.white,
     fontWeight: "600",
+  },
+  guestInputContainer: {
+    backgroundColor: colors.white,
+    paddingVertical: sizes.m,
+    paddingHorizontal: sizes.l,
+    borderTopWidth: 1,
+    borderTopColor: colors.lightGray,
+    alignItems: "center",
+  },
+  guestInputText: {
+    fontSize: font.s,
+    color: colors.tabIcon,
+    fontStyle: "italic",
   },
 });
