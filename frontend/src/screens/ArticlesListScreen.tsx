@@ -47,7 +47,7 @@ const getTrimesterColor = (trimester: Trimester) => {
 
 interface ArticleCardProps {
   item: ArticleOverview;
-  actor: "mother" | "doctor" | "nutritionist" | "merchant";
+  actor: "mother" | "doctor" | "nutritionist" | "merchant" | "guest";
 }
 
 function ArticleCard({ item, actor }: ArticleCardProps) {
@@ -77,14 +77,16 @@ function ArticleCard({ item, actor }: ArticleCardProps) {
               ? "doctor"
               : actor === "nutritionist"
                 ? "nutritionist"
-                : "merchant";
+                : actor === "merchant"
+                  ? "merchant"
+                  : "guest";
         router.push(`/main/${actorPath}/(home)/articles/${item.id}` as any);
       }}
     >
       <View style={styles.articleCardInner}>
         <View style={styles.cardHeader}>
           <Text style={styles.categoryText}>{item.category.toUpperCase()}</Text>
-          {me && (
+          {me && actor !== "guest" && (
             <TouchableOpacity onPress={handleSaveToggle} disabled={isCheckingSaved} style={styles.saveButton}>
               {isCheckingSaved ? (
                 <ActivityIndicator size="small" color={colors.primary} />
@@ -124,7 +126,7 @@ interface ArticlesListScreenProps {
   onBack?: () => void;
   showBackButton?: boolean;
   showActionButtons?: boolean;
-  actor?: "mother" | "doctor" | "nutritionist" | "merchant";
+  actor?: "mother" | "doctor" | "nutritionist" | "merchant" | "guest";
 }
 
 /* ================= SCREEN ================= */
@@ -316,7 +318,7 @@ export default function ArticlesListScreen({
       </View>
 
       {/* ===== SAVED ARTICLES BUTTON ===== */}
-      {me && (
+      {me && actor !== "guest" && (
         <View style={styles.savedButtonWrap}>
           <TouchableOpacity style={styles.savedButton} onPress={handleSavedArticlesPress} activeOpacity={0.85}>
             <Ionicons name="bookmark" size={18} color={colors.primary} />

@@ -20,7 +20,7 @@ const ConsultationSection: FC<ConsultationSectionProps> = ({ onFindDoctorPressed
     <View style={homeHorizontalScrollStyle.section}>
       {/* Header outside the cards */}
       <View style={homeHorizontalScrollStyle.sectionHeader}>
-        <Text style={homeHorizontalScrollStyle.sectionTitle}>Consultation</Text>
+        <Text style={homeHorizontalScrollStyle.sectionTitle}>Upcoming Consultation</Text>
         {onFindDoctorPressed && (
           <TouchableOpacity onPress={onFindDoctorPressed}>
             <Text style={homeHorizontalScrollStyle.viewAllText}>Find a doctor</Text>
@@ -30,7 +30,7 @@ const ConsultationSection: FC<ConsultationSectionProps> = ({ onFindDoctorPressed
 
       {!appointments || appointments.length === 0 ? (
         <View>
-          <Text style={homeHorizontalScrollStyle.emptyText}>No appointments scheduled.</Text>
+          <Text style={homeHorizontalScrollStyle.emptyText}>No Upcoming Consultation</Text>
         </View>
       ) : (
         appointments.map((item) => (

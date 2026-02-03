@@ -48,9 +48,10 @@ function cleanMarkdown(md?: string | null) {
 interface ArticleDetailScreenProps {
   articleId: string;
   onBack: () => void;
+  isGuest?: boolean;
 }
 
-export default function ArticleDetailScreen({ articleId, onBack }: ArticleDetailScreenProps) {
+export default function ArticleDetailScreen({ articleId, onBack, isGuest = false }: ArticleDetailScreenProps) {
   const me = useAuthStore((state) => state.me);
   const { data: isSaved, isLoading: isCheckingSaved } = useIsArticleSaved(Number(articleId));
   const saveArticle = useSaveArticle();
@@ -91,7 +92,7 @@ export default function ArticleDetailScreen({ articleId, onBack }: ArticleDetail
 
         <Text style={styles.headerTitle}>Article</Text>
 
-        {me ? (
+        {me && !isGuest ? (
           <TouchableOpacity
             onPress={handleSaveToggle}
             disabled={isCheckingSaved}
