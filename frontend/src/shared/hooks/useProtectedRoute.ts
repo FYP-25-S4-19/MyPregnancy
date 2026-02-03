@@ -1,9 +1,11 @@
+// src/shared/hooks/useProtectedRoute.ts
+
+import { isDevice } from "expo-device";
 import { router, usePathname, useRootNavigationState, useSegments } from "expo-router";
-import useAuthStore from "../authStore";
 import { useCallback, useEffect } from "react";
+import useAuthStore from "../authStore";
 import utils from "../utils";
 import { useGuestGate } from "./useGuestGate";
-import { isDevice } from "expo-device";
 
 export function useProtectedRoute() {
   const segments = useSegments();
@@ -19,22 +21,34 @@ export function useProtectedRoute() {
 
   const safeReplace = useCallback(
     (to: string) => {
-      // Prevent repeated replaces to the same destination during navigation transitions.
       if (!pathname) return;
       if (pathname === to || pathname.startsWith(`${to}/`)) return;
       router.replace(to as any);
     },
     [pathname],
   );
+
   const openGuestGate = useGuestGate((s) => s.open);
+
+  // ✅ Guest-readable routes allowlist (no auth required)
+  const isGuestAllowedRoute = useCallback(() => {
+    // Examples:
+    // /main/(notab)/threads
+    // /main/(notab)/threads/123
+    const inMain = segment0 === "main";
+    const inNotab = segment1 === "(notab)";
+    const isThreads = segments[2] === "threads";
+
+    return inMain && inNotab && isThreads;
+  }, [segment0, segment1, segments]);
+
   useEffect(() => {
     if (!isHydrated) return;
     if (!rootNavigationState?.key) return;
 
-    // Analyze where the user is trying to go
-    const inAuthGroup = segment0 === "(intro)"; // Login/Register
-    const inMainGroup = segment0 === "main"; // The App
-    const inGuestRoute = segment1 === "guest"; // specifically /main/guest
+    const inAuthGroup = segment0 === "(intro)";
+    const inMainGroup = segment0 === "main";
+    const inGuestRoute = segment1 === "guest"; // /main/guest
 
     const attemptedPath = "/" + segments.join("/");
 
@@ -47,9 +61,10 @@ export function useProtectedRoute() {
     // --------- GUEST / NOT LOGGED IN ----------
     if (!accessToken || utils.safeDecodeUnexpiredJWT(accessToken) === null) {
       if (inMainGroup && !inGuestRoute) {
-        // ✅ Instead of kicking to login immediately:
-        // 1) show modal
-        // 2) bounce back to guest home
+        // ✅ Allow guest-readable routes (threads browsing)
+        if (isGuestAllowedRoute()) return;
+
+        // Otherwise gate + bounce to guest home
         openGuestGate(attemptedPath);
         safeReplace("/main/guest");
       }
@@ -63,5 +78,17 @@ export function useProtectedRoute() {
       else if (me?.role === "VOLUNTEER_DOCTOR") safeReplace("/main/doctor");
       else if (me?.role === "MERCHANT") safeReplace("/main/merchant");
     }
-  }, [accessToken, segments, isHydrated, me?.role, rootNavigationState?.key, openGuestGate, safeReplace, segment0, segment1]);
+  }, [
+    accessToken,
+    segments,
+    isHydrated,
+    me?.role,
+    me?.id,
+    rootNavigationState?.key,
+    openGuestGate,
+    safeReplace,
+    segment0,
+    segment1,
+    isGuestAllowedRoute,
+  ]);
 }
