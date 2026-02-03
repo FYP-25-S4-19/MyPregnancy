@@ -14,7 +14,7 @@ interface CommunityThreadsScreenProps {
   onBack?: () => void;
   onThreadPress?: (threadId: number) => void;
   showBackButton?: boolean;
-  actor?: "mother" | "doctor" | "nutritionist" | "merchant";
+  actor?: "mother" | "doctor" | "nutritionist" | "merchant" | "guest";
 }
 
 export default function CommunityThreadsScreen({
@@ -23,6 +23,7 @@ export default function CommunityThreadsScreen({
   showBackButton = true,
   actor = "mother",
 }: CommunityThreadsScreenProps) {
+  const isGuest = actor === "guest";
   const { data: threads, isLoading, isError, error, refetch } = useThreadsPreviews();
   const {
     data: threadCategories,
@@ -58,10 +59,12 @@ export default function CommunityThreadsScreen({
   };
 
   const handleMyThreadsPress = (): void => {
+    if (isGuest) return;
     router.push(`/main/${actor}/(home)/my-threads`);
   };
 
   const handleCreateThreadPress = (): void => {
+    if (isGuest) return;
     router.push(`/main/${actor}/(home)/my-threads/create`);
   };
 
@@ -198,22 +201,25 @@ export default function CommunityThreadsScreen({
               isFirst={index === 0}
               isLast={index === filteredThreads.length - 1}
               stretchOut
+              isGuest={isGuest}
             />
           ))}
           <View style={{ height: sizes.xl }} />
         </ScrollView>
       )}
 
-      {/* Floating Action Buttons */}
-      <View style={styles.floatingButtonsContainer}>
-        <TouchableOpacity style={styles.floatingButtonLeft} onPress={handleMyThreadsPress} activeOpacity={0.8}>
-          <Ionicons name="person" size={28} color={colors.white} />
-        </TouchableOpacity>
+      {/* Floating Action Buttons - Hidden for guests */}
+      {!isGuest && (
+        <View style={styles.floatingButtonsContainer}>
+          <TouchableOpacity style={styles.floatingButtonLeft} onPress={handleMyThreadsPress} activeOpacity={0.8}>
+            <Ionicons name="person" size={28} color={colors.white} />
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.floatingButtonRight} onPress={handleCreateThreadPress} activeOpacity={0.8}>
-          <Ionicons name="add" size={32} color={colors.white} />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.floatingButtonRight} onPress={handleCreateThreadPress} activeOpacity={0.8}>
+            <Ionicons name="add" size={32} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

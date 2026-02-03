@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
 
-export const useGetProfileImgUrl = () => {
+export const useGetProfileImgUrl = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ["profileImageUrl"],
     queryFn: async () => {
@@ -12,9 +12,10 @@ export const useGetProfileImgUrl = () => {
         const separator = url.includes("?") ? "&" : "?";
         return `${url}${separator}_t=${Date.now()}`;
       }
-      return url;
+      return null;
     },
-    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled,
   });
 };
 

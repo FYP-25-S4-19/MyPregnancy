@@ -8,10 +8,5 @@ export default function ThreadDetailPage() {
   const me = useAuthStore((state) => state.me);
   const isGuest = !me;
 
-  // return (
-  //   <View>
-  //     <Text>We are of thread ID: {threadId}</Text>
-  //   </View>
-  // );
   return <ThreadScreen threadId={threadId} backgroundColor="#FFE8E8" isGuest={isGuest} />;
 }

@@ -3,10 +3,10 @@ import ConsultationSection from "@/src/components/sections/ConsultationSection";
 import ArticleSection from "@/src/components/sections/ArticleSection";
 import JournalSection from "@/src/components/sections/JournalSection";
 import HomePageHeader from "@/src/components/headers/HomePageHeader";
+import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { colors, sizes } from "@/src/shared/designSystem";
-import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import { router } from "expo-router";
 
 export default function GuestHomeScreen() {
@@ -32,7 +32,7 @@ export default function GuestHomeScreen() {
     <View style={{ flex: 1 }}>
       <SafeAreaView edges={["top"]} style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <HomePageHeader greetingText="Hi, Mama!" headerText={""} />
+          <HomePageHeader greetingText="Hi, Mama!" headerText={""} isGuest={true} />
           <View style={{ height: 20 }} />
 
           {/* Journal Section - Edit button triggers guest modal */}
@@ -44,10 +44,10 @@ export default function GuestHomeScreen() {
           <View style={{ height: 20 }} />
 
           {/* Threads Section - Can view but can't like/comment */}
-          <CommunityThreadsSection onViewAll={handleThreadsViewAll} onThreadPress={handleThreadPress} />
+          <CommunityThreadsSection onViewAll={handleThreadsViewAll} onThreadPress={handleThreadPress} isGuest={true} />
 
           {/* Consultation Section - Always shows "No Upcoming Consultation" */}
-          <ConsultationSection />
+          <ConsultationSection isGuest={true} />
 
           <View style={{ height: sizes.xl }} />
         </ScrollView>

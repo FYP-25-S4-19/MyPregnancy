@@ -7,9 +7,14 @@ import { colors } from "@/src/shared/designSystem";
 interface CommunityThreadsSectionProps {
   onViewAll?: () => void;
   onThreadPress?: (threadId: number) => void;
+  isGuest?: boolean;
 }
 
-export default function CommunityThreadsSection({ onViewAll, onThreadPress }: CommunityThreadsSectionProps) {
+export default function CommunityThreadsSection({
+  onViewAll,
+  onThreadPress,
+  isGuest = false,
+}: CommunityThreadsSectionProps) {
   const { data: threads, isLoading, isError, error, refetch } = useThreadsPreviews(6);
 
   if (isLoading) {
@@ -84,6 +89,7 @@ export default function CommunityThreadsSection({ onViewAll, onThreadPress }: Co
             onPress={() => onThreadPress?.(thread.id)}
             isFirst={index === 0}
             isLast={index === threads.length - 1}
+            isGuest={isGuest}
           />
         ))}
       </ScrollView>

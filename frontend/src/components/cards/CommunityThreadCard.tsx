@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { ThreadPreviewData } from "@/src/shared/typesAndInterfaces";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import React from "react";
 
 interface CommunityThreadCardProps {
@@ -10,8 +11,8 @@ interface CommunityThreadCardProps {
   onPress?: () => void;
   isFirst?: boolean;
   isLast?: boolean;
-
   stretchOut?: boolean;
+  isGuest?: boolean;
 }
 
 export default function CommunityThreadCard({
@@ -20,13 +21,21 @@ export default function CommunityThreadCard({
   isFirst,
   isLast,
   stretchOut,
+  isGuest = false,
 }: CommunityThreadCardProps) {
   const likeThreadMutation = useLikeThread();
   const unlikeThreadMutation = useUnlikeThread();
+  const openGuestGate = useGuestGate((state) => state.open);
 
   const handleLikePress = (e: any): void => {
     // Stop propagation to prevent triggering the card's onPress
     e.stopPropagation();
+
+    // If guest, show registration modal
+    if (isGuest) {
+      openGuestGate(`/main/(notab)/threads/${thread.id}`);
+      return;
+    }
 
     if (thread.is_liked_by_current_user) {
       unlikeThreadMutation.mutate(thread.id, {
@@ -98,7 +107,7 @@ export default function CommunityThreadCard({
         <TouchableOpacity
           style={styles.likeContainer}
           onPress={handleLikePress}
-          disabled={likeThreadMutation.isPending || unlikeThreadMutation.isPending}
+          disabled={!isGuest && (likeThreadMutation.isPending || unlikeThreadMutation.isPending)}
           activeOpacity={0.7}
         >
           <MaterialCommunityIcons

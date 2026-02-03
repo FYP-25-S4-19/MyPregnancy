@@ -74,7 +74,7 @@ const replaceS3Localhost = (data: any, hostIp: string): any => {
 api.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().accessToken;
-    if (token) {
+    if (token && token.trim()) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
