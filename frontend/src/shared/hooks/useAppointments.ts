@@ -8,6 +8,7 @@ export interface AppointmentData {
   doctor_name: string;
   mother_id: string;
   mother_name: string;
+  mother_due_date?: string | null;
   start_time: string;
   status: "PENDING_ACCEPT_REJECT" | "ACCEPTED" | "REJECTED";
 }
@@ -46,6 +47,21 @@ export const usePendingAppointmentsCount = () => {
   };
 };
 
+export const usePendingAppointments = () => {
+  const { data: appointments, isLoading, isError, error } = useAllAppointments();
+
+  const pendingAppointments = appointments
+    ? appointments.filter((appt) => appt.status === "PENDING_ACCEPT_REJECT")
+    : [];
+
+  return {
+    appointments: pendingAppointments,
+    isLoading,
+    isError,
+    error,
+  };
+};
+
 export const useUpcomingAppointments = () => {
   const { data: appointments, isLoading, isError, error } = useAllAppointments();
 
@@ -72,4 +88,16 @@ export const formatAppointmentDate = (dateString: string): string => {
 export const formatAppointmentTime = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+};
+
+export const getWeekNumber = (dateString: string): string => {
+  const date = new Date(dateString);
+  const start = new Date(date.getFullYear(), 0, 1);
+  const diff = date.getTime() - start.getTime();
+  const oneWeek = 1000 * 60 * 60 * 24 * 7;
+  const week = Math.floor(diff / oneWeek) + 1;
+
+  // Calculate approximate pregnancy week
+  const pregnancyWeek = Math.floor(diff / oneWeek) + 1;
+  return `Week ${pregnancyWeek}`;
 };

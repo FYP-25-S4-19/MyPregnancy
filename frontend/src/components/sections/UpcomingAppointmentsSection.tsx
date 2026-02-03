@@ -16,9 +16,33 @@ interface Appointment {
   appointment_id: string;
   doctor_name: string;
   mother_name: string;
+  mother_due_date?: string | null;
   start_time: string;
   status: string;
 }
+
+const calculatePregnancyWeek = (dueDate: string): number | null => {
+  try {
+    const due = new Date(dueDate);
+    const now = new Date();
+    const daysDiff = Math.floor((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const weeksRemaining = Math.floor(daysDiff / 7);
+    const currentWeek = 40 - weeksRemaining;
+
+    // Ensure week is between 1 and 40
+    if (currentWeek < 1 || currentWeek > 40) return null;
+    return currentWeek;
+  } catch {
+    return null;
+  }
+};
+
+const formatMotherInfo = (motherName: string, dueDate?: string | null): string => {
+  if (!dueDate) return motherName;
+  const week = calculatePregnancyWeek(dueDate);
+  if (!week) return motherName;
+  return `${motherName} - Week ${week}`;
+};
 
 interface UpcomingAppointmentsSectionProps {
   appointments?: Appointment[];
@@ -75,8 +99,9 @@ export default function UpcomingAppointmentsSection({
                   <Ionicons name="chevron-forward" size={20} color={colors.text} />
                 </View>
                 <Text style={styles.appointmentTime}>{formatAppointmentTime(appointment.start_time)}</Text>
-                <Text style={styles.appointmentInfo}>{appointment.mother_name}</Text>
-                <Text style={styles.appointmentWeek}>{appointment.status}</Text>
+                <Text style={styles.appointmentInfo}>
+                  {formatMotherInfo(appointment.mother_name, appointment.mother_due_date)}
+                </Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -158,11 +183,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     opacity: 0.7,
     marginBottom: sizes.xs / 2,
-  },
-  appointmentWeek: {
-    fontSize: font.s,
-    color: colors.text,
-    opacity: 0.7,
   },
   emptyContainer: {
     paddingVertical: sizes.l,
