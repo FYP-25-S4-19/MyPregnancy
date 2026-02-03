@@ -1,3 +1,5 @@
+// frontend/src/components/sections/BabySizeSection.tsx
+
 import api from "@/src/shared/api";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { getPregnancySnapshotFromDueDate } from "@/src/shared/pregnancyTracker";
@@ -10,29 +12,36 @@ type PregnancyStage = "planning" | "pregnant" | "postpartum";
 type MyProfileResponse = {
   stage: PregnancyStage | null;
   pregnancy_week: number | null;
-  expected_due_date: string | null; // "YYYY-MM-DD"
+  expected_due_date: string | null;
   baby_date_of_birth: string | null;
 };
 
 function emojiForComparison(comparison: string) {
   const c = (comparison || "").toLowerCase();
-  if (c.includes("corn")) return "🌽";
-  if (c.includes("pumpkin")) return "🎃";
-  if (c.includes("watermelon")) return "🍉";
-  if (c.includes("banana")) return "🍌";
-  if (c.includes("avocado")) return "🥑";
-  if (c.includes("lemon")) return "🍋";
-  if (c.includes("lime")) return "🍋";
-  if (c.includes("strawberry")) return "🍓";
-  if (c.includes("raspberry")) return "🫐";
-  if (c.includes("pea")) return "🟢";
+
   if (c.includes("poppy")) return "⚪️";
-  if (c.includes("zucchini")) return "🥒";
-  if (c.includes("eggplant")) return "🍆";
-  if (c.includes("cabbage")) return "🥬";
-  if (c.includes("squash")) return "🎃";
+  if (c.includes("pea")) return "🟢";
+
+  if (c.includes("raspberry")) return "🍓";
+  if (c.includes("strawberry")) return "🍓";
+  if (c.includes("cherry")) return "🍒";
+
+  if (c.includes("lime")) return "🍋";
+  if (c.includes("lemon")) return "🍋";
+  if (c.includes("avocado")) return "🥑";
+  if (c.includes("banana")) return "🍌";
   if (c.includes("papaya")) return "🥭";
   if (c.includes("cantaloupe")) return "🍈";
+  if (c.includes("watermelon")) return "🍉";
+  if (c.includes("pumpkin")) return "🎃";
+
+  if (c.includes("bell pepper")) return "🫑";
+  if (c.includes("corn")) return "🌽";
+  if (c.includes("zucchini")) return "🥒";
+  if (c.includes("squash")) return "🥒";
+  if (c.includes("eggplant")) return "🍆";
+  if (c.includes("cabbage")) return "🥬";
+
   return "👶";
 }
 
@@ -47,41 +56,29 @@ export default function BabySizeSection() {
   });
 
   const snapshot = useMemo(() => {
-    // If not pregnant, show a “neutral” placeholder (or you can hide section instead)
-    if (data?.stage && data.stage !== "pregnant") {
-      return {
-        week: 0,
-        totalWeeks: 40,
-        progressPct: 0,
-        babySize: { comparison: "poppy seed", lengthCm: 0.2, weightG: 0 },
-      };
+    if (data?.stage !== "pregnant") {
+      return null;
     }
 
-    // IMPORTANT: prefer pregnancy_week (slider) if provided
     if (typeof data?.pregnancy_week === "number") {
-      const w = Math.max(0, Math.min(40, data.pregnancy_week));
-      // Build a snapshot using due date logic only if you want lengths/weights to align with week:
-      // easiest: create a fake due date by shifting now
+      const w = Math.max(1, Math.min(40, data.pregnancy_week));
       const now = new Date();
       const due = new Date(now);
       due.setDate(now.getDate() + (40 - w) * 7);
-      return getPregnancySnapshotFromDueDate(due.toISOString().slice(0, 10), now);
+      return getPregnancySnapshotFromDueDate(
+        due.toISOString().slice(0, 10),
+        now
+      );
     }
 
-    // Fallback to due date
-    const dueDateISO = data?.expected_due_date ?? null;
-    if (dueDateISO) {
-      return getPregnancySnapshotFromDueDate(dueDateISO);
+    if (data?.expected_due_date) {
+      return getPregnancySnapshotFromDueDate(data.expected_due_date);
     }
 
-    // Fallback stub (if nothing exists)
-    return {
-      week: 24,
-      totalWeeks: 40,
-      progressPct: Math.round((24 / 40) * 100),
-      babySize: { comparison: "corn", lengthCm: 30, weightG: 600 },
-    };
-  }, [data?.stage, data?.pregnancy_week, data?.expected_due_date]);
+    return null;
+  }, [data]);
+
+  if (!snapshot) return null;
 
   const emoji = emojiForComparison(snapshot.babySize.comparison);
 
@@ -90,9 +87,7 @@ export default function BabySizeSection() {
       {!!error && (
         <View style={{ marginHorizontal: sizes.m, marginBottom: sizes.s }}>
           <Text style={{ fontSize: font.xs, color: colors.text }}>
-            Tracker couldn’t load your pregnancy profile.
-            {"\n"}
-            {String((error as any)?.response?.data?.detail || (error as any)?.message || error)}
+            Pregnancy tracker couldn’t load.
           </Text>
         </View>
       )}
@@ -105,26 +100,39 @@ export default function BabySizeSection() {
 
         <View style={styles.babySizeInfo}>
           <Text style={styles.babySizeTitle}>Your baby is now</Text>
-          <Text style={styles.babySizeSubtitle}>as big as a {snapshot.babySize.comparison}.</Text>
+          <Text style={styles.babySizeSubtitle}>
+            as big as a {snapshot.babySize.comparison}.
+          </Text>
 
           <View style={styles.measurements}>
             <Text style={styles.measurementText}>Approx:</Text>
-            <Text style={styles.measurementText}>length: {snapshot.babySize.lengthCm} cm</Text>
-            <Text style={styles.measurementText}>weight: {snapshot.babySize.weightG} g</Text>
+            <Text style={styles.measurementText}>
+              length: {snapshot.babySize.lengthCm} cm
+            </Text>
+            <Text style={styles.measurementText}>
+              weight: {snapshot.babySize.weightG} g
+            </Text>
           </View>
         </View>
       </View>
 
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${snapshot.progressPct}%` }]} />
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${snapshot.progressPct}%` },
+            ]}
+          />
         </View>
         <Text style={styles.weekProgress}>
           Week {snapshot.week}/{snapshot.totalWeeks}
         </Text>
       </View>
 
-      <Text style={styles.progressLabel}>{snapshot.progressPct}% of your pregnancy journey!</Text>
+      <Text style={styles.progressLabel}>
+        {snapshot.progressPct}% of your pregnancy journey!
+      </Text>
     </>
   );
 }
@@ -206,7 +214,6 @@ const styles = StyleSheet.create({
     fontSize: font.xs,
     color: colors.text,
     fontWeight: "500",
-    textAlignVertical: "center",
     lineHeight: 32,
   },
   progressLabel: {
