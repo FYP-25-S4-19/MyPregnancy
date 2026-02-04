@@ -11,9 +11,6 @@ import { router } from "expo-router";
 import api from "./api";
 
 const utils = {
-  /**
-   * Extract the year from ISO 8601 datetime string for "member since" display
-   */
   getMemberSinceYear(createdAt: string): string {
     try {
       const date = new Date(createdAt);
@@ -22,9 +19,7 @@ const utils = {
       return "";
     }
   },
-  /**
-   * Will try to decode the JWT and return null if it FAILS or if is EXPIRED
-   */
+
   safeDecodeUnexpiredJWT(jwt: string): JwtData | null {
     try {
       const jwtData = jwtDecode<JwtData>(jwt);
@@ -33,11 +28,13 @@ const utils = {
       return null;
     }
   },
+
   formatFullname(me: MeData): string {
     return [me.first_name, me.middle_name, me.last_name]
       .filter((namePart) => namePart && namePart.trim().length > 0)
       .join(" ");
   },
+
   formatConsultRequestDate(date: Date): string {
     const day = date.getDate();
     let dayWithSuffix: string;
@@ -67,40 +64,40 @@ const utils = {
       hour12: true,
     });
 
-    const formattedTime = timeString
-      .replace(" ", "") // Remove space before AM/PM
-      .toLowerCase();
-
+    const formattedTime = timeString.replace(" ", "").toLowerCase();
     return `${dayWithSuffix} ${month} ${formattedTime}`;
   },
+
   getOtherMemberInChannel(channel: Channel, myID: string): UserResponse | undefined {
     if (!channel) return;
 
     const otherMembers = Object.values(channel.state.members).filter((member) => member.user_id !== myID);
-    if (otherMembers.length < 1) {
-      return;
-    }
-
+    if (otherMembers.length < 1) return;
     return otherMembers[0].user;
   },
+
   capitalizeFirstLetter(str: string): string {
     if (str.length === 0) return str;
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
+
   firstLetterOfEveryWordCapitalized(str: string): string {
     return str
       .split(" ")
       .map((word) => (word.length > 0 ? word.charAt(0).toUpperCase() : ""))
       .join("");
   },
+
   centsToDollarStr(cents: number): string {
     const dollars = cents / 100;
     return `${dollars.toFixed(2)}`;
   },
+
   _alertAndThrowErrorMessage(errorMessage: string): void {
     alert(errorMessage);
     throw new Error(errorMessage);
   },
+
   async registerForPushNofificationsAsync(userID: string): Promise<string | undefined> {
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("default", {
@@ -137,9 +134,7 @@ const utils = {
       this._alertAndThrowErrorMessage("Must use physical device for push notifications");
     }
   },
-  /**
-   * Common profile action handlers
-   */
+
   handleChangePassword(): void {
     const authStore = useAuthStore.getState();
     let newPassword = "";
@@ -148,11 +143,7 @@ const utils = {
       "Change Password",
       "Enter your new password",
       [
-        {
-          text: "Cancel",
-          onPress: () => {},
-          style: "cancel",
-        },
+        { text: "Cancel", onPress: () => {}, style: "cancel" },
         {
           text: "Next",
           onPress: (password?: string) => {
@@ -162,16 +153,11 @@ const utils = {
             }
             newPassword = password;
 
-            // Second prompt for confirmation
             Alert.prompt(
               "Confirm Password",
               "Re-enter your new password",
               [
-                {
-                  text: "Cancel",
-                  onPress: () => {},
-                  style: "cancel",
-                },
+                { text: "Cancel", onPress: () => {}, style: "cancel" },
                 {
                   text: "Update",
                   onPress: async (confirm?: string) => {
@@ -220,20 +206,14 @@ const utils = {
       "Delete Account",
       "Are you sure you want to permanently delete your account? This action cannot be undone.",
       [
-        {
-          text: "Cancel",
-          onPress: () => {},
-          style: "cancel",
-        },
+        { text: "Cancel", onPress: () => {}, style: "cancel" },
         {
           text: "Delete",
           onPress: async () => {
             try {
               await api.delete(`/me/delete`);
-
               authStore.clearAuthState();
-              router.replace("/(intro)");
-
+              router.replace("/(intro)" as any); // ✅ keep consistent
               Alert.alert("Account Deleted", "Your account has been permanently deleted");
             } catch (error: any) {
               const errorMsg = error?.response?.data?.detail || error?.message || "Failed to delete account";
@@ -246,22 +226,32 @@ const utils = {
     );
   },
 
+  // ✅ FIXED LOGOUT REDIRECT
   handleSignOut(): void {
-    const { clearAuthState } = useAuthStore.getState();
-    clearAuthState();
-    router.replace("/(intro)/onboarding");
+    const store = useAuthStore.getState();
+
+    // 1) Mark logout in progress so useProtectedRoute won't bounce to /main/guest
+    store.setIsSigningOut(true);
+
+    // 2) Navigate FIRST to your intended “main home page”
+    //    This should be the nice carousel screen you showed.
+    router.replace("/(intro)" as any);
+
+    // 3) Clear auth AFTER the navigation request (next tick)
+    setTimeout(() => {
+      store.clearAuthState();
+      store.setIsSigningOut(false);
+    }, 0);
   },
 
   async handleChangePhoto(): Promise<FormData | null> {
     try {
-      // Request permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("Permission Denied", "We need permission to access your media library");
         return null;
       }
 
-      // Pick image
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -269,16 +259,11 @@ const utils = {
         quality: 0.8,
       });
 
-      if (result.canceled) {
-        return null;
-      }
+      if (result.canceled) return null;
 
       const asset = result.assets[0];
-      if (!asset.uri) {
-        throw new Error("Failed to get image URI");
-      }
+      if (!asset.uri) throw new Error("Failed to get image URI");
 
-      // Create FormData
       const formData = new FormData();
       formData.append("profile_img", {
         uri: asset.uri,

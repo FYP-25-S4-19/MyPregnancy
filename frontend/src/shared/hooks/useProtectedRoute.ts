@@ -1,11 +1,9 @@
-// src/shared/hooks/useProtectedRoute.ts
-
-import { isDevice } from "expo-device";
 import { router, usePathname, useRootNavigationState, useSegments } from "expo-router";
-import { useCallback, useEffect } from "react";
 import useAuthStore from "../authStore";
+import { useCallback, useEffect } from "react";
 import utils from "../utils";
 import { useGuestGate } from "./useGuestGate";
+import { isDevice } from "expo-device";
 
 export function useProtectedRoute() {
   const segments = useSegments();
@@ -15,6 +13,9 @@ export function useProtectedRoute() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const me = useAuthStore((state) => state.me);
   const isHydrated = useAuthStore.persist.hasHydrated();
+
+  // ✅ new
+  const isSigningOut = useAuthStore((state) => state.isSigningOut);
 
   const segment0 = segments[0];
   const segment1 = segments[1];
@@ -30,25 +31,16 @@ export function useProtectedRoute() {
 
   const openGuestGate = useGuestGate((s) => s.open);
 
-  // ✅ Guest-readable routes allowlist (no auth required)
-  const isGuestAllowedRoute = useCallback(() => {
-    // Examples:
-    // /main/(notab)/threads
-    // /main/(notab)/threads/123
-    const inMain = segment0 === "main";
-    const inNotab = segment1 === "(notab)";
-    const isThreads = segments[2] === "threads";
-
-    return inMain && inNotab && isThreads;
-  }, [segment0, segment1, segments]);
-
   useEffect(() => {
     if (!isHydrated) return;
     if (!rootNavigationState?.key) return;
 
+    // ✅ If we’re logging out, do NOTHING. Let handleSignOut navigate to /(intro).
+    if (isSigningOut) return;
+
     const inAuthGroup = segment0 === "(intro)";
     const inMainGroup = segment0 === "main";
-    const inGuestRoute = segment1 === "guest"; // /main/guest
+    const inGuestRoute = segment1 === "guest";
 
     const attemptedPath = "/" + segments.join("/");
 
@@ -61,10 +53,6 @@ export function useProtectedRoute() {
     // --------- GUEST / NOT LOGGED IN ----------
     if (!accessToken || utils.safeDecodeUnexpiredJWT(accessToken) === null) {
       if (inMainGroup && !inGuestRoute) {
-        // ✅ Allow guest-readable routes (threads browsing)
-        if (isGuestAllowedRoute()) return;
-
-        // Otherwise gate + bounce to guest home
         openGuestGate(attemptedPath);
         safeReplace("/main/guest");
       }
@@ -89,6 +77,6 @@ export function useProtectedRoute() {
     safeReplace,
     segment0,
     segment1,
-    isGuestAllowedRoute,
+    isSigningOut, // ✅
   ]);
 }
