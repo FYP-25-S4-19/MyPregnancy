@@ -1,36 +1,35 @@
-// src/screens/ThreadScreen.tsx
-
-import api from "@/src/shared/api";
-import useAuthStore from "@/src/shared/authStore";
-import { colors, font, sizes } from "@/src/shared/designSystem";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, sizes, font } from "@/src/shared/designSystem";
 import { threadStyles } from "@/src/shared/globalStyles";
-import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
+import { Ionicons } from "@expo/vector-icons";
+import { useMemo, useState } from "react";
 import {
+  useUnlikeComment,
   useCreateComment,
+  useUnlikeThread,
   useLikeComment,
   useLikeThread,
   useThread,
-  useUnlikeComment,
-  useUnlikeThread,
 } from "@/src/shared/hooks/useThreads";
-import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router, usePathname } from "expo-router";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import useAuthStore from "@/src/shared/authStore";
+import api from "@/src/shared/api";
+import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
+import utils from "@/src/shared/utils";
 import {
-  ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
+  ActivityIndicator,
   TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  Platform,
+  Alert,
+  Text,
   View,
+  Modal,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 interface ThreadScreenProps {
   threadId: number;
@@ -53,27 +52,26 @@ export default function ThreadScreen({
   const [menuVisibleCommentId, setMenuVisibleCommentId] = useState<number | null>(null);
 
   const me = useAuthStore((state) => state.me);
-  const isLoggedIn = !!me?.id;
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const pathname = usePathname();
 
   const openGuestGate = useGuestGate((s) => s.open);
-  const pathname = usePathname();
+
+  const isAuthed = useMemo(() => {
+    if (!accessToken) return false;
+    return utils.safeDecodeUnexpiredJWT(accessToken) !== null;
+  }, [accessToken]);
 
   const queryClient = useQueryClient();
 
+  // Mutations
   const createCommentMutation = useCreateComment(threadId);
   const likeThreadMutation = useLikeThread();
   const unlikeThreadMutation = useUnlikeThread();
   const likeCommentMutation = useLikeComment(threadId);
   const unlikeCommentMutation = useUnlikeComment(threadId);
 
-  const requireAuthOrGate = () => {
-    if (!isLoggedIn) {
-      openGuestGate(pathname || `/main/(notab)/threads/${threadId}`);
-      return false;
-    }
-    return true;
-  };
-
+  // Update comment mutation
   const updateCommentMutation = useMutation({
     mutationFn: async ({ commentId, content }: { commentId: number; content: string }) => {
       await api.put(`/threads/${threadId}/comments/${commentId}`, { content });
@@ -89,6 +87,7 @@ export default function ThreadScreen({
     },
   });
 
+  // Delete comment mutation
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: number) => {
       await api.delete(`/threads/${threadId}/comments/${commentId}`);
@@ -122,8 +121,14 @@ export default function ThreadScreen({
     else router.back();
   };
 
+  const gateIfGuest = (): boolean => {
+    if (isAuthed) return false;
+    openGuestGate(pathname || `/main/(notab)/threads/${threadId}`);
+    return true;
+  };
+
   const handleSendComment = (): void => {
-    if (!requireAuthOrGate()) return;
+    if (gateIfGuest()) return;
 
     if (commentText.trim()) {
       createCommentMutation.mutate(
@@ -140,8 +145,8 @@ export default function ThreadScreen({
   };
 
   const handleToggleThreadLike = (): void => {
-    if (!requireAuthOrGate()) return;
     if (!thread) return;
+    if (gateIfGuest()) return;
 
     if (thread.is_liked_by_current_user) {
       unlikeThreadMutation.mutate(threadId, {
@@ -161,7 +166,7 @@ export default function ThreadScreen({
   };
 
   const handleToggleCommentLike = (commentId: number, isLiked: boolean): void => {
-    if (!requireAuthOrGate()) return;
+    if (gateIfGuest()) return;
 
     if (isLiked) {
       unlikeCommentMutation.mutate(commentId, {
@@ -181,15 +186,13 @@ export default function ThreadScreen({
   };
 
   const handleEditComment = (commentId: number, currentContent: string): void => {
-    if (!requireAuthOrGate()) return;
     setEditingCommentId(commentId);
     setEditingCommentText(currentContent);
     setMenuVisibleCommentId(null);
   };
 
   const handleSaveEditComment = (): void => {
-    if (!requireAuthOrGate()) return;
-
+    if (!isAuthed) return;
     if (editingCommentId && editingCommentText.trim()) {
       updateCommentMutation.mutate({
         commentId: editingCommentId,
@@ -204,12 +207,15 @@ export default function ThreadScreen({
   };
 
   const handleDeleteComment = (commentId: number): void => {
-    if (!requireAuthOrGate()) return;
-
+    if (!isAuthed) return;
     setMenuVisibleCommentId(null);
     Alert.alert("Delete Comment", "Are you sure you want to delete this comment? This action cannot be undone.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteCommentMutation.mutate(commentId) },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => deleteCommentMutation.mutate(commentId),
+      },
     ]);
   };
 
@@ -244,7 +250,11 @@ export default function ThreadScreen({
 
   return (
     <SafeAreaView edges={["top"]} style={[styles.container, { backgroundColor }]}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+        keyboardVerticalOffset={0}
+      >
         {showBackButton && (
           <TouchableOpacity onPress={handleBack} style={threadStyles.backButtonContainer}>
             <Ionicons name="chevron-back" size={20} color={colors.text} />
@@ -286,6 +296,12 @@ export default function ThreadScreen({
                 <Text style={threadStyles.commentCount}>{thread.comment_count || 0}</Text>
               </View>
             </View>
+
+            {!isAuthed && (
+              <Text style={{ marginTop: sizes.s, color: colors.text, opacity: 0.6, fontSize: font.xs }}>
+                You’re viewing as guest. Sign in to like or comment.
+              </Text>
+            )}
           </View>
 
           <View style={threadStyles.commentsSection}>
@@ -298,12 +314,9 @@ export default function ThreadScreen({
                       <Text style={threadStyles.commentTime}>{formatTimeAgo(comment.commented_at.toString())}</Text>
                     </View>
 
-                    {isCommentOwner(comment.commenter_id) && (
+                    {isAuthed && isCommentOwner(comment.commenter_id) && (
                       <TouchableOpacity
-                        onPress={() => {
-                          if (!requireAuthOrGate()) return;
-                          setMenuVisibleCommentId(comment.id);
-                        }}
+                        onPress={() => setMenuVisibleCommentId(comment.id)}
                         style={localStyles.menuButton}
                       >
                         <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
@@ -329,8 +342,7 @@ export default function ThreadScreen({
                           onPress={handleSaveEditComment}
                           style={[
                             localStyles.saveButton,
-                            (!editingCommentText.trim() || updateCommentMutation.isPending) &&
-                              localStyles.saveButtonDisabled,
+                            (!editingCommentText.trim() || updateCommentMutation.isPending) && localStyles.saveButtonDisabled,
                           ]}
                           disabled={!editingCommentText.trim() || updateCommentMutation.isPending}
                         >
@@ -345,7 +357,6 @@ export default function ThreadScreen({
                   ) : (
                     <>
                       <Text style={threadStyles.commentContent}>{comment.content}</Text>
-
                       <TouchableOpacity
                         onPress={() => handleToggleCommentLike(comment.id, comment.is_liked_by_current_user)}
                         style={threadStyles.commentLikeButton}
@@ -399,7 +410,7 @@ export default function ThreadScreen({
               ))
             ) : (
               <View style={threadStyles.noCommentsContainer}>
-                <Text style={threadStyles.noCommentsText}>No comments yet. Be the first to comment!</Text>
+                <Text style={threadStyles.noCommentsText}>No comments yet.</Text>
               </View>
             )}
           </View>
@@ -407,10 +418,11 @@ export default function ThreadScreen({
           <View style={{ height: 100 }} />
         </ScrollView>
 
+        {/* Comment Input (Guests can see it, but pressing Send triggers modal) */}
         <View style={threadStyles.inputContainer}>
           <TextInput
             style={threadStyles.input}
-            placeholder="Write a comment..."
+            placeholder={isAuthed ? "Write a comment..." : "Sign in to comment..."}
             placeholderTextColor={colors.lightGray}
             value={commentText}
             onChangeText={setCommentText}
@@ -487,13 +499,7 @@ const localStyles = StyleSheet.create({
     textAlignVertical: "top",
   },
   editActions: { flexDirection: "row", justifyContent: "flex-end", gap: sizes.s, marginTop: sizes.s },
-  cancelButton: {
-    paddingHorizontal: sizes.m,
-    paddingVertical: sizes.s,
-    borderRadius: sizes.s,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-  },
+  cancelButton: { paddingHorizontal: sizes.m, paddingVertical: sizes.s, borderRadius: sizes.s, borderWidth: 1, borderColor: colors.lightGray },
   cancelButtonText: { fontSize: font.s, color: colors.text },
   saveButton: { paddingHorizontal: sizes.m, paddingVertical: sizes.s, borderRadius: sizes.s, backgroundColor: colors.primary },
   saveButtonDisabled: { opacity: 0.5 },

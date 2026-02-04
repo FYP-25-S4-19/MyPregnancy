@@ -14,11 +14,11 @@ export function useProtectedRoute() {
   const me = useAuthStore((state) => state.me);
   const isHydrated = useAuthStore.persist.hasHydrated();
 
-  // ✅ new
   const isSigningOut = useAuthStore((state) => state.isSigningOut);
 
   const segment0 = segments[0];
   const segment1 = segments[1];
+  const segment2 = segments[2];
 
   const safeReplace = useCallback(
     (to: string) => {
@@ -34,13 +34,15 @@ export function useProtectedRoute() {
   useEffect(() => {
     if (!isHydrated) return;
     if (!rootNavigationState?.key) return;
-
-    // ✅ If we’re logging out, do NOTHING. Let handleSignOut navigate to /(intro).
     if (isSigningOut) return;
 
     const inAuthGroup = segment0 === "(intro)";
     const inMainGroup = segment0 === "main";
     const inGuestRoute = segment1 === "guest";
+
+    // ✅ Allow guests to view thread details (read-only)
+    // /main/(notab)/threads/[id]
+    const isReadOnlyAllowedForGuest = inMainGroup && segment1 === "(notab)" && segment2 === "threads";
 
     const attemptedPath = "/" + segments.join("/");
 
@@ -52,7 +54,8 @@ export function useProtectedRoute() {
 
     // --------- GUEST / NOT LOGGED IN ----------
     if (!accessToken || utils.safeDecodeUnexpiredJWT(accessToken) === null) {
-      if (inMainGroup && !inGuestRoute) {
+      // ✅ Guests can stay on intro OR guest routes OR read-only thread detail
+      if (inMainGroup && !inGuestRoute && !isReadOnlyAllowedForGuest) {
         openGuestGate(attemptedPath);
         safeReplace("/main/guest");
       }
@@ -77,6 +80,7 @@ export function useProtectedRoute() {
     safeReplace,
     segment0,
     segment1,
-    isSigningOut, // ✅
+    segment2,
+    isSigningOut,
   ]);
 }
