@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
@@ -55,7 +56,13 @@ async def add_new_product(
             img_file=img_file,
         )
         await db.commit()
-    except:
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Product could not be created due to a database constraint. Try changing the product name.",
+        ) from e
+    except Exception:
         await db.rollback()
         raise
 

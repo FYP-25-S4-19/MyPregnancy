@@ -1,1 +1,7 @@
 .idea/
+
+# Credentials / secrets
+backend/secrets/
+
+# Local extracted PDF text
+.tmp_pdf/

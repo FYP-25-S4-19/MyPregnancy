@@ -14,9 +14,50 @@ class ProductScanResult:
 
 
 def _guess_fields_from_text(text: str) -> dict[str, str | None]:
-    lines = [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
+    raw_lines = [re.sub(r"\s+", " ", ln).strip() for ln in (text or "").splitlines()]
 
-    name = lines[0] if lines else None
+    def is_barcode_like(s: str) -> bool:
+        digits = re.sub(r"\D", "", s)
+        return len(digits) >= 10 and digits == digits.strip()
+
+    def is_price_like(s: str) -> bool:
+        return bool(re.fullmatch(r"(?:(?:RM|\$)\s*)?\d{1,6}(?:[.,]\d{2})?", s.strip(), flags=re.IGNORECASE))
+
+    def is_noise(s: str) -> bool:
+        s = (s or "").strip()
+        if not s:
+            return True
+        if len(s) <= 2:
+            return True
+        if is_barcode_like(s):
+            return True
+        if is_price_like(s):
+            return True
+        # mostly punctuation
+        if len(re.sub(r"[\W_]", "", s)) <= 1:
+            return True
+        return False
+
+    # Keep unique, informative lines in order.
+    lines: list[str] = []
+    seen: set[str] = set()
+    for ln in raw_lines:
+        if is_noise(ln):
+            continue
+        key = ln.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append(ln)
+
+    # Pick a reasonable name: first line with letters and not too long.
+    name: str | None = None
+    for ln in lines:
+        if re.search(r"[A-Za-z]", ln) and len(ln) <= 80:
+            name = ln
+            break
+    if name is None and lines:
+        name = lines[0]
 
     # price patterns: 12.90 / 12,90 / RM12.90 / $12.90
     m_price = re.search(r"(?:(RM|\$)\s*)?(\d{1,6}(?:[.,]\d{2})?)", text or "")
@@ -25,8 +66,21 @@ def _guess_fields_from_text(text: str) -> dict[str, str | None]:
     if price:
         price = price.replace(",", ".")
 
-    # lightweight description: first few lines
-    description = " ".join(lines[:3]) if lines else None
+    # Richer description: include more informative lines (but keep it bounded).
+    # Prefer lines that contain letters.
+    descriptive_lines = [ln for ln in lines if re.search(r"[A-Za-z]", ln)]
+    if not descriptive_lines:
+        descriptive_lines = lines
+
+    # Drop the name from description if it's identical (common on packaging)
+    if name:
+        descriptive_lines = [ln for ln in descriptive_lines if ln.strip().lower() != name.strip().lower()]
+
+    # Join as multi-sentence text. Keep short enough for UI.
+    description: str | None = None
+    if descriptive_lines:
+        joined = "; ".join(descriptive_lines[:8])
+        description = joined[:500]
 
     return {
         "name": name,

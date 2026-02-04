@@ -42,6 +42,7 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./migrations:/app/migrations
       - ./secrets:/app/secrets:ro
     depends_on:
       - db
