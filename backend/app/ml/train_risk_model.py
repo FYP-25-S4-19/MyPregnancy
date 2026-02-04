@@ -46,11 +46,8 @@ def train_and_export(csv_path: str = "health_v1.csv") -> dict:
     # Drop rows with missing values
     data = data.dropna(subset=required)
 
-    # Feature engineering: calculate mean blood pressure
-    data["MeanBP"] = (data["SystolicBP"] + data["DiastolicBP"]) / 2.0
-
-    # Prepare features
-    X = data[["Age", "MeanBP", "BS", "HeartRate"]]
+    # Prepare features (use SBP/DBP directly instead of MeanBP so extremes aren't masked)
+    X = data[["Age", "SystolicBP", "DiastolicBP", "BS", "HeartRate"]]
 
     # Prepare multi-class target (low=0, mid=1, high=2) with rule-based overrides
     data["RiskLevel"].astype(str).str.lower().str.strip()

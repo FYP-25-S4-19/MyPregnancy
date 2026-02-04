@@ -80,7 +80,8 @@ async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
             [
                 {
                     "Age": float(request.age),
-                    "MeanBP": float(mean_bp),
+                    "SystolicBP": float(request.systolic_bp),
+                    "DiastolicBP": float(request.diastolic_bp),
                     "BS": float(request.bs),
                     "HeartRate": float(request.heart_rate),
                 }

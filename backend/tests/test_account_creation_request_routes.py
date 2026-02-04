@@ -7,9 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.db_schema import (
     AccountCreationRequestStatus,
     Admin,
+    DoctorSpecialisation,
     DoctorAccountCreationRequest,
+    MCRNumber,
     NutritionistAccountCreationRequest,
 )
+from app.shared.s3_storage_interface import S3StorageInterface
 from tests.conftest import CreateDoctorCallable
 
 
@@ -26,6 +29,8 @@ async def test_get_account_creation_requests_success(
         email="doc.request@test.com",
         password="password",
         qualification_img_key="key1",
+        mcr_no="S123456",
+        specialisation="OBGYN",
     )
     nutritionist_req = NutritionistAccountCreationRequest(
         first_name="Nutri",
@@ -37,7 +42,7 @@ async def test_get_account_creation_requests_success(
     db_session.add_all([doctor_req, nutritionist_req])
     await db_session.commit()
 
-    response = await client.get("/account-requests/")
+    response = await client.get("/accounts/")
     assert response.status_code == status.HTTP_200_OK, "Expected 200 OK for successful retrieval"
     data = response.json()
     assert len(data) == 2, "Expected 2 account creation requests in the response"
@@ -45,7 +50,7 @@ async def test_get_account_creation_requests_success(
 
 @pytest.mark.asyncio
 async def test_get_account_creation_requests_unauthorized(client: AsyncClient) -> None:
-    response = await client.get("/account-requests/")
+    response = await client.get("/accounts/")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -54,15 +59,29 @@ async def test_submit_doctor_account_creation_request_success(
     client: AsyncClient,
     db_session: AsyncSession,
     img_file_fixture: tuple[str, bytes, str],
+    monkeypatch,
 ) -> None:
+    # Seed required lookup data for the request
+    db_session.add(MCRNumber(value="S765432"))
+    db_session.add(DoctorSpecialisation(specialisation="OBGYN"))
+    await db_session.commit()
+
+    monkeypatch.setattr(
+        S3StorageInterface,
+        "put_staging_qualification_img",
+        lambda *_args, **_kwargs: "staging-qualifications/test.png",
+    )
+
     doctor_email: str = "new_doctor@test.com"
     response = await client.post(
-        "/account-requests/doctors",
+        "/accounts/doctors",
         data={
             "email": doctor_email,
             "password": "password123",
             "first_name": "New",
             "last_name": "Doctor",
+            "mcr_no": "S765432",
+            "specialisation": "OBGYN",
         },
         files={"qualification_img": img_file_fixture},
     )
@@ -79,11 +98,18 @@ async def test_submit_nutritionist_account_creation_request_success(
     client: AsyncClient,
     db_session: AsyncSession,
     img_file_fixture: tuple[str, bytes, str],
+    monkeypatch,
 ) -> None:
+    monkeypatch.setattr(
+        S3StorageInterface,
+        "put_staging_qualification_img",
+        lambda *_args, **_kwargs: "staging-qualifications/test.png",
+    )
+
     nutritionist_email: str = "new.nutri@test.com"
 
     response = await client.post(
-        "/account-requests/nutritionists",
+        "/accounts/nutritionists",
         data={
             "email": nutritionist_email,
             "password": "password123",
@@ -110,17 +136,17 @@ async def test_submit_doctor_request_email_conflict(
 ) -> None:
     conflicting_email: str = "existing@test.com"
 
-    existing_doctor = await volunteer_doctor_factory(email=conflicting_email)
-    db_session.add(existing_doctor)
-    await db_session.commit()
+    await volunteer_doctor_factory(email=conflicting_email)
 
     response = await client.post(
-        "/account-requests/doctors",
+        "/accounts/doctors",
         data={
             "email": conflicting_email,
             "password": "password456",
             "first_name": "Conflicting",
             "last_name": "Doctor",
+            "mcr_no": "S111111",
+            "specialisation": "OBGYN",
         },
         files={"qualification_img": img_file_fixture},
     )
@@ -132,7 +158,7 @@ async def test_process_request_not_found(
     authenticated_admin_client: tuple[AsyncClient, Admin],
 ) -> None:
     client, _ = authenticated_admin_client
-    response = await client.patch("/account-requests/doctors/9999/accept")
+    response = await client.patch("/accounts/doctors/9999/accept")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -150,11 +176,13 @@ async def test_process_request_already_processed(
         password="password",
         qualification_img_key="key",
         account_status=AccountCreationRequestStatus.APPROVED,
+        mcr_no="S222222",
+        specialisation="OBGYN",
     )
     db_session.add(request)
     await db_session.commit()
 
-    response = await client.patch(f"/account-requests/doctors/{request.id}/accept")
+    response = await client.patch(f"/accounts/doctors/{request.id}/accept")
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
@@ -170,11 +198,13 @@ async def test_process_request_unauthorized(
         password="password",
         qualification_img_key="key",
         account_status=AccountCreationRequestStatus.PENDING,
+        mcr_no="S333333",
+        specialisation="OBGYN",
     )
     db_session.add(request)
     await db_session.commit()
 
-    response = await client.patch(f"/account-requests/doctors/{request.id}/accept")
+    response = await client.patch(f"/accounts/doctors/{request.id}/accept")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED, (
         "Should not allow unauthorized access to process requests"
     )
