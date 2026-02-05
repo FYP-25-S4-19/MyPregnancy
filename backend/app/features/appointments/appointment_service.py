@@ -19,27 +19,18 @@ class AppointmentService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    @staticmethod
-    def _as_utc(dt: datetime) -> datetime:
-        # Accept both naive and timezone-aware datetimes.
-        # If naive, assume UTC to avoid TypeError comparisons.
-        if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
-            return dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(timezone.utc)
-
     async def create_appointment_request(self, doctor_id: UUID, requester_id: UUID, start_time: datetime) -> UUID:
         doctor = await self.db.get(VolunteerDoctor, doctor_id)
         if doctor is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Specified doctor does not exist")
 
-        start_time_utc = self._as_utc(start_time)
-        if start_time_utc <= datetime.now(timezone.utc):
+        if start_time <= datetime.now(timezone.utc):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Start time must be in the future")
 
         appointment = Appointment(
             volunteer_doctor_id=doctor_id,
             mother_id=requester_id,
-            start_time=start_time_utc,
+            start_time=start_time,
             status=AppointmentStatus.PENDING_ACCEPT_REJECT,
         )
         self.db.add(appointment)
@@ -118,12 +109,10 @@ class AppointmentService:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Attempting to modify appointment for another entity"
             )
-
-        new_start_time_utc = self._as_utc(req.new_start_time)
-        if new_start_time_utc <= datetime.now(timezone.utc):
+        if req.new_start_time <= datetime.now():
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Start time must be in the future")
 
-        appointment.start_time = new_start_time_utc
+        appointment.start_time = req.new_start_time
 
     async def delete_appointment(self, appointment_id: UUID, mother_id: UUID) -> None:
         appointment = await self.db.get(Appointment, appointment_id)
