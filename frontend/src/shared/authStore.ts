@@ -7,6 +7,10 @@ interface AuthState {
   me: MeData | null;
   accessToken: string | null;
 
+  // ✅ add this
+  isSigningOut: boolean;
+  setIsSigningOut: (v: boolean) => void;
+
   setMe: (me: MeData | null) => void;
   setAccessToken: (token: string | null) => void;
 
@@ -30,6 +34,10 @@ const useAuthStore = create<AuthState>()(
     (set) => ({
       me: null,
       accessToken: null,
+
+      // ✅ new
+      isSigningOut: false,
+      setIsSigningOut: (v) => set({ isSigningOut: v }),
 
       setMe: (me) => set({ me }),
       setAccessToken: (token) => set({ accessToken: token }),

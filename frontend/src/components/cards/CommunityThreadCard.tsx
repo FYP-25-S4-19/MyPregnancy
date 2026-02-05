@@ -1,10 +1,13 @@
+// src/components/cards/CommunityThreadCard.tsx
+
+import useAuthStore from "@/src/shared/authStore";
+import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
+import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import { useLikeThread, useUnlikeThread } from "@/src/shared/hooks/useThreads";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { ThreadPreviewData } from "@/src/shared/typesAndInterfaces";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
-import React from "react";
+import { usePathname } from "expo-router";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface CommunityThreadCardProps {
   thread: ThreadPreviewData;
@@ -27,13 +30,19 @@ export default function CommunityThreadCard({
   const unlikeThreadMutation = useUnlikeThread();
   const openGuestGate = useGuestGate((state) => state.open);
 
+  const me = useAuthStore((s) => s.me);
+  const isLoggedIn = !!me?.id;
+
+  const openGuestGate = useGuestGate((s) => s.open);
+  const pathname = usePathname();
+
   const handleLikePress = (e: any): void => {
     // Stop propagation to prevent triggering the card's onPress
     e.stopPropagation();
 
-    // If guest, show registration modal
-    if (isGuest) {
-      openGuestGate(`/main/(notab)/threads/${thread.id}`);
+    // ✅ Guest: show modal instead of calling API
+    if (!isLoggedIn) {
+      openGuestGate(pathname || `/main/(notab)/threads/${thread.id}`);
       return;
     }
 
@@ -53,6 +62,7 @@ export default function CommunityThreadCard({
       });
     }
   };
+
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -61,16 +71,11 @@ export default function CommunityThreadCard({
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 60) {
-      return `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else {
-      return `${diffDays}d ago`;
-    }
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
   };
 
-  // Get the category label, default to "General" if not set
   const categoryLabel = thread.category?.label ?? "General";
 
   return (
@@ -84,17 +89,14 @@ export default function CommunityThreadCard({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* Title sits at the top, taking necessary space up to 2 lines */}
       <Text style={styles.threadTitle} numberOfLines={2} ellipsizeMode="tail">
         {thread.title}
       </Text>
 
-      {/* Preview takes up all remaining space, pushing footer down */}
       <Text style={styles.threadPreview} numberOfLines={2} ellipsizeMode="tail">
         {thread.content}
       </Text>
 
-      {/* Footer sits at the bottom */}
       <View style={styles.footer}>
         <View style={styles.authorInfo}>
           <Text style={styles.authorName}>{thread.creator_name}</Text>
@@ -136,19 +138,14 @@ const styles = StyleSheet.create({
     height: 175,
     flexDirection: "column",
   },
-  firstCard: {
-    marginLeft: 0,
-  },
-  lastCard: {
-    marginRight: sizes.m,
-  },
+  firstCard: { marginLeft: 0 },
+  lastCard: { marginRight: sizes.m },
   threadTitle: {
     fontSize: font.m,
     fontWeight: "700",
     color: colors.text,
     marginBottom: sizes.s,
     lineHeight: 24,
-    // Ensure title doesn't grow beyond its content
     flexGrow: 0,
   },
   threadPreview: {
@@ -156,71 +153,28 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
     marginBottom: sizes.m,
-    // 2. CHANGE: Make this component flexible. It will occupy all remaining space.
     flex: 1,
-    // Ensure text aligns to top of this flexible space
     textAlignVertical: "top",
   },
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    // Ensure footer doesn't grow beyond its content
     flexGrow: 0,
-    // Optional: ensure it sits exactly at bottom if padding calculations are slightly off
     marginTop: "auto",
   },
   authorInfo: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    // Removed flexWrap: 'wrap' here to ensure the row stays aligned nicely in the footer.
-    // If names are very long, you might need to handle truncation on authorName instead.
   },
-  authorName: {
-    fontSize: font.xs,
-    color: colors.text,
-    opacity: 0.6,
-    // Optional: Add max width or numberOfLines=1 here if names break the layout
-  },
-  separator: {
-    fontSize: font.xs,
-    color: colors.text,
-    opacity: 0.4,
-    marginHorizontal: sizes.xs,
-  },
-  category: {
-    fontSize: font.xs,
-    color: colors.text,
-    opacity: 0.6,
-  },
-  timeAgo: {
-    fontSize: font.xs,
-    color: colors.text,
-    opacity: 0.6,
-  },
-  likeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: sizes.xs,
-  },
-  likeIcon: {
-    color: colors.text,
-    opacity: 0.6,
-  },
-  likeIconActive: {
-    color: colors.primary,
-    opacity: 1,
-  },
-  likeCount: {
-    fontSize: font.s,
-    fontWeight: "500",
-    color: colors.text,
-    opacity: 0.6,
-  },
-  likeCountActive: {
-    color: colors.primary,
-    opacity: 1,
-    fontWeight: "700",
-  },
+  authorName: { fontSize: font.xs, color: colors.text, opacity: 0.6 },
+  separator: { fontSize: font.xs, color: colors.text, opacity: 0.4, marginHorizontal: sizes.xs },
+  category: { fontSize: font.xs, color: colors.text, opacity: 0.6 },
+  timeAgo: { fontSize: font.xs, color: colors.text, opacity: 0.6 },
+  likeContainer: { flexDirection: "row", alignItems: "center", gap: sizes.xs },
+  likeIcon: { color: colors.text, opacity: 0.6 },
+  likeIconActive: { color: colors.primary, opacity: 1 },
+  likeCount: { fontSize: font.s, fontWeight: "500", color: colors.text, opacity: 0.6 },
+  likeCountActive: { color: colors.primary, opacity: 1, fontWeight: "700" },
 });

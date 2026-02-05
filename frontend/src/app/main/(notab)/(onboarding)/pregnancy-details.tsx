@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from "react";
+import api from "@/src/shared/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-//import api from "../../../../shared/api";
-import { router } from "expo-router";
 
 type PregnancyStage = "planning" | "pregnant" | "postpartum";
 
@@ -17,11 +18,12 @@ const ALLERGIES = ["Dairy", "Eggs", "Peanuts", "Seafood", "Gluten", "Soy", "Othe
 const DIET_PREFS = ["No restriction", "Vegetarian", "Vegan", "Halal", "Low-sugar"] as const;
 
 function isValidISODate(dateStr: string) {
-  // simple check: YYYY-MM-DD
   return /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 }
 
 export default function PregnancyDetailsScreen() {
+  const queryClient = useQueryClient();
+
   // step 1: pregnancy details, step 2: health profile
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -53,7 +55,6 @@ export default function PregnancyDetailsScreen() {
   };
 
   const toggleDiet = (value: string) => {
-    // default "No restriction" behaves nicely
     if (value === "No restriction") return ["No restriction"];
     const withoutDefault = dietPrefs.filter((x) => x !== "No restriction");
     const next = toggleMulti(withoutDefault, value);
@@ -80,7 +81,10 @@ export default function PregnancyDetailsScreen() {
         baby_date_of_birth: stage === "postpartum" ? babyDob : null,
       };
 
-      await api.put("/accounts/me/pregnancy-details", pregnancyPayload);
+      console.log("PUT /accounts/me/pregnancy-details payload:", pregnancyPayload);
+
+      const pregRes = await api.put("/accounts/me/pregnancy-details", pregnancyPayload);
+      console.log("PUT /accounts/me/pregnancy-details response:", pregRes?.data);
 
       // 2) Save health profile
       const healthPayload = {
@@ -90,13 +94,23 @@ export default function PregnancyDetailsScreen() {
         medical_conditions: medicalConditions || null,
       };
 
-      await api.put("/accounts/me/health-profile", healthPayload);
+      console.log("PUT /accounts/me/health-profile payload:", healthPayload);
+
+      const healthRes = await api.put("/accounts/me/health-profile", healthPayload);
+      console.log("PUT /accounts/me/health-profile response:", healthRes?.data);
+
+      // ✅ 3) DEBUG: Read back profile immediately
+      const check = await api.get("/accounts/me/profile");
+      console.log("PROFILE AFTER SAVE", check.data);
+
+      // ✅ 4) Invalidate cached profile query (Home uses this)
+      queryClient.invalidateQueries({ queryKey: ["myProfile"] });
 
       Alert.alert("Saved", "Your profile has been updated.");
       router.replace("/main/mother/(home)");
     } catch (e: any) {
-      console.log(e?.response?.data ?? e);
-      Alert.alert("Error", "Failed to save. Please try again.");
+      console.log("SAVE ERROR:", e?.response?.data ?? e);
+      Alert.alert("Error", e?.response?.data?.detail || "Failed to save. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -118,7 +132,6 @@ export default function PregnancyDetailsScreen() {
 
           {step === 1 ? (
             <>
-              {/* Stage selector */}
               <Text style={{ marginTop: 16, fontWeight: "600", color: "#7A2E2E" }}>Which stage are you in?</Text>
 
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
@@ -140,7 +153,6 @@ export default function PregnancyDetailsScreen() {
                 ))}
               </View>
 
-              {/* Conditional fields */}
               {stage === "pregnant" && (
                 <View style={{ marginTop: 16 }}>
                   <Text style={{ fontWeight: "600", color: "#7A2E2E" }}>Current Pregnancy Week</Text>
@@ -200,7 +212,6 @@ export default function PregnancyDetailsScreen() {
                 </View>
               )}
 
-              {/* Buttons */}
               <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
                 <Pressable
                   onPress={() => router.replace("/main/mother/(home)")}
@@ -230,7 +241,6 @@ export default function PregnancyDetailsScreen() {
             </>
           ) : (
             <>
-              {/* Health profile */}
               <Text style={{ marginTop: 16, fontWeight: "600", color: "#7A2E2E" }}>Blood Type</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 {BLOOD_TYPES.map((bt) => (
@@ -310,7 +320,6 @@ export default function PregnancyDetailsScreen() {
                 }}
               />
 
-              {/* Buttons */}
               <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
                 <Pressable
                   onPress={() => router.replace("/main/mother/(home)")}

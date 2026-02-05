@@ -14,27 +14,35 @@ export function useProtectedRoute() {
   const me = useAuthStore((state) => state.me);
   const isHydrated = useAuthStore.persist.hasHydrated();
 
+  const isSigningOut = useAuthStore((state) => state.isSigningOut);
+
   const segment0 = segments[0];
   const segment1 = segments[1];
+  const segment2 = segments[2];
 
   const safeReplace = useCallback(
     (to: string) => {
-      // Prevent repeated replaces to the same destination during navigation transitions.
       if (!pathname) return;
       if (pathname === to || pathname.startsWith(`${to}/`)) return;
       router.replace(to as any);
     },
     [pathname],
   );
+
   const openGuestGate = useGuestGate((s) => s.open);
+
   useEffect(() => {
     if (!isHydrated) return;
     if (!rootNavigationState?.key) return;
+    if (isSigningOut) return;
 
-    // Analyze where the user is trying to go
-    const inAuthGroup = segment0 === "(intro)"; // Login/Register
-    const inMainGroup = segment0 === "main"; // The App
-    const inGuestRoute = segment1 === "guest"; // specifically /main/guest
+    const inAuthGroup = segment0 === "(intro)";
+    const inMainGroup = segment0 === "main";
+    const inGuestRoute = segment1 === "guest";
+
+    // ✅ Allow guests to view thread details (read-only)
+    // /main/(notab)/threads/[id]
+    const isReadOnlyAllowedForGuest = inMainGroup && segment1 === "(notab)" && segment2 === "threads";
 
     const attemptedPath = "/" + segments.join("/");
 
@@ -46,10 +54,8 @@ export function useProtectedRoute() {
 
     // --------- GUEST / NOT LOGGED IN ----------
     if (!accessToken || utils.safeDecodeUnexpiredJWT(accessToken) === null) {
-      if (inMainGroup && !inGuestRoute) {
-        // ✅ Instead of kicking to login immediately:
-        // 1) show modal
-        // 2) bounce back to guest home
+      // ✅ Guests can stay on intro OR guest routes OR read-only thread detail
+      if (inMainGroup && !inGuestRoute && !isReadOnlyAllowedForGuest) {
         openGuestGate(attemptedPath);
         safeReplace("/main/guest");
       }
@@ -63,5 +69,18 @@ export function useProtectedRoute() {
       else if (me?.role === "VOLUNTEER_DOCTOR") safeReplace("/main/doctor");
       else if (me?.role === "MERCHANT") safeReplace("/main/merchant");
     }
-  }, [accessToken, segments, isHydrated, me?.role, rootNavigationState?.key, openGuestGate, safeReplace, segment0, segment1]);
+  }, [
+    accessToken,
+    segments,
+    isHydrated,
+    me?.role,
+    me?.id,
+    rootNavigationState?.key,
+    openGuestGate,
+    safeReplace,
+    segment0,
+    segment1,
+    segment2,
+    isSigningOut,
+  ]);
 }

@@ -2,7 +2,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, sizes, font } from "@/src/shared/designSystem";
 import { threadStyles } from "@/src/shared/globalStyles";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useUnlikeComment,
   useCreateComment,
@@ -11,11 +11,13 @@ import {
   useLikeThread,
   useThread,
 } from "@/src/shared/hooks/useThreads";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useAuthStore from "@/src/shared/authStore";
 import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import api from "@/src/shared/api";
+import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
+import utils from "@/src/shared/utils";
 import {
   KeyboardAvoidingView,
   ActivityIndicator,
@@ -46,12 +48,23 @@ export default function ThreadScreen({
   isGuest = false,
 }: ThreadScreenProps) {
   const { data: thread, isLoading, isError, error } = useThread(threadId);
+
   const [commentText, setCommentText] = useState<string>("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentText, setEditingCommentText] = useState<string>("");
   const [menuVisibleCommentId, setMenuVisibleCommentId] = useState<number | null>(null);
 
   const me = useAuthStore((state) => state.me);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const pathname = usePathname();
+
+  const openGuestGate = useGuestGate((s) => s.open);
+
+  const isAuthed = useMemo(() => {
+    if (!accessToken) return false;
+    return utils.safeDecodeUnexpiredJWT(accessToken) !== null;
+  }, [accessToken]);
+
   const queryClient = useQueryClient();
   const openGuestGate = useGuestGate((state) => state.open);
 
@@ -101,33 +114,31 @@ export default function ThreadScreen({
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) {
-      return "Just now";
-    } else if (diffMins < 60) {
-      return `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else {
-      return `${diffDays}d ago`;
-    }
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
   };
 
   const handleBack = (): void => {
-    if (onBack) {
-      onBack();
-    } else {
-      router.back();
-    }
+    if (onBack) onBack();
+    else router.back();
+  };
+
+  const gateIfGuest = (): boolean => {
+    if (isAuthed) return false;
+    openGuestGate(pathname || `/main/(notab)/threads/${threadId}`);
+    return true;
   };
 
   const handleSendComment = (): void => {
+    if (gateIfGuest()) return;
+
     if (commentText.trim()) {
       createCommentMutation.mutate(
         { content: commentText.trim() },
         {
-          onSuccess: () => {
-            setCommentText("");
-          },
+          onSuccess: () => setCommentText(""),
           onError: (error) => {
             Alert.alert("Error", "Failed to post comment. Please try again.");
             console.error("Comment error:", error);
@@ -144,6 +155,7 @@ export default function ThreadScreen({
     }
 
     if (!thread) return;
+    if (gateIfGuest()) return;
 
     if (thread.is_liked_by_current_user) {
       unlikeThreadMutation.mutate(threadId, {
@@ -163,10 +175,7 @@ export default function ThreadScreen({
   };
 
   const handleToggleCommentLike = (commentId: number, isLiked: boolean): void => {
-    if (isGuest) {
-      openGuestGate(`/main/(notab)/threads/${threadId}`);
-      return;
-    }
+    if (gateIfGuest()) return;
 
     if (isLiked) {
       unlikeCommentMutation.mutate(commentId, {
@@ -192,6 +201,7 @@ export default function ThreadScreen({
   };
 
   const handleSaveEditComment = (): void => {
+    if (!isAuthed) return;
     if (editingCommentId && editingCommentText.trim()) {
       updateCommentMutation.mutate({
         commentId: editingCommentId,
@@ -206,6 +216,7 @@ export default function ThreadScreen({
   };
 
   const handleDeleteComment = (commentId: number): void => {
+    if (!isAuthed) return;
     setMenuVisibleCommentId(null);
     Alert.alert("Delete Comment", "Are you sure you want to delete this comment? This action cannot be undone.", [
       { text: "Cancel", style: "cancel" },
@@ -244,7 +255,6 @@ export default function ThreadScreen({
     );
   }
 
-  // Extract category label from thread, default to "General" if not set
   const categoryLabel = thread?.category?.label ?? "General";
 
   return (
@@ -254,7 +264,6 @@ export default function ThreadScreen({
         style={styles.keyboardView}
         keyboardVerticalOffset={0}
       >
-        {/* Back Button */}
         {showBackButton && (
           <TouchableOpacity onPress={handleBack} style={threadStyles.backButtonContainer}>
             <Ionicons name="chevron-back" size={20} color={colors.text} />
@@ -262,11 +271,11 @@ export default function ThreadScreen({
           </TouchableOpacity>
         )}
 
-        {/* Thread Content */}
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={threadStyles.threadCard}>
             <Text style={threadStyles.threadTitle}>{thread.title}</Text>
             <Text style={threadStyles.threadContent}>{thread.content}</Text>
+
             <View style={threadStyles.threadMeta}>
               <Text style={threadStyles.metaText}>{thread.creator_fullname}</Text>
               <Text style={threadStyles.metaSeparator}>•</Text>
@@ -274,6 +283,7 @@ export default function ThreadScreen({
               <Text style={threadStyles.metaSeparator}>•</Text>
               <Text style={threadStyles.metaText}>{formatTimeAgo(thread.posted_at.toString())}</Text>
             </View>
+
             <View style={threadStyles.threadActions}>
               <TouchableOpacity
                 onPress={handleToggleThreadLike}
@@ -289,14 +299,20 @@ export default function ThreadScreen({
                   {thread.like_count || 0}
                 </Text>
               </TouchableOpacity>
+
               <View style={threadStyles.commentCountContainer}>
                 <Ionicons name="chatbubble-outline" size={18} color={colors.text} />
                 <Text style={threadStyles.commentCount}>{thread.comment_count || 0}</Text>
               </View>
             </View>
+
+            {!isAuthed && (
+              <Text style={{ marginTop: sizes.s, color: colors.text, opacity: 0.6, fontSize: font.xs }}>
+                You’re viewing as guest. Sign in to like or comment.
+              </Text>
+            )}
           </View>
 
-          {/* Comments Section */}
           <View style={threadStyles.commentsSection}>
             {thread.comments && thread.comments.length > 0 ? (
               thread.comments.map((comment) => (
@@ -306,7 +322,8 @@ export default function ThreadScreen({
                       <Text style={threadStyles.commentAuthor}>{comment.commenter_fullname}</Text>
                       <Text style={threadStyles.commentTime}>{formatTimeAgo(comment.commented_at.toString())}</Text>
                     </View>
-                    {isCommentOwner(comment.commenter_id) && (
+
+                    {isAuthed && isCommentOwner(comment.commenter_id) && (
                       <TouchableOpacity
                         onPress={() => setMenuVisibleCommentId(comment.id)}
                         style={localStyles.menuButton}
@@ -334,8 +351,7 @@ export default function ThreadScreen({
                           onPress={handleSaveEditComment}
                           style={[
                             localStyles.saveButton,
-                            (!editingCommentText.trim() || updateCommentMutation.isPending) &&
-                              localStyles.saveButtonDisabled,
+                            (!editingCommentText.trim() || updateCommentMutation.isPending) && localStyles.saveButtonDisabled,
                           ]}
                           disabled={!editingCommentText.trim() || updateCommentMutation.isPending}
                         >
@@ -372,7 +388,6 @@ export default function ThreadScreen({
                     </>
                   )}
 
-                  {/* Comment Menu Modal */}
                   <Modal
                     visible={menuVisibleCommentId === comment.id}
                     transparent
@@ -404,17 +419,25 @@ export default function ThreadScreen({
               ))
             ) : (
               <View style={threadStyles.noCommentsContainer}>
-                <Text style={threadStyles.noCommentsText}>No comments yet. Be the first to comment!</Text>
+                <Text style={threadStyles.noCommentsText}>No comments yet.</Text>
               </View>
             )}
           </View>
 
-          {/* Extra space for keyboard */}
           <View style={{ height: 100 }} />
         </ScrollView>
 
-        {/* Comment Input */}
-        {isGuest ? (
+        {/* Comment Input (Guests can see it, but pressing Send triggers modal) */}
+        <View style={threadStyles.inputContainer}>
+          <TextInput
+            style={threadStyles.input}
+            placeholder={isAuthed ? "Write a comment..." : "Sign in to comment..."}
+            placeholderTextColor={colors.lightGray}
+            value={commentText}
+            onChangeText={setCommentText}
+            multiline
+            maxLength={500}
+          />
           <TouchableOpacity
             style={localStyles.guestInputContainer}
             onPress={() => openGuestGate(`/main/(notab)/threads/${threadId}`)}
@@ -457,18 +480,10 @@ export default function ThreadScreen({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: sizes.m,
-  },
+  container: { flex: 1 },
+  keyboardView: { flex: 1 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingHorizontal: sizes.m },
 });
 
 const localStyles = StyleSheet.create({
@@ -478,9 +493,7 @@ const localStyles = StyleSheet.create({
     alignItems: "center",
     gap: sizes.s,
   },
-  menuButton: {
-    padding: sizes.xs,
-  },
+  menuButton: { padding: sizes.xs },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -498,26 +511,11 @@ const localStyles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: sizes.m,
-    gap: sizes.m,
-  },
-  menuItemText: {
-    fontSize: font.m,
-    color: colors.text,
-  },
-  deleteText: {
-    color: "#E74C3C",
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: colors.lightGray,
-  },
-  editContainer: {
-    marginTop: sizes.s,
-  },
+  menuItem: { flexDirection: "row", alignItems: "center", padding: sizes.m, gap: sizes.m },
+  menuItemText: { fontSize: font.m, color: colors.text },
+  deleteText: { color: "#E74C3C" },
+  menuDivider: { height: 1, backgroundColor: colors.lightGray },
+  editContainer: { marginTop: sizes.s },
   editInput: {
     borderWidth: 1,
     borderColor: colors.lightGray,
@@ -528,48 +526,10 @@ const localStyles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: "top",
   },
-  editActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: sizes.s,
-    marginTop: sizes.s,
-  },
-  cancelButton: {
-    paddingHorizontal: sizes.m,
-    paddingVertical: sizes.s,
-    borderRadius: sizes.s,
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-  },
-  cancelButtonText: {
-    fontSize: font.s,
-    color: colors.text,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: sizes.l,
-    paddingVertical: sizes.s,
-    borderRadius: sizes.s,
-  },
-  saveButtonDisabled: {
-    backgroundColor: colors.lightGray,
-  },
-  saveButtonText: {
-    fontSize: font.s,
-    color: colors.white,
-    fontWeight: "600",
-  },
-  guestInputContainer: {
-    backgroundColor: colors.white,
-    paddingVertical: sizes.m,
-    paddingHorizontal: sizes.l,
-    borderTopWidth: 1,
-    borderTopColor: colors.lightGray,
-    alignItems: "center",
-  },
-  guestInputText: {
-    fontSize: font.s,
-    color: colors.tabIcon,
-    fontStyle: "italic",
-  },
+  editActions: { flexDirection: "row", justifyContent: "flex-end", gap: sizes.s, marginTop: sizes.s },
+  cancelButton: { paddingHorizontal: sizes.m, paddingVertical: sizes.s, borderRadius: sizes.s, borderWidth: 1, borderColor: colors.lightGray },
+  cancelButtonText: { fontSize: font.s, color: colors.text },
+  saveButton: { paddingHorizontal: sizes.m, paddingVertical: sizes.s, borderRadius: sizes.s, backgroundColor: colors.primary },
+  saveButtonDisabled: { opacity: 0.5 },
+  saveButtonText: { fontSize: font.s, color: colors.white, fontWeight: "600" },
 });
