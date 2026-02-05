@@ -1,127 +1,158 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { websiteAPI, authAPI } from '../../lib/api';
-import TestimonialsWidget from '../../components/TestimonialsWidget';
-import { LogIn, X, AlertCircle, Mail, Lock, Loader } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { websiteAPI, authAPI } from "../../lib/api";
+import TestimonialsWidget from "../../components/TestimonialsWidget";
+import { LogIn, X, AlertCircle, Mail, Lock, Loader } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function DynamicPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string>("");
 
   // Use 'home' as default page if no slug is provided
-  const pageSlug = slug || 'home';
+  const pageSlug = slug || "home";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       // Step 1: Login with email/password
-      console.log('🔐 Attempting login with email:', email);
+      console.log("🔐 Attempting login with email:", email);
       const loginResponse = await authAPI.login(email, password);
-      console.log('✅ Login successful, response:', loginResponse.data);
-      
+      console.log("✅ Login successful, response:", loginResponse.data);
+
       const token = loginResponse.data.access_token;
-      localStorage.setItem('auth_token', token);
-      console.log('✅ Token stored');
-      
+      localStorage.setItem("auth_token", token);
+      console.log("✅ Token stored");
+
       // Step 2: Fetch user data to verify role
       try {
-        console.log('👤 Fetching user data...');
+        console.log("👤 Fetching user data...");
         const userResponse = await authAPI.getMe();
-        console.log('✅ User data received:', userResponse.data);
-        
+        console.log("✅ User data received:", userResponse.data);
+
         const userData = userResponse.data;
         let userRole = userData.role;
-        
+
         // Handle both enum and string formats
-        console.log('🔍 Raw role from API:', userRole, 'Type:', typeof userRole);
-        
+        console.log("🔍 Raw role from API:", userRole, "Type:", typeof userRole);
+
         // If it's an object (enum), extract the value
-        if (typeof userRole === 'object' && userRole !== null) {
+        if (typeof userRole === "object" && userRole !== null) {
           userRole = userRole.value || String(userRole);
         }
-        
+
         // Convert to string and normalize
         userRole = String(userRole).trim().toUpperCase();
-        
-        console.log('🔍 Processed role:', userRole);
-        
+
+        console.log("🔍 Processed role:", userRole);
+
         // STRICT check: Only allow ADMIN role
-        const isAdmin = userRole === 'ADMIN';
-        console.log('🔐 Is ADMIN?', isAdmin);
+        const isAdmin = userRole === "ADMIN";
+        console.log("🔐 Is ADMIN?", isAdmin);
         console.log('🔐 Role comparison: "' + userRole + '" === "ADMIN"?', isAdmin);
-        
+
         if (!isAdmin) {
-          console.log('❌ Access denied - user role is:', userRole);
+          console.log("❌ Access denied - user role is:", userRole);
           setError(`Access Denied: Your role is "${userRole}". Only users with ADMIN role can access this dashboard.`);
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user_role');
-          localStorage.removeItem('user_id');
-          localStorage.removeItem('user_email');
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user_role");
+          localStorage.removeItem("user_id");
+          localStorage.removeItem("user_email");
           setLoading(false);
           return;
         }
-        
-        console.log('✅ ADMIN role verified - storing user data');
+
+        console.log("✅ ADMIN role verified - storing user data");
         // User is admin - store data and redirect
-        localStorage.setItem('user_role', userRole);
-        localStorage.setItem('user_id', userData.id);
-        localStorage.setItem('user_email', userData.email);
-        
-        console.log('🚀 Redirecting to manage account...');
+        localStorage.setItem("user_role", userRole);
+        localStorage.setItem("user_id", userData.id);
+        localStorage.setItem("user_email", userData.email);
+
+        console.log("🚀 Redirecting to manage account...");
         setShowLoginModal(false);
-        setEmail('');
-        setPassword('');
-        setError('');
+        setEmail("");
+        setPassword("");
+        setError("");
         // Redirect to manage account page
-        window.location.assign('/admin/manage-account');
-        
+        window.location.assign("/admin/manage-account");
       } catch (userErr: any) {
-        console.error('❌ Failed to fetch user data:', userErr);
-        const errorMsg = userErr.response?.data?.detail || userErr.message || 'Failed to fetch user information';
+        console.error("❌ Failed to fetch user data:", userErr);
+        const errorMsg = userErr.response?.data?.detail || userErr.message || "Failed to fetch user information";
         setError(errorMsg);
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem("auth_token");
         setLoading(false);
       }
-      
     } catch (err: any) {
-      console.error('❌ Login error:', err);
-      console.error('Error response:', err.response?.data);
-      
+      console.error("❌ Login error:", err);
+      console.error("Error response:", err.response?.data);
+
       // Handle different error types
       if (err.response?.status === 401 || err.response?.status === 400) {
-        setError('Invalid email or password');
+        setError("Invalid email or password");
       } else if (err.response?.status === 422) {
-        setError('Invalid email format');
-      } else if (err.message === 'Network Error') {
-        setError('Network error. Please check your connection and try again.');
+        setError("Invalid email format");
+      } else if (err.message === "Network Error") {
+        setError("Network error. Please check your connection and try again.");
       } else {
-        setError(err.response?.data?.detail || err.message || 'Login failed. Please try again.');
+        setError(err.response?.data?.detail || err.message || "Login failed. Please try again.");
       }
       setLoading(false);
     }
   };
 
-  const { data: pageData, isLoading, error: pageError } = useQuery({
-    queryKey: ['page', pageSlug],
-    queryFn: () => websiteAPI.getPage(pageSlug).then(res => res.data),
+  const {
+    data: pageData,
+    isLoading,
+    error: pageError,
+  } = useQuery({
+    queryKey: ["page", pageSlug],
+    queryFn: () => websiteAPI.getPage(pageSlug).then((res) => res.data),
     enabled: !!pageSlug,
   });
+
+  // Fetch background image presigned URL
+  useEffect(() => {
+    // console.log("use effect here");
+
+    const loadBackgroundImage = async () => {
+      if (pageSlug) {
+        try {
+          const response = await websiteAPI.getBackgroundImageUrl(pageSlug);
+          console.log("URL:", response.data.background_image_url);
+          if (response.data.background_image_url) {
+            setBackgroundImageUrl(response.data.background_image_url);
+          } else {
+            setBackgroundImageUrl("");
+          }
+        } catch (error) {
+          console.error("Failed to load background image:", error);
+          setBackgroundImageUrl("");
+        }
+      }
+    };
+
+    loadBackgroundImage();
+  }, [pageSlug]);
 
   // If root (/) has no website-builder data, fall back to static /home
   useEffect(() => {
     if (!slug && pageError) {
-      navigate('/home', { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [slug, pageError, navigate]);
+
+  // useEffect(() => {
+  //   console.log("Init!");
+  // }, []);
 
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
   if (!slug && pageError) return null;
@@ -129,15 +160,14 @@ export default function DynamicPage() {
 
   const page = pageData?.page;
   const sections = page?.sections || [];
-  const backgroundImage = page?.background_image;
 
   return (
     <div
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : "none",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
       }}
     >
       {/* Fixed Login Button - Top Right */}
@@ -159,9 +189,9 @@ export default function DynamicPage() {
             <button
               onClick={() => {
                 setShowLoginModal(false);
-                setEmail('');
-                setPassword('');
-                setError('');
+                setEmail("");
+                setPassword("");
+                setError("");
               }}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
             >
@@ -190,9 +220,7 @@ export default function DynamicPage() {
             <form onSubmit={handleLogin} className="space-y-5">
               {/* Email Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
@@ -209,9 +237,7 @@ export default function DynamicPage() {
 
               {/* Password Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
@@ -238,16 +264,14 @@ export default function DynamicPage() {
                     Logging in...
                   </span>
                 ) : (
-                  'Log In'
+                  "Log In"
                 )}
               </button>
             </form>
 
             {/* Footer Info */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-center text-xs text-gray-500">
-                Admin access only. Only ADMIN users can log in here.
-              </p>
+              <p className="text-center text-xs text-gray-500">Admin access only. Only ADMIN users can log in here.</p>
             </div>
           </div>
         </div>
@@ -264,13 +288,16 @@ function SectionDisplay({ section, onLoginClick }: any) {
   const navigate = useNavigate();
 
   switch (section.type) {
-    case 'navbar':
+    case "navbar":
       return (
-        <nav style={{ backgroundColor: section.content.bgColor, color: section.content.textColor }} className="px-8 py-4 flex items-center justify-between">
+        <nav
+          style={{ backgroundColor: section.content.bgColor, color: section.content.textColor }}
+          className="px-8 py-4 flex items-center justify-between"
+        >
           <div className="font-bold text-lg">{section.content.logo}</div>
           <div className="flex gap-6">
             {section.content.links.map((link: any, idx: number) => {
-              if (link.url?.startsWith('/')) {
+              if (link.url?.startsWith("/")) {
                 return (
                   <Link key={idx} to={link.url} className="text-sm hover:opacity-75 transition">
                     {link.label}
@@ -284,26 +311,27 @@ function SectionDisplay({ section, onLoginClick }: any) {
               );
             })}
           </div>
-          <button 
+          <button
             onClick={() => onLoginClick()}
-            style={{ backgroundColor: section.content.buttonColor }} 
+            style={{ backgroundColor: section.content.buttonColor }}
             className="text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
           >
             {section.content.buttonText}
           </button>
         </nav>
       );
-    case 'hero':
+    case "hero":
       return (
-        <div style={{ backgroundColor: section.content.bgColor }} className="p-12 text-center min-h-screen flex flex-col items-center justify-center">
+        <div
+          style={{ backgroundColor: section.content.bgColor }}
+          className="p-12 text-center min-h-screen flex flex-col items-center justify-center"
+        >
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{section.content.heading}</h1>
           <p className="text-xl text-gray-600 mb-8">{section.content.subheading}</p>
-          <button className="px-8 py-3 bg-gray-900 text-white rounded-lg">
-            {section.content.buttonText}
-          </button>
+          <button className="px-8 py-3 bg-gray-900 text-white rounded-lg">{section.content.buttonText}</button>
         </div>
       );
-    case 'features':
+    case "features":
       return (
         <div className="bg-white p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">{section.content.title}</h2>
@@ -321,7 +349,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
           </div>
         </div>
       );
-    case 'about':
+    case "about":
       return (
         <div className="bg-white p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">{section.content.title}</h2>
@@ -331,19 +359,16 @@ function SectionDisplay({ section, onLoginClick }: any) {
           )}
         </div>
       );
-    case 'cta':
+    case "cta":
       return (
-        <div
-          style={{ backgroundColor: section.content.bgColor }}
-          className="p-12 text-center text-white"
-        >
+        <div style={{ backgroundColor: section.content.bgColor }} className="p-12 text-center text-white">
           <h2 className="text-3xl font-bold mb-6">{section.content.heading}</h2>
           <button className="px-8 py-3 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition font-medium">
             {section.content.buttonText}
           </button>
         </div>
       );
-    case 'faq':
+    case "faq":
       return (
         <div className="bg-white p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
@@ -357,7 +382,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
           </div>
         </div>
       );
-    case 'testimonials':
+    case "testimonials":
       return (
         <div className="bg-gray-50 p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
@@ -379,7 +404,9 @@ function SectionDisplay({ section, onLoginClick }: any) {
                 <div key={idx} className="bg-white p-6 rounded-lg border border-gray-200">
                   <div className="flex gap-1 mb-2">
                     {[...Array(item.rating)].map((_, i) => (
-                      <span key={i} className="text-yellow-400">★</span>
+                      <span key={i} className="text-yellow-400">
+                        ★
+                      </span>
                     ))}
                   </div>
                   <p className="text-gray-700 mb-4 italic">"{item.text}"</p>

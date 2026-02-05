@@ -761,7 +761,7 @@ class Page(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     sections: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    background_image: Mapped[str | None] = mapped_column(Text, nullable=True)  # Base64 image
+    background_image: Mapped[str | None] = mapped_column(Text, nullable=True)  # S3 key for background image
     html: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -458,3 +458,74 @@ async def get_all_pages(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Page))
     pages = result.scalars().all()
     return {"pages": [{"id": p.id, "slug": p.slug, "sections": p.sections} for p in pages]}
+
+
+@router.post("/pages/{slug}/background-image")
+async def upload_background_image(
+    slug: str,
+    background_image: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload a background image for a page to S3 and store the key in the database"""
+    try:
+        # Check if page exists
+        result = await db.execute(select(Page).filter(Page.slug == slug))
+        page = result.scalars().first()
+
+        if not page:
+            # Create new page if it doesn't exist with empty sections
+            page = Page(slug=slug, sections=[])
+            db.add(page)
+            await db.flush()
+
+        # Upload image to S3
+        s3_key = S3StorageInterface.put_background_image(slug, background_image)
+
+        if not s3_key:
+            raise HTTPException(status_code=500, detail="Failed to upload image to S3")
+
+        # Update page with S3 key
+        page.background_image = s3_key
+        await db.commit()
+        await db.refresh(page)
+
+        return {
+            "message": "Background image uploaded successfully",
+            "s3_key": s3_key,
+            "slug": slug,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error uploading background image: {str(e)}")
+
+
+@router.get("/pages/{slug}/background-image")
+async def get_background_image(slug: str, db: AsyncSession = Depends(get_db)):
+    """Get a presigned URL for a page's background image"""
+    try:
+        # Get page
+        result = await db.execute(select(Page).filter(Page.slug == slug))
+        page = result.scalars().first()
+
+        if not page:
+            raise HTTPException(status_code=404, detail="Page not found")
+
+        if not page.background_image:
+            return {"background_image_url": None, "message": "No background image set for this page"}
+
+        # Generate presigned URL (valid for 1 hour)
+        presigned_url = S3StorageInterface.get_presigned_url(page.background_image, expires_in_seconds=3600)
+
+        if not presigned_url:
+            raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
+
+        return {
+            "background_image_url": presigned_url,
+            "s3_key": page.background_image,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching background image: {str(e)}")

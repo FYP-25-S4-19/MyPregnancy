@@ -244,6 +244,20 @@ class S3StorageInterface:
         )
 
     # =====================================================
+    # ============== BACKGROUND IMAGES ====================
+    # =====================================================
+    BACKGROUND_IMAGE_PREFIX = "background-images"
+
+    @staticmethod
+    def put_background_image(page_slug: str, background_img: UploadFile) -> str | None:
+        return S3StorageInterface._upload_file_stream(
+            prefix=S3StorageInterface.BACKGROUND_IMAGE_PREFIX,
+            file_name=page_slug,
+            file_obj=background_img.file,
+            content_type=str(background_img.content_type),
+        )
+
+    # =====================================================
     # ==================== COMMON ========================
     # ====================================================
     @staticmethod
