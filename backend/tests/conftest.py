@@ -9,11 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.pool import StaticPool
 
+from app.core.clients import get_stream_client
 from app.core.users_manager import get_jwt_strategy
 from app.db.db_config import get_db
 from app.db.db_schema import (
     Admin,
     Base,
+    DoctorSpecialisation,
+    MCRNumber,
     Nutritionist,
     PregnantWoman,
     UserRole,
@@ -59,7 +62,12 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     async def override_get_db():
         yield db_session
 
+    class _DummyStreamClient:
+        def update_message_partial(self, *args, **kwargs):
+            return None
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_stream_client] = lambda: _DummyStreamClient()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()
@@ -147,11 +155,23 @@ async def volunteer_doctor_factory(db_session: AsyncSession) -> CreateDoctorCall
     async def _create_doctor(**kwargs) -> VolunteerDoctor:
         unique_id = str(uuid.uuid4())
 
+        if "mcr_no_id" not in kwargs:
+            mcr_value = str(uuid.uuid4().int % 10_000_000).zfill(7)
+            mcr = MCRNumber(value=mcr_value)
+            db_session.add(mcr)
+            await db_session.flush()
+            kwargs["mcr_no_id"] = mcr.id
+
+        if "specialisation_id" not in kwargs:
+            spec = DoctorSpecialisation(specialisation=f"OBGYN-{unique_id[:8]}")
+            db_session.add(spec)
+            await db_session.flush()
+            kwargs["specialisation_id"] = spec.id
+
         defaults = {
             "role": UserRole.VOLUNTEER_DOCTOR,
             "email": f"doctor_{unique_id}@test.com",
             "hashed_password": "hashed_password_123",
-            "mcr_no_id": 1,
             "first_name": "John",
             "last_name": "Doe",
         }

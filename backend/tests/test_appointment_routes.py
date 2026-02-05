@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Callable
 
 import pytest
@@ -15,6 +15,7 @@ from app.db.db_schema import (
     VolunteerDoctor,
 )
 from app.features.appointments.appointment_models import (
+    AcceptRejectAppointmentRequest,
     CreateAppointmentRequest,
     EditAppointmentRequest,
 )
@@ -30,7 +31,7 @@ async def test_create_appointment_success(
     db_session: AsyncSession,
 ) -> None:
     client, mother = authenticated_pregnant_woman_client
-    start_time: datetime = datetime.now() + timedelta(days=1)
+    start_time: datetime = datetime.now(timezone.utc) + timedelta(days=1)
 
     response = await client.post(
         "/appointments/",
@@ -42,7 +43,11 @@ async def test_create_appointment_success(
     appointment = result.scalars().one_or_none()
 
     assert appointment is not None, "Appointment was not created in the database"
-    assert appointment.start_time == start_time, "Appointment start time does not match"
+    appointment_start_time = appointment.start_time
+    if appointment_start_time.tzinfo is None:
+        appointment_start_time = appointment_start_time.replace(tzinfo=timezone.utc)
+
+    assert appointment_start_time == start_time, "Appointment start time does not match"
     assert appointment.volunteer_doctor_id == volunteer_doctor.id, "Appointment doctor ID does not match"
     assert appointment.status == AppointmentStatus.PENDING_ACCEPT_REJECT, (
         "Appointment status should be PENDING_ACCEPT_REJECT"
@@ -54,7 +59,7 @@ async def test_create_appointment_doctor_not_found(
     authenticated_pregnant_woman_client: tuple[AsyncClient, PregnantWoman],
 ) -> None:
     client, _ = authenticated_pregnant_woman_client
-    start_time: datetime = datetime.now() + timedelta(days=1)
+    start_time: datetime = datetime.now(timezone.utc) + timedelta(days=1)
     invalid_doctor_id = uuid.uuid4()
     response = await client.post(
         "/appointments/",
@@ -69,7 +74,7 @@ async def test_create_appointment_past_start_time(
     volunteer_doctor: VolunteerDoctor,
 ) -> None:
     client, _ = authenticated_pregnant_woman_client
-    past_start_time: datetime = datetime.now() - timedelta(days=1)
+    past_start_time: datetime = datetime.now(timezone.utc) - timedelta(days=1)
     response = await client.post(
         "/appointments/",
         content=CreateAppointmentRequest(doctor_id=volunteer_doctor.id, start_time=past_start_time).model_dump_json(),
@@ -88,7 +93,7 @@ async def test_edit_appointment_success(
 ) -> None:
     client, mother = authenticated_pregnant_woman_client
 
-    start_time: datetime = datetime.now() + timedelta(days=5)
+    start_time: datetime = datetime.now(timezone.utc) + timedelta(days=5)
     appointment = Appointment(
         volunteer_doctor_id=volunteer_doctor.id,
         mother_id=mother.id,
@@ -98,7 +103,7 @@ async def test_edit_appointment_success(
     db_session.add(appointment)
     await db_session.commit()
 
-    new_start_time: datetime = datetime.now() + timedelta(days=10)
+    new_start_time: datetime = datetime.now(timezone.utc) + timedelta(days=10)
     response = await client.patch(
         "/appointments/",
         content=EditAppointmentRequest(appointment_id=appointment.id, new_start_time=new_start_time).model_dump_json(),
@@ -112,7 +117,7 @@ async def test_edit_appointment_not_found(
 ) -> None:
     client, _ = authenticated_pregnant_woman_client
 
-    new_start_time: datetime = datetime.now() + timedelta(days=10)
+    new_start_time: datetime = datetime.now(timezone.utc) + timedelta(days=10)
     edit_response = await client.patch(
         "/appointments/",
         content=EditAppointmentRequest(appointment_id=uuid.uuid4(), new_start_time=new_start_time).model_dump_json(),
@@ -133,13 +138,13 @@ async def test_edit_appointment_past_start_time(
     appointment = Appointment(
         volunteer_doctor_id=volunteer_doctor.id,
         mother_id=mother.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.PENDING_ACCEPT_REJECT,
     )
     db_session.add(appointment)
     await db_session.commit()
 
-    past_start_time: datetime = datetime.now() - timedelta(days=1)
+    past_start_time: datetime = datetime.now(timezone.utc) - timedelta(days=1)
     edit_response = await client.patch(
         "/appointments/",
         content=EditAppointmentRequest(appointment_id=appointment.id, new_start_time=past_start_time).model_dump_json(),
@@ -163,7 +168,7 @@ async def test_delete_appointment_success(
     appointment = Appointment(
         volunteer_doctor_id=volunteer_doctor.id,
         mother_id=mother.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.PENDING_ACCEPT_REJECT,
     )
     db_session.add(appointment)
@@ -198,7 +203,7 @@ async def test_delete_appointment_for_other_user(
     other_mother_appointment = Appointment(
         volunteer_doctor_id=volunteer_doctor.id,
         mother_id=other_mother.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.PENDING_ACCEPT_REJECT,
     )
     db_session.add(other_mother_appointment)
@@ -222,12 +227,15 @@ async def test_accept_appointment_success(
     appointment = Appointment(
         volunteer_doctor_id=doctor.id,
         mother_id=pregnant_woman.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.PENDING_ACCEPT_REJECT,
     )
     db_session.add(appointment)
     await db_session.commit()
-    accept_response = await client.patch(f"/appointments/{appointment.id}/accept")
+    accept_response = await client.patch(
+        f"/appointments/{appointment.id}/accept",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert accept_response.status_code == status.HTTP_204_NO_CONTENT
 
     updated_appointment = await db_session.get(Appointment, appointment.id)
@@ -246,12 +254,15 @@ async def test_reject_appointment_success(
     appointment = Appointment(
         volunteer_doctor_id=doctor.id,
         mother_id=pregnant_woman.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.PENDING_ACCEPT_REJECT,
     )
     db_session.add(appointment)
     await db_session.commit()
-    reject_response = await client.patch(f"/appointments/{appointment.id}/reject")
+    reject_response = await client.patch(
+        f"/appointments/{appointment.id}/reject",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert reject_response.status_code == status.HTTP_204_NO_CONTENT
 
     updated_appointment = await db_session.get(Appointment, appointment.id)
@@ -264,7 +275,10 @@ async def test_accept_appointment_not_found(
     authenticated_doctor_client: tuple[AsyncClient, VolunteerDoctor],
 ) -> None:
     client, _ = authenticated_doctor_client
-    accept_response = await client.patch(f"/appointments/{uuid.uuid4()}/accept")
+    accept_response = await client.patch(
+        f"/appointments/{uuid.uuid4()}/accept",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert accept_response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -273,7 +287,10 @@ async def test_reject_appointment_not_found(
     authenticated_doctor_client: tuple[AsyncClient, VolunteerDoctor],
 ) -> None:
     client, _ = authenticated_doctor_client
-    reject_response = await client.patch(f"/appointments/{uuid.uuid4()}/reject")
+    reject_response = await client.patch(
+        f"/appointments/{uuid.uuid4()}/reject",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert reject_response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -290,13 +307,16 @@ async def test_accept_appointment_unauthorized(
     other_doctor_appointment = Appointment(
         volunteer_doctor_id=other_doctor.id,
         mother_id=pregnant_woman.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.PENDING_ACCEPT_REJECT,
     )
     db_session.add(other_doctor_appointment)
     await db_session.commit()
 
-    accept_response = await authorized_client.patch(f"/appointments/{other_doctor_appointment.id}/accept")
+    accept_response = await authorized_client.patch(
+        f"/appointments/{other_doctor_appointment.id}/accept",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert accept_response.status_code == status.HTTP_403_FORBIDDEN, (
         "Should not allow accepting appointment belonging to another doctor"
     )
@@ -313,13 +333,16 @@ async def test_accept_appointment_already_accepted(
     appointment = Appointment(
         volunteer_doctor_id=doctor.id,
         mother_id=pregnant_woman.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.ACCEPTED,
     )
     db_session.add(appointment)
     await db_session.commit()
 
-    accept_response = await client.patch(f"/appointments/{appointment.id}/accept")
+    accept_response = await client.patch(
+        f"/appointments/{appointment.id}/accept",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert accept_response.status_code == status.HTTP_409_CONFLICT, (
         "Should not be able to accept an already accepted appointment"
     )
@@ -338,13 +361,16 @@ async def test_reject_appointment_unauthorized(
     other_doctor_appointment = Appointment(
         volunteer_doctor_id=other_doctor.id,
         mother_id=pregnant_woman.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.PENDING_ACCEPT_REJECT,
     )
     db_session.add(other_doctor_appointment)
     await db_session.commit()
 
-    reject_response = await authorized_client.patch(f"/appointments/{other_doctor_appointment.id}/reject")
+    reject_response = await authorized_client.patch(
+        f"/appointments/{other_doctor_appointment.id}/reject",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert reject_response.status_code == status.HTTP_403_FORBIDDEN, (
         "Should not allow rejecting appointment belonging to another doctor"
     )
@@ -361,13 +387,16 @@ async def test_reject_appointment_already_rejected(
     appointment = Appointment(
         volunteer_doctor_id=doctor.id,
         mother_id=pregnant_woman.id,
-        start_time=datetime.now() + timedelta(days=5),
+        start_time=datetime.now(timezone.utc) + timedelta(days=5),
         status=AppointmentStatus.REJECTED,
     )
     db_session.add(appointment)
     await db_session.commit()
 
-    reject_response = await client.patch(f"/appointments/{appointment.id}/reject")
+    reject_response = await client.patch(
+        f"/appointments/{appointment.id}/reject",
+        content=AcceptRejectAppointmentRequest(message_id=uuid.uuid4()).model_dump_json(),
+    )
     assert reject_response.status_code == status.HTTP_409_CONFLICT, (
         "Should not be able to reject an already rejected appointment"
     )

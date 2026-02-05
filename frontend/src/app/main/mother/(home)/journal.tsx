@@ -1006,6 +1006,7 @@ const styles = StyleSheet.create({
   },
   kicksIcon: {
     fontSize: 100,
+  
   },
   kicksIconLarge: {
     fontSize: 64,
@@ -1035,9 +1036,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   kickBtnActive: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: colors.primary,
+    // When kicks session is running, show a distinct STOP state
+    backgroundColor: "#D32F2F",
   },
   kickBtnText: {
     color: colors.white,

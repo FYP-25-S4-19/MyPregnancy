@@ -1,0 +1,3932 @@
+
+
+i 
+ 
+Table of Contents 
+ 
+1. Introduction..............................................................................................................................5 
+1.1 Overview............................................................................................................................5 
+1.2 Project Scope....................................................................................................................6 
+1.2.1 Objectives:................................................................................................................6 
+1.2.2. Key features:............................................................................................................6 
+1.2.3. Nice-to-haves...........................................................................................................7 
+1.2.4. Stretch Goals...........................................................................................................8 
+1.3 Research Finding Analysis................................................................................................8 
+1.3.1 Product Comparison.................................................................................................9 
+1.3.2. Survey (Using google form)...................................................................................11 
+1.3.3. Use of AI................................................................................................................14 
+AI Feature: Risk Alert System....................................................................................14 
+Data Flow and Processing.........................................................................................14 
+1.3.4. Design Research...................................................................................................18 
+1.4. Project Description..........................................................................................................20 
+1.5. Business model..............................................................................................................21 
+1.5.1. Key Partners..........................................................................................................21 
+1.5.2. Key Activities..........................................................................................................21 
+1.5.3. Key Resources.......................................................................................................21 
+1.5.4. Value Propositions.................................................................................................21 
+1.5.5. Customer Relationship...........................................................................................22 
+1.5.6. Channel..................................................................................................................22 
+1.5.7. Cost Structure........................................................................................................22 
+1.5.8. Customer Segments..............................................................................................23 
+1.5.9. Revenue Steams...................................................................................................23 
+2. Requirements Motivation......................................................................................................23 
+3. Requirements Definition.......................................................................................................25 
+3.1 Functional Requirements.................................................................................................25 
+3.1.1 Work-Breakdown Structure.....................................................................................25 
+Unregistered User......................................................................................................26 
+Registered User [Pregnant Women]..........................................................................27 
+Registered User [Doctors]..........................................................................................29 
+Registered User [Nutritionist].....................................................................................30 
+User Admin................................................................................................................31 
+Merchant....................................................................................................................31 
+3.1.2 Use-case Diagrams................................................................................................32 
+1 
+
+Unregistered User......................................................................................................32 
+Registered User [Pregnant Women]..........................................................................33 
+Registered User [Doctors]..........................................................................................34 
+Registered User [Nutritionist].....................................................................................35 
+User Admin................................................................................................................36 
+Merchant....................................................................................................................37 
+3.1.3 Use-case Descriptions............................................................................................38 
+User Admin................................................................................................................38 
+Registered User [Pregnant Women]..........................................................................47 
+Registered User [Doctors]..........................................................................................62 
+Unregistered User......................................................................................................71 
+Registered User [Nutritionist].....................................................................................74 
+Merchant....................................................................................................................82 
+3.1.4 User Stories............................................................................................................89 
+3.1.4.1 User admin...........................................................................................................89 
+3.1.4.2 Pregnant Woman.................................................................................................90 
+3.1.4.3 Doctor..................................................................................................................91 
+3.1.4.4 Unregistered User................................................................................................92 
+3.1.4.5 Nutritionist............................................................................................................93 
+3.1.4.6 Merchant..............................................................................................................94 
+3.2 Non-Functional Requirements.........................................................................................94 
+3.2.1 Performance...........................................................................................................94 
+3.2.2. Usability.................................................................................................................95 
+3.2.3. Security & Privacy..................................................................................................95 
+3.2.4. Reliability & Availability..........................................................................................95 
+3.2.5. Compatibility..........................................................................................................96 
+3.2.6. Other Requirement................................................................................................96 
+3.3. Target Users...................................................................................................................97 
+4. Development Tools & Infrastructure....................................................................................97 
+4.1. Frontend: React Native + Expo | TanStack Query..........................................................97 
+4.2. Backend: FastAPI | SQLAlchemy + Alembic | PyTest....................................................98 
+4.3. Database: PostgreSQL...................................................................................................98 
+4.4. Version-Control: GitHub (CI/CD).....................................................................................98 
+4.5. DevOps/Infra: AWS | Docker..........................................................................................99 
+4.6. Additional Technologies/Libraries: Stream....................................................................100 
+4.7. Development Methodology...........................................................................................100 
+Waterfall.........................................................................................................................101 
+Scrum.............................................................................................................................101 
+Kanban...........................................................................................................................102 
+Conclusion.....................................................................................................................102 
+4.8. Proposed Project Schedule..........................................................................................103 
+2 
+
+Risk Analysis..................................................................................................................103 
+Proposed Duration & Schedule......................................................................................104 
+Overview..................................................................................................................104 
+Phase 1....................................................................................................................104 
+Phase 2....................................................................................................................105 
+Phase 3....................................................................................................................105 
+4.9. Role and Responsibilities.............................................................................................105 
+5. Expected Results.................................................................................................................107 
+6. Design Approach.................................................................................................................108 
+6.1 System Environment......................................................................................................108 
+6.2 Data Flow.......................................................................................................................109 
+6.4 Activity Diagram.............................................................................................................110 
+6.4.1 Unregistered User...........................................................................................110 
+6.4.2 Pregnant Woman.............................................................................................111 
+6.4.3 Nutritionist.......................................................................................................112 
+6.4.4 User Admin......................................................................................................113 
+6.4.5 Doctor..............................................................................................................114 
+6.4.5 Merchant.........................................................................................................115 
+6.5 Activity Diagram Sequence Diagram...............................................................................116 
+6.5.1 User Admin......................................................................................................116 
+6.5.2 Pregnant Woman............................................................................................120 
+6.5.3 Doctor.............................................................................................................155 
+6.5.4 Nutritionist.......................................................................................................174 
+6.5.5 Unregistered User...........................................................................................184 
+6.5.6 Merchant.........................................................................................................188 
+6.6 Database Design...........................................................................................................197 
+6.7 AI models for Risk Alert  
+6.7.1 Data information.........................................................................................................198 
+6.7.2 Distribution of the Dataset...............................................................................199 
+6.7.3 Decision Tree Accuracy..................................................................................199 
+6.7.4 Logistic Regression Accuracy.........................................................................199 
+6.8 CI/CD Implementation and Developer Experience.........................................................200 
+6.8.1 Continuous Integration (CI).............................................................................200 
+Integration Testing....................................................................................................200 
+6.8.2 Continuous Delivery (CD)...............................................................................200 
+Deployment to Infra..................................................................................................200 
+Infrastructure Environment.......................................................................................200 
+Developer Experience..............................................................................................201 
+Streamlined Development Environment..................................................................201 
+6.9 User Interface.....................................................................................................................202 
+6.9.1 Website (Marketing)........................................................................................202 
+3 
+
+6.9.2 User Admin Website.......................................................................................206 
+6.9.3 Unregistered User...........................................................................................208 
+6.9.4 Pregnant Woman............................................................................................210 
+6.9.5 Volunteer/Doctor.............................................................................................217 
+6.9.6 Nutritionist.......................................................................................................220 
+6.9.7 Merchant.........................................................................................................223 
+7. References...........................................................................................................................225 
+ 
+4 
+
+ 
+Revision History Revision Date Revised By Remarks 
+FYP-25-S4-19_PRD_R0   Initial Release 
+FYP-25-S4-19_PRD_R1 7/12/2025   
+    
+ 
+1. Introduction 
+1.1 Overview  
+The My pregnancy application is a mobile platform designed to support women throughout their 
+pregnancy journey by providing free access to health information, nutrition guidance, and 
+voluntary consultation with Healthcare Doctors. The application helps to bridge the gap for users 
+who are unable to afford paid extra medical services by enabling communication with 
+certificated volunteer Doctors.  
+Pregnancy is a crucial phase in a woman’s life, it requires special attention to both physical and 
+mental health. Women need accurate information during their pre-pregnancy, pregnancy, and 
+post-pregnancy periods about nutrition, self-care, and medical guidance to ensure a healthy 
+pregnancy. However, many women face challenges in obtaining such support due to limited 
+financial resources, lack of access to healthcare professionals, or insufficient awareness of 
+available services, which makes many miss essential care for themselves and their babies. 
+Recognising these challenges, this project is to develop a mobile application called “My 
+Pregnancy”, a free platform that offers educational resources, information, and consultation to 
+pregnant women. This app also allows medical doctors to help or give advice. 
+This app is designed to be user-friendly for pregnant women and doctors. All features in this app 
+can be used freely, but registered users will get additional features, like: 
+1. Read articles about pregnancy, nutrition, and baby care 
+2. Consult freely with verified Doctors  
+3. Share and get information from other users through the Discussion Forum 
+4. Receive notifications and reminders for checkups and health tips 
+5 
+
+By creating this app, we aim to make pregnancy-related information and basic services more 
+accessible to everyone, raise awareness about the importance of care before-during-after 
+pregnancy and without financial or geographical barriers. 
+We will also provide various convenience features that usually come with such apps to assist in 
+helping expectant mothers learn more about their pregnancy such that they can make informed 
+decisions, as well as keep a handle on their emotional well-being. 
+1.2 Project Scope 
+1.2.1 Objectives: 
+The My Pregnancy app aims to: 
+1. Educate and Empower: 
+ Provide verified, easy-to-understand educational resources on pregnancy, nutrition, and 
+self-care so that women can make informed decisions during all pregnancy stages. 
+2. Promote Health Awareness: 
+ Help expectant mothers monitor their well-being by tracking physical and emotional 
+indicators such as mood, symptoms, and appetite. 
+3. Enhance Accessibility to Support: 
+ Connect pregnant women with volunteer Doctors (doctors, nutritionists) for free video or 
+messaging consultations, removing financial and geographic barriers. 
+4. Facilitate Pregnancy Planning: 
+ Provide tools to calculate and track the expected due date and pregnancy milestones 
+throughout the journey. 
+5. Encourage Community Support: 
+ Build an interactive forum that allows mothers to share experiences, seek advice, and 
+learn from one another in a safe, supportive environment. 
+1.2.2. Key features: 
+User Management & 
+Account Recovery 
+Support register, login, and profile setup for 
+mother/Doctor + forgot password 
+Learning Module Categorised educational content (video/image/ 
+articles) 
+Consultation Module Being able to have a consultation with a Doctor 
+Matching System Connect users to read what they need/helpful for 
+them  (Can use AI if needed) 
+Notification System Send reminders, updates, and consultation alerts 
+6 
+
+Admin Panel Manage users, content, and volunteer 
+verification 
+Verified Doctors A label on doctors’ profiles to confirm that they 
+have been approved by the app It helps users 
+easily see which doctors are trusted and 
+qualified, even if the service is free 
+Pregnancy Setup Set pregnancy week and auto-segment 
+before/during/after 
+Fertility and Cycle 
+Tracking 
+To show the user (Fertile women) their fertile 
+period is this is for pre pregnancy 
+Due Date 
+Counterdown 
+To estimate the due date of the pregnant women. 
+1.2.3. Nice-to-haves 
+Kick 
+Counter/Tracker 
+Provide a timer to allow mothers to track their 
+baby’s kick frequency. Can be visualized over 
+time in a dashboard (Can be an indicator of fetal 
+well-being) 
+Community 
+Discussion Forum 
+Users can post questions, share experiences, 
+and advise other users.  
+Emergency hotline Direct contact with verified emergency help lines. 
+Checklist What to bring to the hospital  
+AWS Deployment Deployment 
+Favorites / 
+Bookmark 
+Users can bookmark articles or consultations to 
+read later 
+Feedback & Rating  Rate consultations/ doctors to maintain quality 
+Journal/ Memory log Helps users emotionally process their pregnancy 
+journey. 
+ 
+Encourages daily reflection, which supports 
+mental well-being. 
+ 
+7 
+
+Provides a personal health record that users can 
+look back on to identify patterns (example: 
+symptoms, mood, cravings). 
+ 
+Makes the app more personal and engaging, 
+improving user retention. 
+Merchant (selling 
+product) 
+Allow users (merchants) to sell products in the 
+application. 
+Drag and drop for 
+the Marketing 
+website  
+Allow the user admin to edit the website without 
+any programming knowledge. 
+ 
+1.2.4. Stretch Goals 
+Risk Alerts AI will analyse entered data (symptoms, blood pressure, 
+glucose logs) and warn the user of possible health issues 
+Wearable  Using the data collected from the watches to input into the 
+application to save the user time. 
+Search & Filter Helps users to find articles, Doctors, or discussions. 
+ 
+1.3 Research Finding Analysis 
+From our research, it seems that many of the pre-existing apps on the market share quite a few 
+common, core features - such as providing educational content, tracking of various metrics 
+about the mother and baby, community forum, and bump tracking. 
+Many of these apps find ways to keep track of metrics/statistics that may be useful for the user’s 
+physician to have a general gauge of the mother (and baby’s) physical and emotional well-being 
+(mood, symptoms, baby’s “kick” patterns - usually useful in the later trimesters, etc....) 
+Our team has looked into 6 major players in the market, based on PlayStore downloads. 
+1. Flo 
+2. Pregnancy+ 
+3. BabyCenter 
+4. AsianParent 
+5. Ovia 
+6. What To Expect 
+8 
+
+1.3.1 Product Comparison 
+ Flo Pregnancy+ BabyCenter AsianParent Ovia What to 
+Expect 
+PlayStore 
+Downloads 
+100M+ 50M+ 10M+ 10M+ 9M+ 5M+ 
+Initial 
+Release Year 
+2015 2012 2010 2008 2012 Exact year 
+unknown, pre 
+~2015 
+ 
+In order to find out the best of what the market has to offer, our team has conducted research on 
+the 6 most downloaded apps in the PlayStore. 
+Based on that, we have compiled the following Product Comparison Matrix 
+ 
+Functions/ Features Flo 
+  
+ 
+Pregnancy+ BabyCenter Asianparent 
+ 
+Ovia  Our app 
+(My 
+pregnancy 
+app) 
+Educational 
+Articles/Videos 
+(Nutrition, Physical 
+activity, symptoms, 
+etc....) 
+      
+User Profiles       
+Baby size 
+tracker/Comparison with 
+objects 
+      
+Community 
+Posts/Threads (Like, 
+comment, save) 
+      
+Tracker (mood, appetite, 
+symptoms, weight...) 
+      
+Notifications system 
+(Reminders) 
+      
+Due Date Countdown       
+Journal/Bump Tracker       
+Health Assistant/ 
+Consultation (?) 
+      
+Kick Counter/Tracker       
+9 
+
+Functions/ Features Flo 
+  
+ 
+Pregnancy+ BabyCenter Asianparent 
+ 
+Ovia  Our app 
+(My 
+pregnancy 
+app) 
+Fertility and Cycle 
+Tracking (Before 
+Pregnancy Features) 
+      
+Selling products       
+Wearable       
+ 
+Despite the rise in popularity of various telemedicine and teleconsultation apps, only 2 out of 
+the 6 major pregnancy applications we researched offer some form of consultation. 
+And even in those apps, consultations are usually offered as a paid feature, preventing an even 
+larger portion of the userbase who are un-willing or unable to spend money for such a feature.  
+ 
+Access to timely, expert advice - as important as it is - may be difficult to access for various 
+reasons, such as geographic barriers (living far away from a hospital) or financial constraints. 
+Users end up relying on generic, non-tailored advice from places like unmoderated community 
+forums or word-of-mouth, which can sometimes cause more harm than good. 
+ 
+Our app aims to democratize access to consultation services by making them free for all by 
+allowing physicians and obstetricians to volunteer their expertise.  
+To maintain quality and trust, our solution ensures a rigorous manual verification process for all 
+doctors, ensuring that only those who have properly proved their ownership of the relevant 
+license/certification may be allowed to provide birthing-related consultation advice on our 
+platform. 
+ 
+10 
+
+1.3.2. Survey (Using google form) 
+We conducted a short survey to understand users’ needs and preferences regarding 
+pregnancy-related support. The key questions explored users’ experiences and the type of 
+information or features they find most valuable. 
+ 
+● How old are you? 
+ 
+● Have you ever created a birth plan? 
+ 
+11 
+
+● Have you ever attended a childbirth education class? 
+ 
+● What type of pregnancy-related information do you find most useful? 
+ 
+○ Nutrition 
+○ Exercise 
+○ Mental Health 
+○ Medical Checkup 
+ 
+12 
+
+● Have you ever consulted a doctor or Doctor online? 
+ 
+● If there were an application to support you during pregnancy, what features would you 
+like to have in it? 
+ 
+○ Community Discussion Forum 
+○ Alert for possible health issues (AI) 
+○ Pregnancy Journal 
+13 
+
+Key Finding: 
+●  Most respondents were of childbearing age. 
+● A majority had not created a birth plan or attended childbirth education classes, 
+suggesting a need for accessible guidance and educational support. 
+The most useful pregnancy-related topics identified were: 
+● Nutrition ( We decided to add a Nutritionist) 
+● Exercise 
+● Mental Health 
+● Medical Checkups 
+Desired App Features (Adding this to our features list) 
+● Popular feature choices included: 
+○ Community Discussion Forum (for peer support and shared experiences.) 
+○ Alert for Possible Health Issues ( To enhance safety and awareness during 
+pregnancy.) 
+○ Pregnancy Journal (To track their pregnancy journey and record personal 
+experiences.) 
+1.3.3. Use of AI 
+Reason why we want AI 
+ 
+Most of the pregnary related applications provide useful features but lack the AI integration, 
+limiting the ability to offer personalized and intelligent support. So by adopting the AI, the 
+application can analyze user data to first tailor the recommendation and second to predict the 
+health risk alert. This improves engagement and smart interactions. This enhances the overall 
+effectiveness as a modern, technology-driven solution that aligns with the growing use of AI in 
+healthcare.This is the feature we research and proposed model: 
+AI Feature: Risk Alert System 
+Data Flow and Processing 
+Input Data 
+● User-entered data: symptoms, mood, weight, blood pressure, glucose levels 
+● Optional wearable device data (if available): heart rate. 
+Pre-processing 
+● Missing data handling (e.g., average or previous value imputation) 
+● Data normalization and feature encoding (converting qualitative symptoms into 
+AI Model Training & Prediction (Logistic Regression/Random Forest) with wearable 
+ 
+14 
+
+The model uses labeled data (e.g., “Low Risk”, “High Risk”) from existing medical guidelines or 
+verified expert input. 
+ 
+Difference between the both 
+1. Logistic Regression  
+1.1. Small dataset (faster to train) 
+1.2. Easier to explain  
+1.2.1. Logistic regression is based using the model to calculate the probability of 
+a particular outcome using linear combination input features. Therefore, is 
+make the relationship so interpretable 
+2. Random forest 
+2.1. Larger dataset (slower to train) 
+2.2. Harder to explain 
+2.3. Better accuracy 
+Output (Risk Classification) 
+● The system generates a risk score or category (e.g., “Low Risk”, “Medium Risk”, “High 
+Risk”). 
+● The app will still say if still go and consult a doctor or nearest A&E or Call the ambulance 
+Real world: 
+Start with Logistic Regression for your prototype and requirement demo. After collecting real 
+user data over time. Change to Random Forest later for smarter predictive risk alerts.  
+ 
+Dataset Description Source 
+Preeclampsia Dataset 
+(Kaggle) 
+Contains blood pressure, age, BMI, 
+glucose, and lab results to predict 
+preeclampsia risk. 
+Kaggle: 
+Preeclampsia 
+Prediction Dataset 
+Pregnancy Health 
+Dataset (UCI ML 
+Repository) 
+Data on maternal age, weight, medical 
+history, BP, and sugar level for 
+pregnancy outcome classification. 
+UCI Machine 
+Learning Repository 
+Maternal Health Risk 
+Data Set (UCI) 
+A clean dataset (1024 records) 
+predicting maternal risk levels (low, mid, 
+high) using BP, age, and heart rate. 
+UCI Maternal Health 
+Dataset 
+ 
+What do we plan to do? 
+Train using Logistic Regression with Maternal Health Risk Data Set (UCI)  
+ 
+ 
+15 
+
+Research on the wearable 
+● Fitbit 
+● Samsung  
+● Apple watch 
+● Garmin 
+ 
+ 
+Feature/Sensor Fitbit Samsung Apple watch  Garmin 
+Heart Rate (hr)     
+Blood Pressure 
+(bp) 
+    
+Blood Oxygen 
+(sp02) 
+    
+Blood Glucose 
+(sugar level 
+    
+ECG     
+Fall Detection     
+Developer Tools     
+ 
+Legend: Red - Not allowed 
+    Yellow - Limited to some models 
+    Green - Allowed by all models 
+ 
+Difference between the both Fitbit and Samsung 
+1. Fitbit watch 
+1.1. Cloud - Based API to access heath data 
+1.2. Slower response time due to internal dependency and server processing 
+1.3. Security will be more complex 
+1.3.1. OAuth 2.0 authentication  
+1.3.2. Access tokens and permission scopes 
+ 
+2. Samsung watch  
+2.1. Local Data Access through the Samsung Health SDK 
+2.2. Heath data is accessed directly from from the mobile phone 
+2.3. Security will be simple 
+2.3.1. Local permission grants 
+2.3.2. Device - level authentication 
+2.4. Supports near real time monitoring suitable for the health risk alert 
+ 
+16 
+
+ 
+ 
+In conclusion, we will be planning to use the Samsung watch to do the test. Using the help of 
+these documents. 
+  
+https://developer.samsung.com/health/data/overview.html - Samsung developer 
+ 
+Based on the research done required, 
+1. Physical Android Phone 
+2. Physical Samsung Galaxy Watch 
+3. Samsung Health installed (v6.30.2+) 
+ 
+Research on automated sentiment analysis of feedback using python VADER 
+We wanted an automated solution to be able to rank and filter user feedback, such that we can 
+show the most “aligned”/”positive” feedback, without having to have the overhead of having to 
+manually manage it through the admin dashboard. 
+ 
+Through our research, we have arrived at a Python library, VADER. Per the statement on 
+GeeksForGeeks.org: 
+“VADER (Valence Aware Dictionary and sEntiment Reasoner) is a sentiment analysis tool 
+which is designed to analyze social media text and informal language.” 
+ 
+In contrast to many sentiment analysis tools which simply give you a binary “positive” or 
+“negative” (which is antithetical to our goal of sorting), VADER provides a lightweight way to give 
+a scalar sentiment value for various metrics (see following): 
+ 
+From this, we can sort comments with the highest positive sentiment, filter out comments with 
+excessive negative sentiments, etc..... 
+ 
+ 
+17 
+
+Research on AI detection of products details (Merchant) 
+ 
+So the idea is to allow AI to automatically detect and populate product details whenever a 
+merchant takes a photo of an item for their listing. By leveraging an image recognition API, the 
+system can identify the product and its category, allowing merchants to quickly and easily create 
+accurate listings. This not only speeds up the listing process but also ensures products are 
+properly categorized, making it easier for users such as pregnant women to discover and 
+purchase the items they need based on the relevant categories. 
+ 
+Two ways to Add Products 
+1. Manual Input 
+2. AI-Assisted 
+ 
+API we looking at: 
+1. Google Vision API 
+a. High accuracy 
+b. Features(Label detection, product search) 
+c. Easy to integrate and test fast 
+2. AWS rekognition 
+a. Well integrated with AWS ecosystem 
+3. Azure Computer Vision 
+a. Easy to start  
+b. Microsoft Ecosystem 
+ 
+We plan to use Google Vision, as the pricing and there is a features we will require to use like: 
+ 
+Feature Description  Use Case 
+Label Detection Recognizes general objects, 
+concepts and categories in 
+an image 
+Examples from image able to 
+detect “baby stroller”, “milk 
+bottle”.. 
+Object Localization  Detects multiple objects in an 
+image and their locations 
+Highlight products in a photo, 
+or detect multiple items. 
+Product search  Matches images against your 
+custom product catalog 
+Allow users to find similar 
+products. 
+ 
+1.3.4. Design Research 
+The My Pregnancy app adopts a soft and welcoming design style that reflects warmth, 
+comfort, and trust. The overall visual focuses on simplicity and calmness, so that mothers 
+can feel relaxed and supported while using the app. 
+18 
+
+This section explains the colors, fonts, and layout used in the mobile app. 
+Color Palette: 
+Color Name Hex Code Usage 
+Warm Pink #FF9B9B Primary color for buttons icons and 
+highlights 
+Soft Pink #FFCCCC Secondary color for tags and hover states 
+Light Blush #FFE2E2 Background color for cards and panels 
+Dark Brown #732727 Primary text color 
+Black/ Grey 
+Variants 
+#000000 (with varying 
+opacity) 
+Secondary text color, icons, and shadows 
+for contrast 
+White #FFFFFF Base background color for content areas 
+The main colors are based on warm pink tones to create a caring, feminine atmosphere. 
+Soft pink and blush shades make the interface visually pleasant, while transparent greys 
+keep the layout light and easy to read using dark brown color as the primary text color. 
+Typography: 
+Font Name Usage 
+Poppins Main font for all UI elements (titles, body tex,t and buttons) which clean, 
+simple, and readable 
+Syncopate Used for headings on Login page, it gives a modern touch 
+Font Styles: 
+- Title/ Header : Bold or Semi-Bold 
+- Body Text: Regular 
+- Secondary Text: 40% opacity for softer tone 
+- Button Text: Medium or Regular 
+Design Theme and Layout: 
+- Tone: Friendly, calm, trustworthy which designed for expectant mothers 
+- Layout: Simple navigation, rounded corners, and balanced spacing. 
+- Contrast: Balanced text and background colors to ensure readability 
+Background Image Style: 
+The background design is applied only to the onboarding screens of the My Pregnancy 
+app to create a warm impression for new users. It features soft abstract wave patterns in 
+19 
+
+shades of light pink and peach that match the app’s color palette, reflect the gentle and 
+nurturing nature of the app’s theme (pregnancy, care, and motherhood) 
+The rest of the app interfaces use a clean white background to maintain focus and 
+readability content. 
+ 
+Onboarding background featuring soft pink abstract to create a welcoming and calm first 
+impression 
+This design helps create a consistent, comforting, and user-friendly experience in the My 
+Pregnancy app, from onboarding and journal entries to notifications and consultations. 
+1.4. Project Description 
+This project aims to develop an user-friendly mobile application, application name My 
+Pregnancy, designed to help women through each and every stage of their maternal journey 
+before, during and after pregnancy. Understanding that many women might face barriers such 
+as limited access to healthcare, education and resources due to the financial obstacles. 
+Therefore, this application is providing a free platform offering verified educational resources, 
+community-driven support, and volunteer Doctor consultation. 
+ 
+The application promotes both physical and emotional well-being by combining the informative 
+article, discussion forums and tracking tools, reminder based on all personalized. By doing this it 
+bridges the gap between healthcare knowledge and accessibility, to empower women to 
+manage their pregnancy confidently, safely and with the necessary support at every stage of 
+their pregnancy even though it might be their first time. 
+20 
+
+1.5. Business model 
+1.5.1. Key Partners 
+The key partners in our business model are: 
+1. Healthcare Professionals: Volunteer doctors, nutritionists, and Doctors who can provide 
+consultation and information. 
+2. Merchant to allow pregnant women to purchase items that are required during the post 
+pregnancy. 
+1.5.2. Key Activities 
+Our key activity focuses on development to serve mothers by providing them with accurate 
+information, emotional support, and easy access to healthcare professionals. These activities 
+are carefully designed to ensure that the app remains reliable, user-friendly, and impactful for 
+women throughout their maternal journey. This includes: 
+1. App development & maintenance for continuous updates, bug fixes, and UX 
+improvements. 
+2. Content creation & curation where the research, verification, and updating of articles is 
+done on pregnancy, nutrition, and baby care. 
+3. Doctor engagement to recruit, verify, and manage every volunteer Doctor. 
+4. Community management to ensure user safety, and encouraging engagement. 
+5. Public support on technical assistance, FAQ updates, and troubleshooting. 
+1.5.3. Key Resources 
+The following key resources that our business model has adopted are: 
+1. Technological platforms: Cloud-based service providers such as AWS to handle 
+secure data storage, user authentication, etc. 
+2. API Integrations: Access to 3rd-party APIs to provide things such as  
+a. Video calling and real-time messaging for our consultations feature 
+b. Verification of medical certificate information against public registries 
+ 
+3. Doctor Network: Collaboration with healthcare professionals such as nutritionists to 
+validate nutritional information, provide professional consultations, and develop 
+scientifically-backed dietary recommendations. 
+ 
+1.5.4. Value Propositions 
+These are a few value propositions that we have proposed with our business model:  
+1. Free access to reliable information such as articles, tips, and guidelines for pregnancy 
+stages. 
+21 
+
+2. Volunteer Doctor consultation where expert guidance without financial barriers. 
+3. Community support - discussion forums for sharing experiences and advice. 
+4. User-friendly design that leads to easy navigation, notifications, and tracking tools. 
+5. Emotional and physical well-being supporting mental health, reminders for checkups, 
+and nutrition guidance. 
+6. Accessible to users regardless of financial status or location. 
+1.5.5. Customer Relationship 
+For the My Pregnancy mobile application, the relationship model is semi-self-service, where 
+users primarily interact with the platform independently while still having access to support and 
+expert guidance when needed. This relationship model is self-service. Users can 
+independently explore all the educational resources, such as articles, videos, and participate in 
+discussion forums. This app provides personal assistance. Users can receive personalized 
+guidance tailored to their individual circumstances. Automated engagement features such as 
+notifications and reminders for health checkups, prenatal tips, nutrition advice, and postnatal 
+guidance help women stay on track. Finally, the app emphasizes trust-based relationships. 
+Verified Doctors, accurate content, and moderated community interactions build credibility and 
+reliability.  
+1.5.6. Channel 
+We will use the following communication channels as our customers’ first touchpoint into our 
+product. 
+1. Mobile App: Android platforms as primary delivery channels. 
+2. Social Media: Facebook, Instagram, TikTok for awareness and engagement. 
+3. Word-of-Mouth: Recommendations from existing users or communities. 
+1.5.7. Cost Structure 
+The successful development, launch, and maintenance of our mobile application will involve 
+various costs across multiple areas. These are some of the key expenses we expect to incur 
+throughout the project lifecycle, categorized into development, technology platform, marketing, 
+and support costs. This breakdown provides a clear overview of the financial investments 
+required to ensure the app's success, scalability and long-term sustainability. 
+ 
+1. App Development & Maintenance 
+1.1. Salaries for developers, UI/UX designers, and QA personnel. 
+1.2. Server hosting, cloud storage, and software licenses. 
+1.3. Continuous updates and technical improvements for smooth operation. 
+ 
+2. Content Production 
+2.1. Hiring writers, healthcare experts, and media Doctors. 
+2.2. Creating articles, videos, and tutorials for pre-pregnancy, pregnancy, and 
+postnatal care. 
+22 
+
+2.3. Regular updates to keep content accurate and relevant. 
+ 
+3. Doctor Network Management 
+3.1. Recruiting verified Doctors. 
+3.2. Verifying credentials and managing schedules. 
+3.3. Ensuring safe, reliable, and timely consultations for users. 
+ 
+4. Marketing & Outreach 
+4.1. Online campaigns and social media promotions. 
+4.2. Partnerships with healthcare institutions and NGOs. 
+4.3. Offline events to raise awareness and attract users. 
+ 
+5. Administrative Costs 
+5.1. Salaries for operational and managerial staff. 
+5.2. Office expenses and utilities. 
+5.3. Legal compliance and regulatory costs. 
+ 
+6. Customer Support & Community Management 
+6.1. Moderating discussion forums and community spaces. 
+6.2. Providing technical support and responding to user inquiries. 
+6.3. Maintaining a safe and supportive environment for users. 
+1.5.8. Customer Segments 
+Our customer segments include individuals and organizations that require access to our 
+application.  
+1. Primary users such as pregnant women, mothers, and women planning pregnancy. 
+2. Volunteer Doctors were by all the doctors, nutritionists Doctors contributing guidance. 
+3. Secondary users like new mothers seeking postnatal care information. 
+1.5.9. Revenue Steams 
+The primary source of revenue will be generated through sponsorship / grants where we get  
+funding from our maternal health initiatives. Additionally, advertising such as mental health 
+products, wellness brands, collaboration with hospitals, clinics, and etc.  
+ 
+2. Requirements Motivation 
+Pregnancy is a serious and universal human experience, and this is the only process where life 
+continues. Yet, this transformative journey often comes with need for loyal support and 
+honorable information that can be hard to find. In today’s world, mothers face an enigma: they 
+are surrounded by infinite online information, but starved for guidance that is reliable and feels 
+personally safe. Sifting through this sea of unverified content can be overwhelming, leaving 
+numerous women feeling anxious, confused, and unsafe for their health. 
+23 
+
+While there are many pregnancy apps available, they often disappoint. They can feel neutral, 
+offering broken tools that lack genuine expert access, deep personalization, or a sense of 
+community. We created the "My Pregnancy" app to bridge this exact gap—to build a tool that 
+can truly understand and encounter the needs of pregnant women. 
+Our core motivation is simple: to help and to fix what is missing. We see the obstacle women 
+facing whether it's the cost of healthcare, living far from a clinic, or the simple difficulty of 
+knowing what advice to trust. Many existing apps don't really help a lot; they offer a common 
+content or focus on general basis over real support. We knew a better solution had to be broad, 
+caring for a woman's emotional and knowledgeability health with the same importance as her 
+physical health. That’s why "My Pregnancy" is free. 
+The motivation for this project is to address these challenges by developing a comprehensive 
+pregnancy mobile application that offers: 
+1. Trusted Educational Resources: Curated articles, expert videos, and interactive 
+materials to help mothers understand every stage of pregnancy, from conception to 
+childbirth. 
+2. Personalized Health Tracking: A user-friendly interface for tracking key metrics such as 
+mood, symptoms, appetite, sleep, and weight, helping users make informed health 
+decisions. 
+3. Expert Consultation: Access to certified obstetricians and healthcare professionals for 
+free video or chat consultations, providing timely medical advice and reassurance. 
+4. Community Engagement: A built-in discussion forum where expectant mothers can 
+connect, share experiences, and seek peer or expert support, fostering a sense of 
+belonging. 
+5. Due Date and Progress Monitoring: Smart tools for calculating and tracking expected 
+due dates, trimester progress, and important milestones in an easy, visually engaging 
+format. 
+"My Pregnancy" aims not to just be an app. It can be your dedicated partner. Our mission is to 
+provide essential support and knowledge for every mother. Ultimately, we are driven by a 
+simple, sincere commitment: to empower you with the confidence, safety, and compassion you 
+deserve, ensuring you and your baby have the healthiest, most supported start possible. 
+ 
+24 
+
+3. Requirements Definition 
+ 
+3.1 Functional Requirements 
+3.1.1 Work-Breakdown Structure 
+ 
+https://app.diagrams.net/#G1nYQgZeX3nCMY8dgRn7TJe8Fl83ygvw_z 
+25 
+
+Unregistered User 
+ 
+ 
+26 
+
+Registered User [Pregnant Women] 
+ 
+27 
+
+ 
+28 
+
+Registered User [Doctors] 
+ 
+29 
+
+Registered User [Nutritionist] 
+ 
+30 
+
+User Admin 
+ 
+ 
+31 
+
+Merchant 
+ 
+32 
+
+3.1.2 Use-case Diagrams 
+Unregistered User 
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+33 
+
+ 
+ 
+ 
+34 
+
+Registered User [Pregnant Women] 
+ 
+35 
+
+Registered User [Doctors] 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+36 
+
+ 
+ 
+Registered User [Nutritionist] 
+ 
+37 
+
+ 
+User Admin 
+ 
+38 
+
+Merchant 
+ 
+ 
+39 
+
+ 
+3.1.3 Use-case Descriptions 
+User Admin 
+Name: log in ID: 41 
+Stakeholders and goals: to authenticate user admin and provide secure access to 
+system administration features   
+Description: allow user admin to authenticate with valid credentials to access the 
+administrative dashboard and system management features  
+Actors: user admin  
+Trigger: user clicks the “login”button 
+Normal Flow: 
+1. User admin navigates to the login page 
+2. System displays login form 
+3. User admin enters username and password  
+4. User admin submits credentials 
+5. System validates credentials 
+6. System grants access to admin dashboard 
+Sub-Flows: None 
+Alternative/Exceptional Flows:1.system displays error message and prompts retry 
+ 
+ 
+Name: log out  ID: 42 
+Stakeholders and goals: to securely terminate user admin session and protect system 
+from unauthorized access 
+Description: allow user admin to safely exit the system and end their administrative 
+session 
+Actors: user admin 
+Trigger: user clicks the “log out ”button 
+40 
+
+Normal Flow: 
+1.user admin clicks logout button  
+2.system displays confirmation dialog 
+3.user admin confirms logout 
+4.system terminates session 
+5.system redirects to login page 
+Sub-Flows: None 
+ 
+ 
+Name: View all user account ID: 43 
+Stakeholders and goals: to allow user admin to review user account details for 
+management and support purposes 
+Description: allow user admin to access and view all the user in that have registered 
+the app 
+Actors: user admin 
+Trigger: Click user account button 
+Normal Flow: 
+1.user admin navigates to user management section 
+2.system display list of user accounts  
+Sub-Flows: None 
+ 
+ 
+Name: view user account information  ID: 45 
+Stakeholders and goals: to allow user admin to review user account details for 
+management and support purposes 
+Description: allow user admin to access and view comprehensive information about 
+user accounts including personal details,activity history and account status 
+Actors: user admin 
+Trigger: Search a user in the search bar 
+Normal Flow: 
+1.user admin navigates to user management section 
+2.system display list of user accounts  
+3.user admin select a specific user account 
+4.system retrieves user account information 
+5.system displays detailed user account view 
+41 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows:1.system displays error message (access denied) 
+ 
+ 
+Name: Suspend user account information  ID: 44 
+Stakeholders and goals: to allow user admin to suspend user account for 
+administrative and support purposes 
+Description: enable user admin to suspend the user account 
+Actors: user admin 
+Trigger: user clicks “edit”button while viewing user account 
+Normal Flow: 
+1.user admin view user account details 
+2.user admin click “edit”button 
+3.system displays pop-up asking to suspend the account 
+4.system saves changes and confirms the suspend of the account 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Validation error: system highlight invalid fields and 
+prompts correction 
+ 
+ 
+Name: view “create Doctor account” requests  ID: 49 
+Stakeholders and goals: to allow user admin review pending requests for Doctor 
+account creation for approval workflow 
+Description: allow user admin to access and review all pending requests from users 
+seeking to create Doctor accounts 
+Actors: user admin  
+Trigger: user admin navigates to Doctor account request section 
+Normal Flow: 
+1. User admin navigates to Doctor requests section 
+2. System retrieves all pending Doctor account request  
+3. System displays list of requests with applicant details  
+4. User admin can view detailed information for each request 
+42 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows:1.system displays empty state message 
+ 
+ 
+Name: accept / reject create Doctor account requests  ID: 50 
+Stakeholders and goals: to allow user admin to approve or deny Doctor account 
+creation requests based on qualification review 
+Description: enable user admin to make decision on Doctor account request and notify 
+applicants of the outcomes 
+Actors: user admin  
+Trigger: user clicks the “accept”button and “reject” button while viewing a Doctor 
+request  
+Normal Flow: 
+1. User admin view Doctor account request details  
+2. User admin reviews applicant qualifications and documentation 
+3. User admin click “accept”or “reject”button 
+4. System processes the decision 
+5. System updates request status  
+Sub-Flows: None 
+Alternative/Exceptional Flows:1.system logs error and displays warning  
+2.invalid request status  
+ 
+ 
+Name: manage marketing website  ID: 51 
+Stakeholders and goals: to allow user admin to control and maintain the marketing 
+website content and functionality  
+Description: enable user admin to update ,modify and manage various aspects of the 
+marketing website including content lay out and features  
+Actors: user admin  
+Trigger: user admin navigate to marketing website management section 
+43 
+
+Normal Flow: 
+1. User admin navigate to marketing website management 
+2. System displays website management dashboard 
+3. User admin select area to manage (content,layout,features ) 
+4. User admin make changes  
+5. User admin save changes  
+6. System applies changes to marketing website 
+Sub-Flows: None 
+Alternative/Exceptional Flows:1.system displays error and suggest retry 
+ 
+ 
+Name: View Recipe categories ID 
+Stakeholders and goals: To allow the user admin to view recipe categories 
+Description: Allow user admin to access and view the recipe categories 
+Actors: user admin  
+Trigger: User admin click “recipe categories” button 
+44 
+Name: manage feedback  ID: 52 
+Stakeholders and goals: to allow user admin to handle and respond to user feedback 
+for improving system quality and user satisfaction 
+Description: enable user admin to view,categorize, respond to and manage user 
+feedback from various sources 
+Actors: user admin  
+Trigger: user admin navigates to feedback management section  
+Normal Flow: 
+1. User admin navigates to feedback management  
+2. System displays list of feedback items  
+3. User admin selects a feedback item to review 
+4. System displays detailed feedback information 
+5. User admin reads feedback and determines response  
+6. System saves response and updates feedback status  
+Sub-Flows: None 
+Alternative/Exceptional Flows:1.system displayed empty state message  
+
+Normal Flow: 
+1. Click the “recipe categories” button 
+2. System display list of recipe categories 
+Sub-Flows: None 
+ 
+Name: Edit Recipe categories ID 
+Stakeholders and goals: To allow the user admin to edit recipe category 
+Description: Allow user admin to access and edit the recipe category 
+Actors: user admin  
+Trigger: User admin click “edit” button 
+Normal Flow: 
+1. Click the “recipe categories” button 
+2. System display list of recipe categories 
+3. Filter using a search button 
+4. Click “edit” button 
+5. Type in a new label  
+6. Click “Confirm” 
+7. The system will save the data and display the new categories  
+Sub-Flows: None 
+ 
+Name: Create Recipe categories ID 
+Stakeholders and goals: To allow the user admin to create recipe category 
+Description: Allow user admin to access and create the recipe category 
+Actors: user admin  
+Trigger: User admin click “Create” button 
+Normal Flow: 
+1. Click the “recipe categories” button 
+2. System display list of recipe categories 
+3. Click the “Create” button 
+4. Type in a new label  
+5. Click “Confirm” 
+6. The system will save the data and display the new categories  
+45 
+
+Sub-Flows: None 
+ 
+ 
+Name: View Article categories ID 
+Stakeholders and goals: To allow the user admin to view Article categories 
+Description: Allow user admin to access and view the Article categories 
+Actors: user admin  
+Trigger: User admin click “Article categories” button 
+Normal Flow: 
+1. Click the “Article categories” button 
+2. System display list of recipe categories 
+Sub-Flows: None 
+ 
+Name: Edit Article categories ID 
+Stakeholders and goals: To allow the user admin to edit Article categories 
+Description: Allow user admin to access and edit the Article categories 
+Actors: user admin  
+Trigger: User admin click “edit” button 
+Normal Flow: 
+1. Click the “Article categories” button 
+2. System display list of Article categories 
+3. Filter using a search button 
+4. Click “edit” button 
+5. Type in a new label  
+6. Click “Confirm” 
+7. The system will save the data and display the new categories  
+Sub-Flows: None 
+ 
+Name: Create Article categories ID 
+46 
+
+Description: Allow user admin to access and create the Article categories 
+Actors: user admin  
+Trigger: User admin click “Create” button 
+Normal Flow: 
+1. Click the “Article categories” button 
+2. System display list of Article categories 
+3. Click the “Create” button 
+4. Type in a new label  
+5. Click “Confirm” 
+6. The system will save the data and display the new categories  
+Sub-Flows: None 
+ 
+Name: View Product categories ID 
+Stakeholders and goals: To allow the user admin to view Product categories 
+Description: Allow user admin to access and view the Product categories 
+Actors: user admin  
+Trigger: User admin click “Product categories” button 
+Normal Flow: 
+1. Click the “Product categories” button 
+2. System display list of recipe categories 
+Sub-Flows: None 
+ 
+Name: Edit Product categories ID 
+Stakeholders and goals: To allow the user admin to edit Product categories 
+Description: Allow user admin to access and edit the Product categories 
+Actors: user admin  
+Trigger: User admin click “edit” button 
+47 
+
+Normal Flow: 
+1. Click the “Product categories” button 
+2. System display list of Product categories 
+3. Filter using a search button 
+4. Click “edit” button 
+5. Type in a new label  
+6. Click “Confirm” 
+7. The system will save the data and display the new categories  
+Sub-Flows: None 
+ 
+Name: Create Product categories ID 
+Actors: user admin  
+Trigger: User admin click “Create” button 
+Normal Flow: 
+1. Click the “Product categories” button 
+2. System display list of Product categories 
+3. Click the “Create” button 
+4. Type in a new label  
+5. Click “Confirm” 
+6. The system will save the data and display the new categories  
+Sub-Flows: None 
+ 
+Name: View Doctor Specialization ID 
+Stakeholders and goals: To allow the user admin to view Doctor Specialization 
+Description: Allow user admin to access and view the Doctor Specialization 
+Actors: user admin  
+Trigger: User admin click “Doctor Specialization” button 
+Normal Flow: 
+1. Click the “Doctor Specialization” button 
+2. System display list of recipe Specialization 
+Sub-Flows: None 
+ 
+48 
+
+Name: Edit Doctor Specialization ID 
+Stakeholders and goals: To allow the user admin to edit Doctor Specialization 
+Description: Allow user admin to access and edit the Doctor Specialization 
+Actors: user admin  
+Trigger: User admin click “edit” button 
+Normal Flow: 
+1. Click the “Doctor Specialization” button 
+2. System display list of Doctor Specialization 
+3. Filter using a search button 
+4. Click “edit” button 
+5. Type in a new label  
+6. Click “Confirm” 
+7. The system will save the data and display the new Specialization 
+Sub-Flows: None 
+ 
+Name: Create Doctor Specialization ID 
+Actors: user admin  
+Trigger: User admin click “Create” button 
+Normal Flow: 
+7. Click the “Doctor Specialization” button 
+8. System display list of Doctor Specialization 
+9. Click the “Create” button 
+10. Type in a new label  
+11. Click “Confirm” 
+12. The system will save the data and display the new Specialization 
+Sub-Flows: None 
+ 
+Registered User [Pregnant Women] 
+Name: Log In ID: 54 
+Stakeholders and goals: User can successfully login into the app 
+Description: User needs to login before using the system 
+Actors: User - Pregnant Woman  
+49 
+
+Trigger: User clicks the login button 
+Normal Flow: 
+1. User click ‘Mum-to-be’ button 
+2. User click login button 
+3. User enter their email and password for verification 
+4. System will validate the details 
+5. User will be logged in  
+Sub-Flows: None 
+Alternative/Exceptional Flows:  
+ 
+1. Unable to login if the username/password is wrong or unfilled.  
+ 
+Name: Log Out  ID: 55 
+Stakeholders and goals: User can successfully logout into the app 
+Description: User able to logout after using the system  
+Actors: User - Pregnant Woman  
+Trigger: User clicks the logout button 
+Normal Flow: 
+1. User finish using the application 
+2. User click on logout button 
+3. User will be logged out 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View User Account ID: 56 
+Stakeholders and goals: User able to view account details 
+Description: User will be able to view account name, email, and their pregnancy details. 
+Actors: User - Pregnant Woman  
+Trigger: User clicks on profile button 
+50 
+
+Normal Flow: 
+1. User already logged in  
+2. User click on profile button 
+3. System display profile information 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Update User Account ID: 57 
+Stakeholders and goals: User will be able to update their account details 
+Description: User able to change their name, email, and phone details.  
+Actors: User - Pregnant Woman  
+Trigger: User click on update button 
+Normal Flow: 
+1. User already be logged in 
+2. User click on profile button 
+3. User enter new information that they want to change 
+4. User will click on the update profile button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Delete User Account ID: 58 
+Stakeholders and goals: User can successfully delete account 
+Description: User wants to delete account 
+Actors: User - Pregnant Woman  
+Trigger: User click on delete profile button 
+Normal Flow: 
+1. User already be logged in 
+2. User click on profile button 
+3. User will click on the delete profile button 
+4. System will delete their account 
+51 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Educational Content ID: 61 
+Stakeholders and goals: User can read educational content 
+Description: User want to know more knowledge on pregnancy  
+Actors: User - Pregnant Woman  
+Trigger: User click on Article & Material button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Article & Material button  
+3. User can choose either article or material 
+4. User click on view all on specific materials to read 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Save Educational Content ID: 60 
+Stakeholders and goals: User can save educational content 
+Description: User save the content for continuous reading  
+Actors: User - Pregnant Woman  
+Trigger: User click on save article/material  
+Normal Flow: 
+1. User click on Article & Material button  
+2. User can choose either article or material 
+3. User click on view all on specific materials to read 
+4. User click on save button to save the article/material  
+5. System will save the content for user 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+52 
+
+ 
+Name: Share Educational Content ID: 62 
+Stakeholders and goals: User can share educational content  
+Description: User share article/material to help others 
+Actors: User - Pregnant Woman  
+Trigger: User click on share button  
+Normal Flow: 
+1. User click on Article & Material button  
+2. User can choose either article or material 
+3. User click on view all on specific materials to read 
+4. User click on share button to share the article/material  
+5. System will share the content for user 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Community Threads ID: 63 
+Stakeholders and goals: User can view community threads  
+Description: User can view all the threads that share/discuss by other  
+Actors: User - Pregnant Woman  
+Trigger: User click on discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Comments in Community Threads  ID: 64 
+53 
+
+Stakeholders and goals: User can view all the comments in the community threads  
+Description: User can view all the threads comments that share/discuss by other  
+Actors: User - Pregnant Woman  
+Trigger: User click into a specific discussion forum  
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that attract them  
+5. User can post comments in the community threads by click post button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Create Comments in Community Threads  ID: 65 
+Stakeholders and goals:  User can create comments in the community threads  
+Description: User can participate in the threads comments that share/discuss by other  
+Actors: User - Pregnant Woman  
+Trigger: User click on post button to create comments 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that attract them  
+5. User can post comments in the community threads by click post button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Delete Comment in Community Threads ID: 66 
+Stakeholders and goals: User can delete comment in community threads 
+Description: User able to delete comment in community threads that they don't want 
+54 
+
+Actors: User - Pregnant Woman  
+Trigger: User click on delete button in the comment of discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view the specific comment in discussion that they have written  
+4. User can delete any of the comments they do not wish to keep by pressing 
+delete button  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Update Comment in Community Threads ID: 67 
+Stakeholders and goals: User can update the comment in the community thread  
+Description: User able to keep updating the comment in threads 
+Actors: User - Pregnant Woman  
+Trigger: User press on post button to update comment  
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that attract them  
+5. User can edit post comments in the community threads by click post button to 
+update comment threads  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+55 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Name: Create Community Threads  ID: 68 
+Stakeholders and goals: User can create community threads 
+Description: User able to create new community threads to allow others to participate 
+Actors: User - Pregnant Woman  
+Trigger: User click on create button in discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can click on the “create thread” button to create a new thread 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Edit Community Threads  ID: 69 
+Stakeholders and goals: User can edit the community threads 
+Description: User able to edit community threads to update old/outdated information 
+Actors: User - Pregnant Woman  
+Trigger: User click on edit button in discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion they have written  
+4. User can edit any of the threads they have previously created 
+56 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Delete Community Threads  ID: 70 
+Stakeholders and goals: User can delete the community threads 
+Description: User able to delete community threads they do not want to keep 
+Actors: User - Pregnant Woman  
+Trigger: User click on delete button in discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion they have written  
+4. User can delete any of the threads they do not wish to keep 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: View Consultation Requests ID: 71 
+Stakeholders and goals: User can view their consultation requests 
+Description: User able to view the consultation requests that they can previously 
+created 
+Actors: User - Pregnant Woman  
+Trigger: User press on Consultation button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Consultation button  
+3. User views all the “consult requests” they have previously created 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+57 
+
+Name: Create Consultation Request ID: 72 
+Stakeholders and goals: User can create consultation request  
+Description: User able to create consultation request, so that they can request to view 
+volunteer Doctors 
+Actors: User - Pregnant Woman  
+Trigger: User click on the “create consultation request” button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Consultation button  
+3. User views all the “consult requests” they have previously created 
+4. User can click on the “create consult request” button 
+5. A new “consult request” entry is created 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Delete Consultation Request  ID: 73 
+Stakeholders and goals: User can delete consultation requests  
+Description: User can delete consultation requests that they have previously created 
+Actors: User - Pregnant Woman  
+Trigger: User click on delete button beside the specific “consultation request” entry 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Consultation button 
+3. User views all the “consult requests” they have previously created 
+4. User can click on the delete button beside the “consult request” entry 
+5. The corresponding “consult request” entry is removed 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Update Consultation Request  ID: 74 
+58 
+
+Stakeholders and goals:  User can update consultation request  
+Description: Users can update the previous consultation requests with more up-to-date 
+details (timing, request reason, etc...) 
+Actors: User - Pregnant Woman  
+Trigger: User click on update button  inside the consultation request they have created 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Consultation button  
+3. User views all the “consult requests” they have previously created 
+4. User can click on the “edit” button of the corresponding “consult request” entry 
+they wish to edit 
+5. User can update the request-specific details that they have previously entered 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Doctors  ID: 75 
+Stakeholders and goals: User can view the doctor 
+Description: User able to see all the doctor provided 
+Actors: User - Pregnant Woman  
+Trigger: User click on doctor button  
+Normal Flow: 
+1. User logged into the application 
+2. User click on the doctor button 
+3. User able to view all the doctor  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Save Doctors ID: 76 
+Stakeholders and goals: User can save the doctor 
+Description: User able to save the doctor they like 
+Actors: User - Pregnant Woman  
+59 
+
+Trigger: User click on save button in doctor button  
+Normal Flow: 
+1. User logged into the application 
+2. User click on the doctor button 
+3. User able to view the doctor  
+4. User click on save on the doctor that they like 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Search Doctors ID: 77 
+Stakeholders and goals: User can search the doctor 
+Description: User able to search the doctor they want 
+Actors: User - Pregnant Woman  
+Trigger: User click search button  
+Normal Flow: 
+1. User logged into the application 
+2. User click on the doctor button 
+3. User able to view the doctor  
+4. User can search on the doctor that they want 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create Consultation Request under Doctors  ID: 78 
+Stakeholders and goals: User can create consultation request  
+Description: User able to create consultation request for a doctors  
+Actors: User - Pregnant Woman  
+Trigger: When user click on book 
+Normal Flow: 
+5. User logged into the application 
+6. User click on the doctor button 
+7. User able to view the doctor  
+8. User can create a consultation request with doctor that they want 
+60 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Journal  ID: 79 
+Stakeholders and goals: User can view their journal 
+Description: User able to track themselves by viewing their journal 
+Actors: User - Pregnant Woman  
+Trigger: User click on the Journal button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on the Journal button 
+3. User able to view all their own journal   
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create Journal Entry ID: 80 
+Stakeholders and goals: User can create their journal 
+Description: User can create new journal entry 
+Actors: User - Pregnant Woman  
+Trigger: User write inside a box that have current date to create new entry  
+Normal Flow: 
+1. User logged into the application 
+2. User click on the Journal button 
+3. User able to view all their own journal   
+4. User can create new journal by writing down in the new entry  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Update Journal Entry ID: 81 
+Stakeholders and goals:  User can update their journal 
+61 
+
+Description: User can update journal entry 
+Actors: User - Pregnant Woman  
+Trigger: User edit the entry  
+Normal Flow: 
+1. User logged into the application 
+2. User click on the Journal button 
+3. User able to view all their own journal   
+4. User can update their old journal by editing it  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Delete Journal Entry ID: 82 
+Stakeholders and goals: User can delete their journal entry  
+Description: User able to delete their journal entry  
+Actors: User - Pregnant Woman  
+Trigger: User delete all the content in the journal entry 
+Normal Flow: 
+1. User logged into the application 
+2. User click on the Journal button 
+3. User able to view all their own journal   
+4. User can delete their old journal in the journal entry 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Metric ID: 83 
+Stakeholders and goals: User can view their metric  
+Description: User able to view their own metric  
+Actors: User - Pregnant Woman  
+Trigger: User click Journal button to view metric 
+Normal Flow: 
+1. User logged into the application 
+62 
+
+2. User click on the Journal button 
+3. User able to view all their metric 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create Metric ID: 84 
+Stakeholders and goals: User can create metric 
+Description: User able to create new metric  
+Actors: User - Pregnant Woman  
+Trigger: User press on create button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on the Journal button 
+3. User able to view all their metric 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Update Metric ID: 85 
+Stakeholders and goals: User can update their metric  
+Description: User are able to edit the metric  
+Actors: User - Pregnant Woman  
+Trigger: User press on update the metric 
+Normal Flow: 
+1. User logged into the application 
+2. User click on the Journal button 
+3. User able to update their metric 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+63 
+
+Name: View Nutrition Plans  ID: 86 
+Stakeholders and goals: to allow user to review and monitor available nutrition plan for 
+system oversight and quality control 
+Description: allow user access and view all nutrition plans available in the system for 
+administrative review and management  
+Actors: User - Pregnancy woman 
+Trigger: user navigates to nutrition plans section  
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can review plan content and specifications  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None  
+ 
+Name: Save Nutrition Plan ID: 87 
+Stakeholders and goals: User can save nutrition plan 
+Description: User are able to save nutrition plan  
+Actors: User - Pregnant Woman  
+Trigger: User press on  save nutrition plan button 
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can review plan content and specifications  
+6. User can save a specific nutrition plan 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Share Nutrition Plan ID: 88 
+Stakeholders and goals: User can share nutrition plan 
+64 
+
+Description: User are able to share nutrition plan 
+Actors: User - Pregnant Woman  
+Trigger: User press on share nutrition plan button 
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can review plan content and specifications   
+6. User can share a specific nutrition plan 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Registered User [Doctors]  
+Name: Log In ID: 96 
+Stakeholders and goals: User can successfully log into the app 
+Description: User needs to log in before accessing their volunteer or Doctor features 
+Actors: User – Doctor 
+Trigger: User clicks the login button 
+Normal Flow: 
+1. User click login button 
+2. User enter their email and password for verification 
+3. System will validate the details 
+4. User will be logged in 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Unable to log in if username/password is incorrect or 
+unfilled 
+ 
+Name: Log Out ID: 97 
+65 
+
+Stakeholders and goals: User can successfully log out from the app 
+Description: User can log out safely after completing their activities 
+Actors: User – Doctor 
+Trigger: User clicks the logout button 
+Normal Flow: 
+1. User finishes using the application 
+2. User clicks the Logout button 
+3. System logs the user out and returns to the home screen 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. System automatically log out and displays timeout 
+message 
+ 
+ 
+Name: View Account Info ID: 98 
+Stakeholders and goals: User can view their profile and account details 
+Description: User can view their personal information and professional credentials 
+Actors: User – Doctor 
+Trigger: User clicks on the profile button 
+Normal Flow: 
+1. User is already logged in 
+2. User clicks on the Profile button 
+3. System displays account details  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Update Account Info ID: 99 
+Stakeholders and goals: User can update their account information 
+Description: User updates personal or professional details 
+Actors: User - Doctor 
+66 
+
+Trigger: User clicks on the update button in the profile section. 
+Normal Flow: 
+1. User is logged in 
+2. User clicks Profile > Edit Info 
+3. User updates their details  
+4. User clicks Save Changes 
+5. System updates the profile successfully 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Delete Account Info ID: 100 
+Stakeholders and goals: User can delete their account 
+Description: User deletes their account and all associated data 
+Actors: User – Doctor 
+Trigger: User clicks the delete profile button 
+Normal Flow: 
+1. User is logged in 
+2. User clicks Profile > Delete Account 
+3. System deletes account and logs user out 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: View Education Content ID: 101 
+Stakeholders and goals: User can read educational content 
+Description: User views learning materials on pregnancy, wellness, or baby care 
+Actors: User – Doctor 
+Trigger: User clicks on the Education tab 
+67 
+
+Normal Flow: 
+1. User is logged in 
+2. User clicks the articles and materials button 
+3. System displays educational articles and materials 
+4. User selects an item to read 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Create Education Content ID: 102 
+Stakeholders and goals: Doctor can create new educational content 
+Description: Doctors create and upload new educational materials for pregnant women 
+Actors: User – Doctor 
+Trigger: User clicks on Create Content 
+Normal Flow: 
+1. Doctor logs into the application 
+2. Doctor clicks Education > Create New Content 
+3. Doctor enters title, description, and material (text/video) 
+4. Doctor clicks Submit 
+5. System publishes the new content 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Share Education Content ID: 103 
+Stakeholders and goals: User can share educational materials with others 
+Description: Doctors share useful educational content via app or social channels 
+Actors: User – Doctor 
+Trigger: User clicks the share button 
+Normal Flow: 
+1. User selects an article/material 
+68 
+
+2. User clicks Share button 
+3. System generates share link or forwards content to selected users/platforms 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Save Education Content ID: 104 
+Stakeholders and goals: Users can save educational materials for later reference. 
+Description: User saves specific content for future reading. 
+Actors: User – Doctor 
+Trigger: User clicks Save on an article or material 
+Normal Flow: 
+1. User views an educational article. 
+2. User clicks Save icon. 
+3. System stores the content under Saved Items. 
+4. User can revisit saved content anytime. 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Community Threads ID: 105 
+Stakeholders and goals: User can view all community discussions 
+Description: User views forum threads created by other users to learn and interact 
+Actors: User – Doctor 
+Trigger: User clicks Discussion Forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussions written by other users 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+69 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Name: View Comments in Community Threads  ID: 106 
+Stakeholders and goals: User can view all the comments in the community threads  
+Description: User can view all the threads comments that share/discuss by other  
+Actors: User – Doctor  
+Trigger: User click into a specific discussion forum  
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that attract them  
+5. User can post comments in the community threads by click post button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create Comment ID: 107 
+Stakeholders and goals: User can participate in discussions 
+Description: User creates a comment in a community thread to share information or 
+support 
+Actors: User – Doctor 
+Trigger: User clicks Post Button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that attract them  
+5. User can post comments in the community threads by click post button 
+70 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Missing or empty comment content 
+ 
+Name: Delete Comment ID: 108 
+Stakeholders and goals: User can delete unnecessary or outdated comments 
+Description: User removes their comment from a discussion thread 
+Actors: User – Doctor 
+Trigger: User clicks Delete Comment button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view the specific comment in discussion that they have written  
+4. User can delete any of the comments they do not wish to keep by pressing 
+delete button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1.there is no comment to delete 
+ 
+ 
+Name: Update Comment ID: 109 
+Stakeholders and goals: User can edit their previous comments 
+Description: User modifies previously posted comments for clarity or correction 
+Actors: User – Doctor 
+Trigger: User clicks post button to update comment 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that they want to update  
+5. User can edit post comments in the community threads by click post button to 
+update comment threads  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+71 
+
+ 
+Name: Create Community Threads  ID: 110 
+Stakeholders and goals: User can create community threads 
+Description: User able to create new community threads to allow others to participate 
+Actors: User - Doctor 
+Trigger: User click on create button in discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can click on the “create thread” button to create a new thread 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Missing or empty community thread 
+ 
+ 
+ 
+Name: Edit Community Threads  ID: 111 
+Stakeholders and goals: User can edit the community threads 
+Description: User able to edit community threads to update old/outdated information 
+Actors: User - Doctor 
+Trigger: User click on edit button in discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion they have written  
+4. User can edit any of the threads they have previously created 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+72 
+
+Name: Delete Community Threads ID: 112 
+Stakeholders and goals: User can delete community threads they own 
+Description: Volunteer or Doctor can remove a thread they created or moderate 
+inappropriate ones 
+Actors: User – doctor 
+Trigger: User clicks Delete Thread button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion they have written  
+4. User can delete any of the threads they do not wish to keep 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Consultation Request ID: 113 
+Stakeholders and goals: doctor can view consultation requests from pregnant users 
+Description: User views pending consultation requests for review or response 
+Actors: User – Doctor 
+Trigger: User clicks Consultation Requests 
+Normal Flow: 
+1. User logs into the app. 
+2. User clicks Consultation Requests. 
+3. System lists all consultation requests from pregnant women. 
+4. User selects one to view details. 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+ 
+ 
+Name: Accept/Reject Consultation Request ID: 114 
+73 
+
+Stakeholders and goals: Doctor can manage consultation requests 
+Description: Doctor accepts or rejects consultation requests based on schedule and 
+expertise 
+Actors: User – Doctor 
+Trigger: User clicks Accept or Reject on a consultation request 
+Normal Flow: 
+1. Doctor views a consultation request 
+2. Doctor reviews details and schedule 
+3. Doctor clicks Accept or Reject 
+4. System notifies the requesting user of the decision 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Unregistered User  
+Name: View Educational Content ID: 89 
+Stakeholders and goals: Unregistered users view educational content 
+Description: Unregistered users can view educational content 
+Actors: User - Unregistered 
+Trigger: User click on view educational content on guest page 
+Normal Flow: 
+1. User click continue as guest on the login page 
+2. User click on view educational content  
+3. User can part of content that is provided 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View doctor ID: 90 
+Stakeholders and goals: Unregistered users view doctor 
+74 
+
+Description: Unregistered users can view some doctor  
+Actors: User - Unregistered 
+Trigger: User click on doctor 
+Normal Flow: 
+1. User click continue as guest on the login page 
+2. User click on view doctor   
+3. User can part of doctor that is provided 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View community Threads  ID: 91 
+Stakeholders and goals: Unregistered users view community threads  
+Description: Unregister user can view part of the community threads  
+Actors: User - Unregistered 
+Trigger: User click on view community threads  
+Normal Flow: 
+1. User click continue as guest on the login page 
+2. User click on view community threads  
+3. User can see part of threads that is discussed  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View comment in Threads  ID: 92 
+Stakeholders and goals: Unregistered users view community threads comment 
+Description: Unregister user can view part of the community threads comment 
+Actors: User - Unregistered 
+Trigger: User click on specific community threads  
+75 
+
+Normal Flow: 
+1. User click continue as guest on the login page 
+2. User click on view community threads  
+3. User can see part of threads that is discussed  
+4. User click on specific threads to view comment  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create user Account - Pregnant woman ID: 93 
+Stakeholders and goals: User create account as a pregnant woman 
+Description: User can create an account as a pregnant woman 
+Actors: User - Unregistered 
+Trigger: User click on register button 
+Normal Flow: 
+1. User click on ‘I’m a Mom-to-be’ button 
+2. User click on a register button 
+3. User enter their username email password to create account OR select 
+google/apple/facebook account to register  
+4. User click on register button 
+ 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create user account - Doctor/volunteer ID: 94 
+Stakeholders and goals: User create account as a Doctor/volunteer 
+Description: User can create an account as a Doctor/volunteer 
+Actors: User - Unregistered 
+Trigger: User click on register button 
+Normal Flow: 
+1. User click on ‘I’m a Doctor’ button 
+76 
+
+2. User click on a register button 
+3. User enter their username email password to create account OR select 
+google/apple/facebook account to register  
+4. User click on register button 
+ 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: view nutrition plans  ID: 95 
+Stakeholders and goals: to allow user to review and monitor available nutrition plan for 
+system oversight and quality control 
+Description: allow user access and view all nutrition plans available in the system for 
+administrative review and management  
+Actors: User - Unregistered 
+Trigger: user navigates to nutrition plans section  
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can review plan content and specifications  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Registered User [Nutritionist] 
+Name: Log In ID: 116 
+Stakeholders and goals: User can successfully log into the app 
+Description: User needs to log in before accessing their features 
+Actors: User – Nutritionist 
+Trigger: User clicks the login button 
+77 
+
+Normal Flow: 
+1. User click login button 
+2. User enter their email and password for verification 
+3. System will validate the details 
+4. User will be logged in 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Unable to log in if username/password is incorrect or 
+unfilled 
+ 
+Name: Log Out ID:  
+Stakeholders and goals: User can successfully log out from the app 
+Description: User can log out safely after completing their activities 
+Actors: User – Nutritionist 
+Trigger: User clicks the logout button 
+Normal Flow: 
+1. User finishes using the application 
+2. User clicks the Logout button 
+3. System logs the user out and returns to the home screen 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: View Account Info ID: 118 
+Stakeholders and goals: User can view their profile and account details 
+Description: User can view their personal information and professional credentials 
+Actors: User – Nutritionist  
+Trigger: User clicks on the profile button 
+Normal Flow: 
+1. User is already logged in 
+2. User clicks on the Profile button 
+3. System displays account details  
+78 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Update Account Info ID: 119 
+Stakeholders and goals: User can update their account information 
+Description: User updates personal or professional details 
+Actors: User - Nutritionist  
+Trigger: User clicks on the update button in the profile section. 
+Normal Flow: 
+1. User is logged in 
+2. User clicks Profile > Edit Info 
+3. User updates their details  
+4. User clicks Save Changes 
+5. System updates the profile successfully 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Delete Account Info ID: 120 
+Stakeholders and goals: User can delete their account 
+Description: User deletes their account and all associated data 
+Actors: User – Nutritionist  
+Trigger: User clicks the delete profile button 
+Normal Flow: 
+1. User is logged in 
+2. User clicks Profile > Delete Account 
+3. System deletes account and logs user out 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+79 
+
+ 
+Name: View Education Content ID: 121 
+Stakeholders and goals: User can read educational content 
+Description: User views learning materials on pregnancy, wellness, or baby care 
+Actors: User – Nutritionist  
+Trigger: User clicks on the Education tab 
+Normal Flow: 
+1. User is logged in 
+2. User clicks the articles and materials button 
+3. System displays educational articles and materials 
+4. User selects an item to read 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Community Threads ID: 122 
+Stakeholders and goals: User can view all community discussions 
+Description: User views forum threads created by other users to learn and interact 
+Actors: User – Nutritionist  
+Trigger: User clicks Discussion Forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussions written by other users 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: View Comments in Community Threads  ID: 123 
+Stakeholders and goals: User can view all the comments in the community threads  
+80 
+
+Description: User can view all the threads comments that share/discuss by other  
+Actors: User – Nutritionist  
+Trigger: User click into a specific discussion forum  
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that attract them  
+5. User can post comments in the community threads by click post button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create Comment ID: 124 
+Stakeholders and goals: User can participate in discussions 
+Description: User creates a comment in a community thread to share information or 
+support 
+Actors: User – Nutritionist  
+Trigger: User clicks Post Button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that attract them  
+5. User can post comments in the community threads by click post button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Missing or empty comment content 
+ 
+Name: Delete Comment ID: 125 
+Stakeholders and goals: User can delete unnecessary or outdated comments 
+Description: User removes their comment from a discussion thread 
+81 
+
+Actors: User – Nutritionist  
+Trigger: User clicks Delete Comment button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view the specific comment in discussion that they have written  
+4. User can delete any of the comments they do not wish to keep by pressing 
+delete button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1.there is zero comment in the database server 
+ 
+Name: Update Comment ID: 126 
+Stakeholders and goals: User can edit their previous comments 
+Description: User modifies previously posted comments for clarity or correction 
+Actors: User – Nutritionist  
+Trigger: User clicks post button to update comment 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion other users have written  
+4. User click into one specific threads that they want to update  
+5. User can edit post comments in the community threads by click post button to 
+update comment threads  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Create Community Threads  ID: 127 
+Stakeholders and goals: User can create community threads 
+Description: User able to create new community threads to allow others to participate 
+Actors: User - Nutritionist 
+82 
+
+Trigger: User click on create button in discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can click on the “create thread” button to create a new thread 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+ 
+Name: Edit Community Threads  ID: 128 
+Stakeholders and goals: User can edit the community threads 
+Description: User able to edit community threads to update old/outdated information 
+Actors: User - Nutritionist 
+Trigger: User click on edit button in discussion forum button 
+Normal Flow: 
+1. User logged into the application 
+2. User click on Discussion Forum button  
+3. User can view all the discussion they have written  
+4. User can edit any of the threads they have previously created 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Delete Community Threads ID: 129 
+Stakeholders and goals: User can delete community threads they own 
+Description: Nutritionist can remove a thread they created or moderate inappropriate 
+ones 
+Actors: User – Nutritionist  
+Trigger: User clicks Delete Thread button 
+Normal Flow: 
+1. User logged into the application 
+83 
+
+2. User click on Discussion Forum button  
+3. User can view all the discussion they have written  
+4. User can delete any of the threads they do not wish to keep 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: View Nutrition Plans  ID: 130 
+Stakeholders and goals: User to review and monitor available nutrition plan for system 
+oversight and quality control 
+Description: allow user access and view all nutrition plans available in the system for 
+administrative review and management  
+Actors: User - Nutritionist  
+Trigger: user navigates to nutrition plans section  
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can review plan content and specifications  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None  
+ 
+ 
+Name: Create Nutrition Plans  ID: 131 
+Stakeholders and goals: to allow user to review and monitor available nutrition plan for 
+system oversight and quality control 
+Description: allow user access and view all nutrition plans available in the system for 
+administrative review and management  
+Actors: User - Nutritionist  
+Trigger: user navigates to nutrition plans section  
+84 
+
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can create new plan content and specifications  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None  
+ 
+ 
+Name: Delete Nutrition Plans  ID: 132 
+Stakeholders and goals: to allow user to review and monitor available nutrition plan for 
+system oversight and quality control 
+Description: allow user access and view all nutrition plans available in the system for 
+administrative review and management  
+Actors: User - Doctor 
+Trigger: user navigates to nutrition plans section  
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can delete plan content and specifications  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None  
+ 
+ 
+Name: Update Nutrition Plans  ID: 133 
+Stakeholders and goals: to allow user to review and monitor available nutrition plan for 
+system oversight and quality control 
+Description: allow user access and view all nutrition plans available in the system for 
+administrative review and management  
+Actors: User - Nutritionist  
+Trigger: user navigates to nutrition plans section  
+85 
+
+Normal Flow: 
+1. User navigates to nutrition plans section 
+2. System retrieves all available nutrition plans  
+3. System displays list of nutrition plans with details  
+4. User can view detailed information for each plan  
+5. User can update plan content and specifications  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None  
+ 
+Merchant 
+Name: Log In ID: 134 
+Stakeholders and goals: User can successfully log into the app 
+Description: User needs to log in before accessing their features 
+Actors: User – Merchant 
+Trigger: User clicks the login button 
+Normal Flow: 
+1. User click login button 
+2. User enter their email and password for verification 
+3. System will validate the details 
+4. User will be logged in 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Unable to log in if username/password is incorrect or 
+unfilled 
+ 
+Name: log out  ID: 135 
+Stakeholders and goals: User can successfully log out from the app 
+Description: User can log out safely after completing their activities 
+Actors: User – Merchant 
+Trigger: User clicks the logout button 
+86 
+
+Normal Flow: 
+1. User finishes using the application 
+2. User clicks the Logout button 
+3. System logs the user out and returns to the home screen 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Account Info ID: 136 
+Stakeholders and goals: User can view their profile and account details 
+Description: User can view their personal information and professional credentials 
+Actors: User – Merchant 
+Trigger: User clicks on the profile button 
+Normal Flow: 
+1. User is already logged in 
+2. User clicks on the Profile button 
+3. System displays account details  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Update Account Info ID: 137 
+Stakeholders and goals: User can update their account information 
+Description: User updates personal or professional details 
+Actors: User - Merchant 
+Trigger: User clicks on the update button in the profile section. 
+Normal Flow: 
+1. User is logged in 
+2. User clicks Profile > Edit Info 
+3. User updates their details  
+4. User clicks Save Changes 
+5. System updates the profile successfully 
+87 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Delete Account Info ID: 138 
+Stakeholders and goals: User can delete their account 
+Description: User deletes their account and all associated data 
+Actors: User – Merchant 
+Trigger: User clicks the delete profile button 
+Normal Flow: 
+1. User is logged in 
+2. User clicks Profile > Delete Account 
+3. System deletes account and logs user out 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+ 
+Name: View Product ID: 139 
+Stakeholders and goals: User can view product 
+Description: User can view all product available  
+Actors: User – Merchant 
+Trigger: User clicks the view product button 
+Normal Flow: 
+1. User is logged in 
+2. User clicks view product 
+3. User can view all the product that is available 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create Product Plan  ID: 140 
+88 
+
+Stakeholders and goals: User can create product plan 
+Description: User can create own products 
+Actors: User – Merchant 
+Trigger: User clicks the create product button 
+Normal Flow: 
+1. User is logged in 
+2. User clicks create product 
+3. User can create their own product. 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Edit Product Plan  ID: 141 
+Stakeholders and goals: User can edit product plan  
+Description: User can edit own products 
+Actors: User – Merchant 
+Trigger: User clicks the edit product button 
+Normal Flow: 
+4. User is logged in 
+5. User clicks edit product 
+6. User can edit their own product. 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Delete Product Plan  ID: 141 
+Stakeholders and goals: User can delete product plan  
+Description: User can delete own products 
+Actors: User – Merchant 
+Trigger: User clicks the delete product button 
+Normal Flow: 
+89 
+
+7. User is logged in 
+8. User clicks delete product 
+9. User can delete their own product. 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: View Community Threads ID: 143 
+Stakeholders and goals: User can view all community discussions 
+Description: User views forum threads created by other users to learn and interact 
+Actors: User – Merchant 
+Trigger: User clicks Discussion Forum button 
+Normal Flow: 
+4. User logged into the application 
+5. User click on Discussion Forum button  
+6. User can view all the discussions written by other users 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: View Comments in Community Threads  ID: 144 
+Stakeholders and goals: User can view all the comments in the community threads  
+Description: User can view all the threads comments that share/discuss by other  
+Actors: User – Merchant 
+Trigger: User click into a specific discussion forum  
+Normal Flow: 
+6. User logged into the application 
+7. User click on Discussion Forum button  
+8. User can view all the discussion other users have written  
+9. User click into one specific threads that attract them  
+10. User can post comments in the community threads by click post button 
+90 
+
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+Name: Create Comment ID: 145 
+Stakeholders and goals: User can participate in discussions 
+Description: User creates a comment in a community thread to share information or 
+support 
+Actors: User – Merchant 
+Trigger: User clicks Post Button 
+Normal Flow: 
+6. User logged into the application 
+7. User click on Discussion Forum button  
+8. User can view all the discussion other users have written  
+9. User click into one specific threads that attract them  
+10. User can post comments in the community threads by click post button 
+Sub-Flows: None 
+Alternative/Exceptional Flows: 1. Missing or empty comment content 
+ 
+Name: Delete Comment ID: 146 
+Stakeholders and goals: User can delete unnecessary or outdated comments 
+Description: User removes their comment from a discussion thread 
+Actors: User – Merchant 
+Trigger: User clicks Delete Comment button 
+Normal Flow: 
+5. User logged into the application 
+6. User click on Discussion Forum button  
+7. User can view the specific comment in discussion that they have written  
+8. User can delete any of the comments they do not wish to keep by pressing 
+delete button 
+Sub-Flows: None 
+91 
+
+Alternative/Exceptional Flows: 1.there is zero comment in the database server 
+ 
+Name: Update Comment ID: 147 
+Stakeholders and goals: User can edit their previous comments 
+Description: User modifies previously posted comments for clarity or correction 
+Actors: User – Merchant 
+Trigger: User clicks post button to update comment 
+Normal Flow: 
+6. User logged into the application 
+7. User click on Discussion Forum button  
+8. User can view all the discussion other users have written  
+9. User click into one specific threads that they want to update  
+10. User can edit post comments in the community threads by click post button to 
+update comment threads  
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Create Community Threads  ID: 148 
+Stakeholders and goals: User can create community threads 
+Description: User able to create new community threads to allow others to participate 
+Actors: User - Merchant 
+Trigger: User click on create button in discussion forum button 
+Normal Flow: 
+4. User logged into the application 
+5. User click on Discussion Forum button  
+6. User can click on the “create thread” button to create a new thread 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+92 
+
+ 
+Name: Edit Community Threads  ID: 149 
+Stakeholders and goals: User can edit the community threads 
+Description: User able to edit community threads to update old/outdated information 
+Actors: User - Merchant 
+Trigger: User click on edit button in discussion forum button 
+Normal Flow: 
+5. User logged into the application 
+6. User click on Discussion Forum button  
+7. User can view all the discussion they have written  
+8. User can edit any of the threads they have previously created 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+ 
+Name: Delete Community Threads ID: 150 
+Stakeholders and goals: User can delete community threads they own 
+Description: User can remove a thread they created or moderate inappropriate ones 
+Actors: User – Merchant 
+Trigger: User clicks Delete Thread button 
+Normal Flow: 
+5. User logged into the application 
+6. User click on Discussion Forum button  
+7. User can view all the discussion they have written  
+8. User can delete any of the threads they do not wish to keep 
+Sub-Flows: None 
+Alternative/Exceptional Flows: None 
+ 
+93 
+
+ 
+3.1.4 User Stories 
+3.1.4.1 User admin 
+1. As a User Admin, I want to log in so that I can access the system and manage user 
+accounts. 
+2. As a User Admin, I want to log out so that I can securely end my session. 
+3. As a User Admin, I want to view user accounts so that I can see the details of each user 
+account. 
+4. As a User Admin, I want to update user accounts so that users always have access to 
+the most current and accurate information. 
+5. As a User Admin, I want to delete user accounts so that I can remove inactive or 
+inappropriate users for housekeeping and security purposes. 
+6. As a User Admin, I want to view Doctor requests so that I can review applications from 
+healthcare professionals who wish to join the platform. 
+7. As a User Admin, I want to accept or reject Doctor requests so that only verified and 
+qualified Doctors can provide consultation through the app. 
+8. As a User Admin, I want to manage the marketing website so that I can update 
+promotional content and ensure accurate public information about the application. 
+9. As a User Admin, I want to manage feedback on the marketing website so that I can 
+monitor user opinions, address issues, and improve the platform’s image. 
+10. As a User Admin, I want to view nutrition plans so that I can monitor and verify the health 
+and dietary information shared with users. 
+3.1.4.2 Pregnant Woman 
+1. As a pregnant woman, I want to log in so that I can access the platform and its 
+personalized features securely. 
+2. As a pregnant woman, I want to log out of my user account so that I can securely end 
+my session and protect my privacy. 
+3. As a pregnant woman, I want to view my user account so that I can see my personal and 
+medical details stored in the system. 
+4. As a pregnant woman, I want to update my user account so that I can ensure my profile 
+and information are always accurate. 
+5. As a pregnant woman, I want to delete my account so that I can permanently remove my 
+personal data from the platform. 
+6. As a pregnant woman, I want to view educational content so that I can learn more about 
+pregnancy health, care, and wellness. 
+7. As a pregnant woman, I want to save educational content so that I can access helpful 
+materials later. 
+8. As a pregnant woman, I want to share educational content so that I can send useful 
+information to family or friends. 
+9. As a pregnant woman, I want to view community threads so that I can read discussions 
+and connect with other users. 
+94 
+
+10. As a pregnant woman, I want to view comments on community threads so that I can 
+understand the opinions and experiences of others. 
+11. As a pregnant woman, I want to create comments on community threads so that I can 
+participate and share my views. 
+12. As a pregnant woman, I want to delete comments in community threads so that I can 
+remove posts I no longer want visible. 
+13. As a pregnant woman, I want to update comments in community threads so that I can 
+edit my posts for clarity or accuracy. 
+14. As a pregnant woman, I want to create community threads so that I can start new 
+discussions about pregnancy-related topics. 
+15. As a pregnant woman, I want to edit community threads so that I can make corrections 
+or updates to my posts. 
+16. As a pregnant woman, I want to delete community threads so that I can remove topics 
+that are no longer relevant. 
+17. As a pregnant woman, I want to view consultation requests so that I can track ongoing or 
+past requests made to Doctors. 
+18. As a pregnant woman, I want to create consultation requests so that I can seek 
+professional advice or guidance from Doctors. 
+19. As a pregnant woman, I want to delete consultation requests so that I can cancel 
+requests that are no longer needed. 
+20. As a pregnant woman, I want to update consultation requests so that I can modify or 
+correct the details before the consultation. 
+21. As a pregnant woman, I want to view doctors so that I can identify suitable experts to 
+assist me. 
+22. As a pregnant woman, I want to save doctors so that I can easily contact them again in 
+the future. 
+23. As a pregnant woman, I want to search for doctors so that I can quickly find experts 
+based on my needs. 
+24. As a pregnant woman, I want to create a consultation request with a specific Doctor so 
+that I can connect directly with the right professional for my concern. 
+25. As a pregnant woman, I want to view my journal so that I can monitor my pregnancy 
+progress and emotional journey. 
+26. As a pregnant woman, I want to create journal entries so that I can record my daily 
+thoughts, moods, or pregnancy milestones. 
+27. As a pregnant woman, I want to update journal entries so that I can revise or expand on 
+previous entries. 
+28. As a pregnant woman, I want to delete journal entries so that I can remove records I no 
+longer wish to keep. 
+29. As a pregnant woman, I want to view metrics in my journal entries so that I can track key 
+health data like weight or blood pressure. 
+30. As a pregnant woman, I want to create metrics in my journal entries so that I can add 
+new health measurements for tracking. 
+31. As a pregnant woman, I want to update metrics in my journal entries so that I can correct 
+or modify recorded values. 
+95 
+
+32. As a pregnant woman, I want to view nutrition plans so that I can follow dietary 
+recommendations for a healthy pregnancy. 
+33. As a pregnant woman, I want to save nutrition plans so that I can easily revisit them 
+when needed. 
+34. As a pregnant woman, I want to share nutrition plans so that I can discuss them with my 
+doctor or family for feedback and support. 
+3.1.4.3 Doctor 
+1. As a doctor, I want to log in so that I can access my Doctor account securely. 
+2. As a doctor, I want to log out of my Doctor account so that I can securely end my session 
+and protect my personal information. 
+3. As a doctor, I want to view my account information so that I can check and verify my 
+profile details and professional status. 
+4. As a doctor, I want to update my account information so that my contact details and 
+credentials remain current and accurate. 
+5. As a doctor, I want to delete my account information so that I can remove my data from 
+the system if I choose to stop volunteering. 
+6. As a doctor, I want to view educational content so that I can stay informed about the 
+topics shared with users. 
+7. As a doctor, I want to create educational content so that I can share reliable medical 
+knowledge and pregnancy-related information with users. 
+8. As a doctor, I want to share educational content so that I can distribute helpful materials 
+and raise awareness among expectant mothers. 
+9. As a doctor, I want to save educational content so that I can easily access important 
+articles or materials for future reference. 
+10. As a doctor, I want to view community threads so that I can observe discussions and 
+understand user concerns or questions. 
+11. As a doctor, I want to view comments on community threads so that I can read users’ 
+opinions and provide guidance when necessary. 
+12. As a doctor, I want to create comments on community threads so that I can share expert 
+advice or encouragement with users. 
+13. As a doctor, I want to delete comments in community threads so that I can remove my 
+own posts if they are outdated or incorrect. 
+14. As a doctor, I want to update comments in community threads so that I can correct or 
+improve my responses for clarity and accuracy. 
+15. As a doctor, I want to create community threads so that I can start new discussions or 
+educational topics related to pregnancy and wellness. 
+16. As a doctor, I want to edit community threads so that I can update the information or add 
+new insights. 
+17. As a doctor, I want to delete community threads so that I can remove outdated or 
+irrelevant discussions I created. 
+18. As a doctor, I want to view consultation requests so that I can see which users are 
+seeking help or advice. 
+96 
+
+19. As a doctor, I want to accept or reject consultation requests so that I can manage my 
+time effectively and respond only to cases I can assist with. 
+20. As a doctor, I want to view nutrition plans so that I can review and ensure that the dietary 
+advice aligns with medical standards. 
+3.1.4.4 Unregistered User 
+1. As an unregistered user, I want to create a Doctor account request so that I can apply to 
+join the platform as a verified Doctor user. 
+2. As an unregistered user, I want to create a pregnant woman account so that I can 
+register and log in as a pregnancy user. 
+3. As an unregistered user, I want to view educational content (articles, videos, and guides) 
+so that I can better understand pregnancy-related topics and the type of information 
+offered by the application. 
+4. As an unregistered user, I want to view the list of volunteer Doctors so that I can learn 
+more about the experts who contribute to the platform. 
+5. As an unregistered user, I want to view community threads so that I can explore the 
+discussions and understand how users interact within the community. 
+6. As an unregistered user, I want to view comments on community threads so that I can 
+see the type of conversations and support exchanged among users. 
+7. As an unregistered user, I want to view nutrition plans so that I can preview the type of 
+health and dietary guidance provided before registering. 
+ 3.1.4.5 Nutritionist 
+1. As a nutritionist, I want to log in so that I can securely access my professional account. 
+2. As a nutritionist, I want to log out so that I can securely end my session. 
+3. As a nutritionist, I want to view my account information so that I can verify my personal 
+and professional details. 
+4. As a nutritionist, I want to update my account information so that my credentials and 
+contact details remain accurate and up to date. 
+5. As a nutritionist, I want to delete my account information so that I can remove my profile 
+and data from the system if I decide to stop providing services. 
+6. As a nutritionist, I want to view nutrition plans so that I can review and evaluate dietary 
+recommendations shared with users. 
+7. As a nutritionist, I want to create nutrition plans so that I can provide customized dietary 
+advice to expectant mothers based on their needs. 
+8. As a nutritionist, I want to edit nutrition plans so that I can update or improve dietary 
+recommendations when new information is available. 
+9. As a nutritionist, I want to delete nutrition plans so that I can remove outdated or 
+incorrect plans from the system. 
+10. As a nutritionist, I want to view community threads so that I can stay informed about 
+users’ discussions and common nutrition-related questions. 
+11. As a nutritionist, I want to view comments on community threads so that I can 
+understand users’ concerns and identify where professional input is needed. 
+97 
+
+12. As a nutritionist, I want to create comments on community threads so that I can share 
+expert advice or clarify nutrition-related misconceptions. 
+13. As a nutritionist, I want to delete comments in community threads so that I can remove 
+my own posts if they are no longer relevant or accurate. 
+14. As a nutritionist, I want to update comments in community threads so that I can edit or 
+refine my responses for clarity and accuracy. 
+15. As a nutritionist, I want to create community threads so that I can initiate discussions 
+about healthy eating habits during pregnancy. 
+16. As a nutritionist, I want to edit community threads so that I can update or expand the 
+information shared in my posts. 
+17. As a nutritionist, I want to delete community threads so that I can remove any 
+discussions I started that are outdated or no longer useful. 
+18. As a nutritionist, I want to view educational content so that I can ensure that the 
+materials shared in the app align with accurate and evidence-based nutrition knowledge. 
+3.1.4.6 Merchant 
+1. As a Merchant, I want to log in so that I can securely access my professional account. 
+2. As a Merchant, I want to log out so that I can securely end my session. 
+3. As a Merchant, I want to view my account information so that I can verify my personal 
+and professional details. 
+4. As a Merchant, I want to update my account information so that my credentials and 
+contact details remain accurate and up to date. 
+5. As a Merchant, I want to delete my account information so that I can remove my profile 
+and data from the system if I decide to stop providing services. 
+6. As a Merchant, I want to view products, so that I can see the available product plans in 
+the system. 
+7. As a Merchant, I want to create a product plan, so that new products can be added to 
+the system. 
+8. As a Merchant, I want to edit a product plan, so that existing product details can be 
+updated. 
+9. As a Merchant, I want to delete a product plan, so that outdated or incorrect products are 
+removed. 
+ 
+3.2 Non-Functional Requirements  
+3.2.1 Performance 
+Startup Latency: Usability research shows that as page load time increases over 3 seconds, 
+the chance that a user bounces away greatly increases 
+98 
+
+ 
+ 
+As such, we generally will aim to keep our initial app startup time short, ideally under 3 seconds 
+for a project of this scope 
+ 
+Real-time Latency: Sluggish performance may also cause a user to become frustrated while 
+using the app, and uninstall in favour of our competitors. As such, we aim to keep general 
+performance snappy. 
+3.2.2. Usability 
+Visual and Functional consistency: Our app should, first and foremost, be intuitive and 
+user-friendly. Elements should appear to be stylistically and functionally consistent. 
+Users should be able to intuitively navigate around the app to find whatever they need. 
+A user should easily be able to discover whether or not our app has certain functionality, and 
+learn to operate it with relative ease 
+ 
+Responsivenesss: Our app should be able to resize and render correctly on various screen 
+sizes 
+ 
+Errors (such as our API returning an error) should be handled gracefully, with clear and concise 
+error messages to the users on what went wrong - as well as any corrective course of action. 
+3.2.3. Security & Privacy 
+Given the sensitive nature of pregnancy (and medical data, as a whole), ensuring that our data 
+is secure from unauthorized access and bad actors is arguably one of the most critical 
+requirements 
+If we indeed choose to deploy to AWS infrastructure, then our best bet would be to leverage 
+their vendor-specific methods of ensuring that their data is kept encrypted both in-transit and 
+at-rest. 
+99 
+
+3.2.4. Reliability & Availability 
+Uptime: The app should have minimal down-time, such that users can access the app at almost 
+all times. Regular outages during times such as mid-consultation, or when watching a video, 
+may also cause a user to favour the competition. 
+ 
+The app itself should have minimal errors, and most errors should be caught and remediated via 
+early and regular testing. 
+3.2.5. Compatibility 
+Our app should be fully functional on both Android, the 2 primary operating systems for mobile 
+platforms.  
+ 
+3.2.6. Other Requirement  
+Documentation Requirements: Comprehensive user and technical documentation shall be 
+maintained, including guides, system details, and version-controlled change logs to support 
+effective usage, development, and maintenance. 
+Development Standard Requirements: Our application shall be developed following industry 
+best practices and platform coding standards, with continuous testing and compliance to UI/UX 
+and accessibility guidelines to ensure reliability, quality, and user inclusivity. 
+Security Requirements: All sensitive data shall be securely encrypted in transit and at rest, 
+with strong authentication, authorization, and error monitoring mechanisms to prevent 
+unauthorized access and detect security threats. 
+Regulatory and Compliance Requirements: Our app shall comply with Singapore’s PDPA by 
+ensuring responsible data handling, obtaining users’ informed consent, and requiring all 
+third-party services to follow equivalent privacy and protection standards. 
+Maintenance Requirements: Our system shall be regularly updated and maintained for 
+stability and compatibility. 
+Backup and Recovery Requirements: Essential data are regularly backed up with secure 
+cloud infrastructure, with a recovery plan to quickly restore system functionality in case of 
+update failure or security breach.
+ 
+ 
+ 
+100 
+
+3.3. Target Users 
+User Type Description 
+Pregnant Users Women who are pregnant, planning pregnancy, or in postnatal care. 
+Can access resources, track progress, and consult Doctors. 
+Doctors/ 
+Nutritionist 
+Free advice or consultations. 
+User Admin System managers who verify Doctors, approve content, and monitor 
+user activities for compliance. 
+Unregistered User Basic feature (only viewing) 
+ 
+4. Development Tools & Infrastructure 
+4.1. Frontend: React Native + Expo | TanStack Query 
+When deciding upon a frontend framework, we decided that due to the time constraints of a 
+student project, we would want something that prioritises velocity and rapid iteration. 
+The programmers in our team were (are) not well-versed in mobile development, but have 
+moderate experience with React on the frontend.  
+Thus, React Native seemed like the natural choice - being syntactically very similar. 
+ 
+Expo is a popular framework that provides an SDK layered over React Native that provides 
+conveniences which help to greatly speed up the development process, such as: 
+● Fast Refresh, no need to keep rebuilding APK/IPA. Instantly test app on your mobile 
+device via Expo Go 
+● SDK for easy platform-agnostic access to native API’s (camera, location, sensors...) 
+● Built app is automatically compatible with Android - no need for extra configuration  
+ 
+On the more technical side of things, we want to ensure that our codebase remains relatively 
+maintainable as it scales, so as to not crumble under the weight of technical debt. Tanstack 
+Query is a popular library that assists in managing the complexities of managing server-side 
+data caching and synchronisation on the frontend, which integrates well with React by following 
+its hook-based paradigm. 
+101 
+
+4.2. Backend: FastAPI | SQLAlchemy + Alembic | PyTest 
+Similarly, after discussions with the programmers - we decided upon Python for its suitability for 
+rapid development, rich ecosystem (in case we also want to integrate AI libraries into our app), 
+as well as ease of onboarding. 
+After some research, we settled upon using FastAPI. Though it is relatively new (compared to 
+more mature and well-known frameworks such as Django and Flask), it provides many modern 
+features and conveniences, such as:  
+● First-class Async support  
+● Runtime data validation and strong type enforcement for request/response body  
+● Built-in autogenerated Swagger UI documents. Easy for multiple backend developers to 
+collaborate 
+ 
+Coming from statically-typed languages, we were all too familiar with the importance of 
+compile-time type safety, so we decided upon using SQLAlchemy as our Object-Relational 
+Mapping (ORM) to ensure that we could declaratively define, and quickly iterate upon, our 
+database schema, with Alembic to handle migrations. 
+ 
+And finally, our product will make use of extensive tests, with unit testing being one of them. For 
+that, we just picked what seemed to be the most popular unit testing framework currently, 
+PyTest. 
+4.3. Database: PostgreSQL 
+In-spite of the rise in popularity of NoSQL/non-relational technologies in recent years, seemingly 
+enticing due to their offer of flexibility - there is a tradeoff in terms of things like Data Integrity, 
+Schema Enforcement, and Complex Queries/Joins. 
+By using relational databases, we ensure that any data entering our system adheres to a strict 
+pre-defined schema, reducing the likelihood of malformed data entering the system - something 
+a NoSQL database like MongoDB is highly prone to. 
+ 
+Relational databases are also much more mature, having been around for much longer than 
+non-relational technologies, and have a proven track record of reliability. 
+With most of us having previously taken Database Systems, which made use of PostgreSQL - 
+we decided upon to use it due to our familiarity with it as a database technology. 
+4.4. Version-Control: GitHub (CI/CD) 
+For version control, we have chosen to make use of GitHub, simply for its ubiquity within the 
+development space, its generous free tier (more than sufficient for a student project), and the 
+built-in solution for CI/CD via Github Actions. 
+Though enterprise environments may prefer to self-host on-premise repositories using 
+something like GitLab or BitBucket, it would incur additional overhead for which their extra 
+features do not justify. 
+102 
+
+Additionally, though GitHub Actions is a relatively new feature - being released in late 2019, it is 
+sufficient for the (very) large majority of use-cases in building a robust CI/CD pipeline.  
+4.5. DevOps/Infra: AWS | Docker  
+ 
+Amazon Web Services (AWS) is currently the leading cloud provider, offering a vast suite of 
+cloud services that operate upon a global infrastructure. 
+To mitigate the complexity of self-hosting and managing infrastructure, we will leverage AWS’s 
+suite of cloud services, with their promise of high availability and durability. 
+AWS EC2: Elastic Compute Cloud, a horizontally-scalable service suitable for hosting backends  
+AWS RDS: A managed database service, compatible with a wide range of database engines 
+(including PostgreSQL)    
+AWS S3: An object-storage service,  
+We will also be using Docker as our containerisation technology. The reason is two-fold: 
+● “It works on my machine”: By containerising the backend, we package all its 
+dependencies into a single Docker image that is runnable by any machine with the 
+Docker software, ensuring consistency - the code and local environment are the same 
+as what is being deployed
+ 
+● Local “test” Database: A dockerized PostgreSQL instance allows developers to quickly 
+set-up and tear-down local databases, which is critical for rapid prototyping and iteration 
+(a single CLI command, over having to manually configure database software) 
+103 
+
+4.6. Additional Technologies/Libraries: Stream 
+One of the intended features of our app is “video calling” and “real-time messaging”, such that 
+expectant mothers may contact Doctors for a tele-consult (similar to the likes of ReallySick, or 
+the now defunct MaNaDr). 
+Stream’s (formerly GetStream) service seems to provide one of the more generous free tiers 
+via their “Maker” program, which allows us to test freely without any surprise billing due to their 
+enforcement of hard limits (service is stopped when exceeding free tier usage). 
+ 
+Skimming through their setup documentation also shows a well thought-out SDK that we should 
+be able to integrate into our app without too much difficulty, so we don’t waste too much time 
+trying to wrangle with something more complicated 
+4.7. Development Methodology  
+After some consideration, our team has decided not to adhere to any formal project 
+development methodology such as Scrum, Waterfall, or Kanban. 
+However, we will still be making use of the Kanban Board for general task tracking. 
+104 
+
+Waterfall 
+ 
+The Waterfall model is often regarded as the most rigid and linear of the traditional software 
+development methodologies.  
+The development lifecycle is conceptualized as a series of sequential phases, where each 
+phase is usually well-defined, has well-understood requirements, and has little/no overlap with 
+the other phases. 
+However, this is inherently inflexible and has been known to present challenges when trying to 
+accommodate changing requirements. Thus, our team has decided against it. 
+Scrum 
+ 
+Several of our team members already possess prior experience working with Scrum, allowing us 
+to make the informed decision NOT to proceed with adopting this framework. 
+Despite its popularity and widespread appeal in agile environments, Scrum would introduce 
+considerable overhead via its prescribed ceremonies (daily standup, sprint planning, 
+retrospectives, etc....), demanding time that could have been better spent on documentation, or 
+development of our product. 
+105 
+
+Kanban 
+ 
+Arguably the most flexible of all the aforementioned methodologies. It is a very lightweight 
+framework, highly-adaptable, and most importantly - does not impose rigid roles and 
+ceremonies. 
+They focus on a much more continuous workflow, with the Kanban board mirroring that by 
+showing tasks flowing through the board as it progresses from conception to completion. 
+Conclusion 
+Our goal is to minimise any process or ceremonial overhead, thereby maximising time that could 
+be spent on development or working on our documentation - hence our deliberate decision to 
+refrain from committing to any formal development methodology or framework. 
+ 
+106 
+
+However, the Kanban Board still offers great value as a task management tool, allowing us to 
+easily keep track of tasks in a visual way. With it, the general state of our progress can quickly 
+be ascertained via a quick glance at the board.  
+It is fully transparent to all parties - allowing us to quickly spot task statuses, workload 
+distribution, and any potential bottlenecks. 
+4.8. Proposed Project Schedule 
+Risk Analysis 
+ 
+Risk Category 
+ 
+Identified Risk 
+Risk Elements 
+Impact Probability Risk Rating 
+Communication Miscommunication between 
+developers, designers, and 
+stakeholders leading to 
+inconsistent app content or 
+delays. 
+H M H 
+Misinformation in user forums or 
+miscommunication between 
+Doctor and user.  
+H M H 
+Resources Lack of skilled personnel M H H 
+Insufficient budget for app 
+development and updates 
+L L L 
+Technical Device compatibility issues or 
+application downtime & poor 
+performance  
+L L L 
+Inability to achieve the 
+programming and project 
+requirements 
+H H H 
+User Low user engagement or difficulty 
+in app navigation, poor user 
+experience (UX), and low user 
+adoption 
+M L M 
+Maintainance  Content decay, technical debt and 
+slowed innovation 
+M M M 
+Delay in releasing updates or 
+fixing issues 
+L L L 
+107 
+
+Security Data breach of sensitive health 
+information 
+H L H 
+Unauthorized access to user 
+information 
+H L H 
+ 
+Proposed Duration & Schedule 
+Overview 
+ 
+ 
+Phase 1 
+ 
+108 
+
+ 
+Phase 2 
+ 
+Phase 3 
+ 
+ 
+109 
+
+4.9. Role and Responsibilities 
+Name 
+ 
+Roles Responsibilities 
+Aloysius Lee 
+Cheng Long  
+ 
+Project Manager 
+Full-stack Developer 
+Lead Documentation 
+AI Developer 
+Set up communication and shared folder 
+Lead and Coordinate the project timeline 
+Product Research 
+Establishment of key features + WBS 
+Key Feature documentation 
+Survey documentation  
+Work Breakdown Structure  
+AI research and documentation  
+Use-Case diagram 
+Alexander Neo Lead Full-stack Developer 
+Database Administrator 
+DevOps  
+ 
+  
+Research dev tools + infra 
+Establishment of key features + WBS 
+Product Research 
+Gantt Chart 
+Use-Case Diagrams 
+Setup Development Environment 
+Preliminary Database Design 
+Agatha Gloria 
+Eldyjoe  
+ 
+Lead UI/UX Designer 
+Documentation  
+Tester 
+Designed app interface 
+Establishment of key features 
+Product Research 
+Designed Marketing website  
+Surveys google form 
+Research on the design 
+Tan Yan Zhang  
+ 
+Tester 
+Documentation 
+Front-end Developer 
+Business model  
+Risk Table 
+PDAD 
+Use-Case Description 
+Proposed Project Schedule documentation 
+Yang, Han Tester 
+Documentation  
+AI Developer 
+Use-Case Description  
+Surveys google form 
+Gantt Chart 
+Muhammad 
+Danish Bin 
+Mohd Puzi 
+Meeting minutes 
+Documentation 
+Back-end Developer 
+Use-Case Description 
+Meeting minutes 
+110 
+
+5. Expected Results 
+● Accessible Maternal Care: 
+○ Provide free, reliable information and consultation for women throughout 
+pre-,during, and post-pregnancy. 
+● Personalized Guidance: 
+○ AI-powered recommendations and predictive risk alerts support early detection of 
+potential complications. 
+● Engagement & Support: 
+○ Community forums, journals, and consultation features create emotional and 
+informational support networks. 
+● Empowered Self-Care: 
+○ Tools like mood, symptom, and kick trackers help users monitor their health and 
+baby’s development. 
+● Scalable & Future-Ready: 
+○ Built for future integration of advanced AI and wearable health data to enhance 
+accuracy and impact. 
+ 
+111 
+
+6. Design Approach 
+6.1 System Environment  
+● Internet Explorer 11 or Mozilla Firefox or Chrome 
+● Android  
+112 
+
+6.2 Data Flow 
+ 
+113 
+
+6.4 Activity Diagram 
+6.4.1 Unregistered User 
+ 
+114 
+
+6.4.2 Pregnant Woman 
+ 
+115 
+
+6.4.3 Nutritionist 
+ 
+116 
+
+6.4.4 User Admin  
+ 
+117 
+
+6.4.5 Doctor 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+118 
+
+ 
+6.4.5 Merchant 
+ 
+119 
+
+6.5 Activity Diagram Sequence Diagram 
+6.5.1 User Admin 
+ 
+ 
+120 
+
+ 
+ 
+121 
+
+ 
+ 
+122 
+
+ 
+ 
+123 
+
+ 
+ 
+ 
+124 
+
+6.5.2 Pregnant Woman 
+ 
+ 
+ 
+ 
+125 
+
+ 
+ 
+ 
+126 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+127 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+128 
+
+ 
+129 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+130 
+
+ 
+ 
+ 
+ 
+131 
+
+ 
+ 
+ 
+132 
+
+ 
+ 
+133 
+
+ 
+ 
+134 
+
+ 
+135 
+
+ 
+136 
+
+ 
+137 
+
+ 
+ 
+ 
+138 
+
+ 
+139 
+
+ 
+140 
+
+ 
+141 
+
+ 
+142 
+
+ 
+143 
+
+ 
+144 
+
+ 
+145 
+
+ 
+146 
+
+ 
+ 
+ 
+147 
+
+ 
+148 
+
+ 
+149 
+
+ 
+150 
+
+ 
+151 
+
+ 
+152 
+
+ 
+153 
+
+ 
+154 
+
+ 
+155 
+
+ 
+156 
+
+ 
+157 
+
+ 
+158 
+
+6.5.3 Doctor 
+ 
+159 
+
+ 
+160 
+
+ 
+161 
+
+ 
+162 
+
+ 
+163 
+
+ 
+164 
+
+ 
+165 
+
+ 
+166 
+
+ 
+167 
+
+ 
+ 
+168 
+
+ 
+169 
+
+ 
+170 
+
+ 
+171 
+
+ 
+172 
+
+ 
+173 
+
+ 
+174 
+
+ 
+175 
+
+ 
+176 
+
+ 
+ 
+ 
+ 
+177 
+
+6.5.4 Nutritionist 
+Log In 
+ 
+ 
+Log Out 
+ 
+178 
+
+ 
+View User Account 
+ 
+Update User Account Info 
+ 
+ 
+179 
+
+Delete User Account 
+ 
+ 
+View Nutrition Plans 
+ 
+ 
+180 
+
+Create Nutrition Plan 
+ 
+Edit Nutrition Plan 
+ 
+181 
+
+Delete Nutrition Plan 
+ 
+ 
+View Educational Content 
+ 
+182 
+
+View Community Threads 
+ 
+Create Community Threads 
+ 
+ 
+183 
+
+Edit Community Threads 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+184 
+
+ 
+Delete Community Threads 
+ 
+View Comments 
+ 
+185 
+
+Create Comment 
+ 
+Update Comment 
+ 
+186 
+
+Delete Comment 
+ 
+187 
+
+6.5.5 Unregistered User 
+ 
+188 
+
+ 
+ 
+189 
+
+ 
+ 
+190 
+
+ 
+ 
+191 
+
+6.5.6 Merchant 
+ 
+ 
+192 
+
+ 
+ 
+193 
+
+ 
+ 
+194 
+
+ 
+ 
+195 
+
+ 
+ 
+196 
+
+ 
+ 
+197 
+
+ 
+ 
+ 
+198 
+
+ 
+ 
+199 
+
+ 
+200 
+
+6.6 Database Design 
+ 
+201 
+
+6.7 AI models for Risk Alert  
+6.7.1 Data information 
+  
+ 
+202 
+
+6.7.2 Distribution of the Dataset 
+ 
+6.7.3 Decision Tree Accuracy 
+ 
+203 
+
+6.7.4 Logistic Regression Accuracy 
+ 
+6.8 CI/CD Implementation and Developer Experience  
+6.8.1 Continuous Integration (CI) 
+Our CI process is handled entirely through GitHub Actions and focuses on ensuring code quality 
+and functionality with every commit. 
+Integration Testing 
+Tooling 
+Python's 
+pytest
+ framework. 
+Process A GitHub Actions workflow is triggered upon a pull request to the 
+main 
+branch 
+Scope Integration tests are run against the FastAPI backend, specifically 
+targeting the core HTTPS endpoints to validate expected API 
+behavior. 
+Local Emulation To facilitate local testing within the GitHub Actions runner, services 
+like LocalStack were employed to emulate AWS S3 functionality, 
+while a local Dockerized PostgreSQL instance was used for 
+database interactions. This ensures the tests are representative of 
+the production environment's data dependencies. 
+6.8.2 Continuous Delivery (CD) 
+The CD pipeline automates the packaging and deployment of the backend service to our 
+production environment hosted on AWS. 
+204 
+
+Deployment to Infra 
+1. Image Build: Upon successful completion of CI tests, a dedicated CD GitHub Actions 
+workflow is initiated. This workflow builds the production-ready Docker image for the 
+FastAPI backend 
+2. Image Push: The built image is securely pushed to the Amazon Elastic Container 
+Registry (ECR) 
+3. Remote Deployment: The workflow then uses AWS Systems Manager (SSM) to send 
+SSH commands to the target EC2 instance 
+4. Application Update: The EC2 instance, which is configured to run the application, 
+receives the command to pull the latest image from ECR and restart the containerized 
+application. 
+Infrastructure Environment 
+The deployed backend runs on an AWS EC2 instance and interacts with core AWS services: 
+ 
+● Database: Amazon RDS PostgreSQL instance 
+● Object Storage: Amazon S3 Bucket for persistent storage of images 
+Developer Experience  
+The implemented CI/CD practices and local development setup have significantly streamlined 
+the development process: 
+Streamlined Development Environment 
+A robust local development environment ensures developers can work efficiently without relying 
+on the shared cloud infrastructure for daily coding and testing. 
+ 
+Component Purpose Benefit 
+Docker PostgreSQL Local emulation of the 
+production RDS database. 
+Developers can quickly spin up, reset, and 
+seed the database with necessary test data, 
+enabling rapid iteration and user seeding 
+(e.g., creating hundreds of test users). 
+LocalStack Local emulation of the AWS 
+S3 Bucket. 
+Allows for development and testing of S3 
+interactions (upload/download) without 
+incurring AWS costs or managing complex 
+IAM roles for local development. 
+ 
+ 
+205 
+
+ 
+206 
+
+6.9 User Interface 
+6.9.1 Website (Marketing) 
+ 
+207 
+
+208 
+
+ 
+ 
+ 
+209 
+
+ 
+ 
+210 
+
+6.9.2 User Admin Website 
+Login Page 
+ 
+211 
+
+ 
+ 
+  
+212 
+
+  
+ 
+6.9.3 Unregistered User 
+Homepage 
+213 
+
+ 
+Journal, Articles (However require to sign in before using the function) 
+\ 
+ 
+214 
+
+Community Thread (However require to sign in before using the function) 
+ 
+ 
+6.9.4 Pregnant Woman 
+Homepage 
+ 
+215 
+
+Login Page 
+ 
+Personalized profile 
+ 
+216 
+
+ 
+ Profile page  
+ 
+217 
+
+ 
+ 
+ 
+218 
+
+ 
+Consultation page 
+ 
+219 
+
+ 
+ 
+Nutrition page  
+220 
+
+ 
+ 
+ 
+221 
+
+6.9.5 Doctor 
+Homepage 
+ 
+Login page/Register page/ Waiting result page 
+ 
+ 
+ 
+222 
+
+Profile page 
+ 
+ 
+223 
+
+ 
+ 
+224 
+
+6.9.6 Nutritionist  
+Homepage 
+ 
+Login page/Register page/ Waiting result page 
+ 
+ 
+Profile page 
+225 
+
+226 
+
+ 
+227 
+
+6.9.7 Merchant 
+ 
+228 
+
+  
+229 
+
+7. References 
+● Flo: https://flo.health/  
+● Pregnancy+:  
+● BabyCenter: https://www.babycenter.com/  
+● AsianParent: https://sg.theasianparent.com/  
+● Ovia: https://www.oviahealth.com/ovia-app/  
+● Expo: https://expo.dev/  
+● TanStack Query: https://tanstack.com/query/latest  
+● FastAPI: https://fastapi.tiangolo.com/  
+● PyTest: https://docs.pytest.org/en/stable/  
+● Docker: https://www.docker.com/  
+● PostgreSQL: https://www.postgresql.org/  
+● AWS: https://aws.amazon.com/  
+● GetStream: https://getstream.io/  
+● Logistic Regression: 
+https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegressio
+nCV.html 
+● Random Forest: 
+https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassif
+ier.html 
+● Differences (Topic Health): https://www.nature.com/articles/s41598-025-93675-1 
+● Dataset: https://archive.ics.uci.edu/dataset/863/maternal+health+risk 
+● Design References: 
+○ Journal: 
+https://www.behance.net/gallery/165459441/Crafting-an-Intuitive-UI-Design-for-a-
+Journal-App  
+○ Consultation: https://www.pinterest.com/pin/139119075979142531/  
+○ Notification: https://dribbble.com/shots/16250780-Notifications-Mobile-UI  
+○ Discussion Forum: https://www.threads.com/  
+230 
