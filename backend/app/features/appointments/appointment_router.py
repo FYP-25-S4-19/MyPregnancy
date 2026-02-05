@@ -25,7 +25,7 @@ def get_appointment_service(db: AsyncSession = Depends(get_db)) -> AppointmentSe
     return AppointmentService(db)
 
 
-@appointments_router.post("/", status_code=status.HTTP_201_CREATED, response_model=CreateAppointmentResponse)
+@appointments_router.post("", status_code=status.HTTP_201_CREATED, response_model=CreateAppointmentResponse)
 async def create_appointment(
     request: CreateAppointmentRequest,
     service: AppointmentService = Depends(get_appointment_service),
@@ -53,14 +53,14 @@ async def get_appointment_previews_for_month(
     return await service.get_appointment_previews_for_month(mother)
 
 
-@appointments_router.get("/", response_model=list[AppointmentResponse])
+@appointments_router.get("", response_model=list[AppointmentResponse])
 async def get_all_appointments(
     service: AppointmentService = Depends(get_appointment_service), user: User = Depends(require_role(User))
 ) -> list[AppointmentResponse]:
     return await service.get_all_appointments(user)
 
 
-@appointments_router.patch("/", status_code=status.HTTP_204_NO_CONTENT)
+@appointments_router.patch("", status_code=status.HTTP_204_NO_CONTENT)
 async def edit_appointment_start_time(
     request: EditAppointmentRequest,
     service: AppointmentService = Depends(get_appointment_service),

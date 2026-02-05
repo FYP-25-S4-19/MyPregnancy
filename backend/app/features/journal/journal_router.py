@@ -55,7 +55,7 @@ async def scalar_metrics_and_kick_count_on_date(
     return await service.scalar_metrics_and_kick_count_on_date(mother.id, entry_date)
 
 
-@journal_router.get("/", response_model=list[GetJournalEntryResponse])
+@journal_router.get("", response_model=list[GetJournalEntryResponse])
 async def get_all_journal_entries_for_mother(
     mother: PregnantWoman = Depends(require_role(PregnantWoman)), service: JournalService = Depends(get_journal_service)
 ) -> list[GetJournalEntryResponse]:

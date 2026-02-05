@@ -97,9 +97,6 @@ export default function NutritionistProfileScreen() {
   };
 
   const handleSendFeedback = () => router.push("/main/(notab)/feedback");
-
-  const handleChangePassword = () => utils.handleChangePassword();
-
   const handleDeleteAccount = () => utils.handleDeleteAccount();
 
   return (

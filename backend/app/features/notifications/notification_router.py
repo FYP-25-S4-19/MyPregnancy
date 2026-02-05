@@ -28,7 +28,7 @@ async def check_has_unread_notifications(
     return {"has_unread": has_unread}
 
 
-@notification_router.get("/", response_model=AppNotificationListResponse)
+@notification_router.get("", response_model=AppNotificationListResponse)
 async def get_notifications(
     user: User = Depends(current_active_user),
     service: NotificationService = Depends(get_notification_service),
@@ -83,7 +83,7 @@ async def notify_thread_like(
         raise
 
 
-@notification_router.post("/", status_code=status.HTTP_204_NO_CONTENT)
+@notification_router.post("", status_code=status.HTTP_204_NO_CONTENT)
 async def send_to_all(
     _: Admin = Depends(require_role(Admin)), service: NotificationService = Depends(get_notification_service)
 ) -> None:

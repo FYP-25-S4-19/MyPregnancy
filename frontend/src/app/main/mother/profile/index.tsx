@@ -221,7 +221,6 @@ export default function MotherProfileScreen() {
   };
 
   const handleSendFeedback = () => router.push("/main/(notab)/feedback");
-  const handleChangePassword = () => utils.handleChangePassword();
   const handleDeleteAccount = () => utils.handleDeleteAccount();
 
   // -------------------------

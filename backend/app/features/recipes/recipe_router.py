@@ -49,7 +49,7 @@ async def get_recipe_previews(
     return await service.get_recipe_previews(limit, user, cursor)
 
 
-@recipe_router.post("/", status_code=status.HTTP_201_CREATED)
+@recipe_router.post("", status_code=status.HTTP_201_CREATED)
 async def create_recipe(
     name: str = Form(...),
     instructions: str = Form(...),
@@ -144,7 +144,7 @@ async def unsave_recipe(
 # =================================================================
 
 
-@recipe_router.post("/drafts/", status_code=status.HTTP_201_CREATED, response_model=RecipeDraftResponse)
+@recipe_router.post("/drafts", status_code=status.HTTP_201_CREATED, response_model=RecipeDraftResponse)
 async def create_recipe_draft(
     draft_data: RecipeDraftCreateRequest,
     nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
@@ -160,7 +160,7 @@ async def create_recipe_draft(
         raise
 
 
-@recipe_router.get("/drafts/", response_model=list[RecipeDraftResponse])
+@recipe_router.get("/drafts", response_model=list[RecipeDraftResponse])
 async def list_recipe_drafts(
     nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
     service: RecipeService = Depends(get_recipe_service),

@@ -47,7 +47,7 @@ async def get_article_previews(
     return await service.get_article_previews(limit)
 
 
-@edu_articles_router.get("/", response_model=list[ArticleOverviewResponse])
+@edu_articles_router.get("", response_model=list[ArticleOverviewResponse])
 async def get_article_overviews_by_category(
     category: str, service: EduArticleService = Depends(get_edu_articles_service)
 ):
@@ -139,7 +139,7 @@ async def unsave_article(
         raise
 
 
-@edu_articles_router.post("/", status_code=status.HTTP_201_CREATED)
+@edu_articles_router.post("", status_code=status.HTTP_201_CREATED)
 async def create_article(
     category_id: int = Form(...),
     title: str = Form(...),

@@ -139,7 +139,7 @@ async def get_product_categories(
     return await service.get_product_categories()
 
 
-@product_router.post("/", status_code=status.HTTP_201_CREATED)
+@product_router.post("", status_code=status.HTTP_201_CREATED)
 async def add_new_product(
     name: str = Form(...),
     merchant: Merchant = Depends(require_role(Merchant)),

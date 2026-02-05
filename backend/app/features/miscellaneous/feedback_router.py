@@ -59,7 +59,7 @@ async def create_feedback(
 
 
 # feedback able to filter and sort
-@router.get("/", response_model=list[FeedbackResponse])
+@router.get("", response_model=list[FeedbackResponse])
 async def get_all_feedback(
     min_rating: Optional[int] = Query(None, greater_equal=1, lesser_equal=5),
     max_rating: Optional[int] = Query(None, greater_equal=1, lesser_equal=5),

@@ -27,7 +27,7 @@ async def get_thread_categories(service: ThreadService = Depends(get_threads_ser
     return await service.get_thread_categories()
 
 
-@community_threads_router.get("/", response_model=list[ThreadPreviewData])
+@community_threads_router.get("", response_model=list[ThreadPreviewData])
 async def get_thread_previews(
     service: ThreadService = Depends(get_threads_service),
     current_user: User | None = Depends(optional_current_active_user),
@@ -52,7 +52,7 @@ async def get_thread_by_id(
     return await service.get_thread_by_id(thread_id, current_user)
 
 
-@community_threads_router.post("/", status_code=status.HTTP_201_CREATED)
+@community_threads_router.post("", status_code=status.HTTP_201_CREATED)
 async def create_thread(
     thread_data: CreateThreadData,
     service: ThreadService = Depends(get_threads_service),

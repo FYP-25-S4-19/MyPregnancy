@@ -13,7 +13,7 @@ export const useProductCategories = () => {
   return useQuery({
     queryKey: ["Product Categories"],
     queryFn: async () => {
-      const response = await api.get<ProductCategory[]>(`/products/categories/`);
+      const response = await api.get<ProductCategory[]>(`/products/categories`);
       return response.data;
     },
   });
@@ -69,7 +69,7 @@ export const useAddNewProductMutation = () => {
 
       // Append the image file
       formData.append("img_file", data.img_file);
-      const response = await api.post("/products/", formData, {
+      const response = await api.post("/products", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

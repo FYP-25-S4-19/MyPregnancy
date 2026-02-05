@@ -59,7 +59,7 @@ export const useCreateArticle = () => {
       formData.append("content_markdown", articleData.content_markdown);
       formData.append("trimester", articleData.trimester.toString());
 
-      const response = await api.post("/articles/", formData, {
+      const response = await api.post("/articles", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

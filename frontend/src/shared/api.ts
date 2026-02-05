@@ -31,14 +31,14 @@ export const getDevHostIp = (): string => {
 
 const getBaseUrl = (): string => {
   if (process.env.EXPO_PUBLIC_APP_ENV === "prod") {
-    return "https://api.my-pregnancy.click/";
+    return "https://api.my-pregnancy.click"; // Removed trailing slash to prevent double slashes
   }
 
   const host: string = getDevHostIp();
-  return `http://${host}:8000/`;
+  return `http://${host}:8000`;
 };
 
-const api = axios.create({ baseURL: getBaseUrl(), timeout: 10000 });
+const api = axios.create({ baseURL: getBaseUrl(), timeout: 30000 }); // Increased timeout to 30 seconds for production
 axiosRetry(api, { retryDelay: linearDelay(), retries: 3 });
 
 // Recursively walks through the JSON response to find and fix S3 URLs

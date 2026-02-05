@@ -65,7 +65,7 @@ async def get_my_profile(
     return await service.get_my_profile(mother)
 
 
-@account_router.get("/", response_model=list[AccountCreationRequestView])
+@account_router.get("", response_model=list[AccountCreationRequestView])
 async def get_account_creation_requests(
     _: Admin = Depends(require_role(Admin)),
     service: AccountService = Depends(get_account_service),
