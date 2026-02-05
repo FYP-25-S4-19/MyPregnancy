@@ -186,7 +186,6 @@ export default function NutritionistProfileScreen() {
 
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
-          onChangePassword={handleChangePassword}
           onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />

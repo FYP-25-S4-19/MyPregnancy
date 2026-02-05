@@ -391,7 +391,6 @@ export default function MotherProfileScreen() {
 
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
-          onChangePassword={handleChangePassword}
           onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />

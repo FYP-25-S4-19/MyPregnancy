@@ -15,8 +15,6 @@ import { router, usePathname } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useAuthStore from "@/src/shared/authStore";
 import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
-import api from "@/src/shared/api";
-import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
 import utils from "@/src/shared/utils";
 import {
   KeyboardAvoidingView,
@@ -31,6 +29,7 @@ import {
   View,
   Modal,
 } from "react-native";
+import api from "../shared/api";
 
 interface ThreadScreenProps {
   threadId: number;
@@ -57,8 +56,6 @@ export default function ThreadScreen({
   const me = useAuthStore((state) => state.me);
   const accessToken = useAuthStore((state) => state.accessToken);
   const pathname = usePathname();
-
-  const openGuestGate = useGuestGate((s) => s.open);
 
   const isAuthed = useMemo(() => {
     if (!accessToken) return false;
@@ -270,7 +267,6 @@ export default function ThreadScreen({
             <Text style={threadStyles.backButtonText}>Back</Text>
           </TouchableOpacity>
         )}
-
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={threadStyles.threadCard}>
             <Text style={threadStyles.threadTitle}>{thread.title}</Text>
@@ -351,7 +347,8 @@ export default function ThreadScreen({
                           onPress={handleSaveEditComment}
                           style={[
                             localStyles.saveButton,
-                            (!editingCommentText.trim() || updateCommentMutation.isPending) && localStyles.saveButtonDisabled,
+                            (!editingCommentText.trim() || updateCommentMutation.isPending) &&
+                              localStyles.saveButtonDisabled,
                           ]}
                           disabled={!editingCommentText.trim() || updateCommentMutation.isPending}
                         >
@@ -426,7 +423,6 @@ export default function ThreadScreen({
 
           <View style={{ height: 100 }} />
         </ScrollView>
-
         {/* Comment Input (Guests can see it, but pressing Send triggers modal) */}
         <View style={threadStyles.inputContainer}>
           <TextInput
@@ -445,7 +441,7 @@ export default function ThreadScreen({
           >
             <Text style={localStyles.guestInputText}>Sign in to comment...</Text>
           </TouchableOpacity>
-        ) : (
+          ) : (
           <View style={threadStyles.inputContainer}>
             <TextInput
               style={threadStyles.input}
@@ -473,7 +469,8 @@ export default function ThreadScreen({
               )}
             </TouchableOpacity>
           </View>
-        )}
+        </View>
+        )
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -527,9 +524,20 @@ const localStyles = StyleSheet.create({
     textAlignVertical: "top",
   },
   editActions: { flexDirection: "row", justifyContent: "flex-end", gap: sizes.s, marginTop: sizes.s },
-  cancelButton: { paddingHorizontal: sizes.m, paddingVertical: sizes.s, borderRadius: sizes.s, borderWidth: 1, borderColor: colors.lightGray },
+  cancelButton: {
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.s,
+    borderRadius: sizes.s,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+  },
   cancelButtonText: { fontSize: font.s, color: colors.text },
-  saveButton: { paddingHorizontal: sizes.m, paddingVertical: sizes.s, borderRadius: sizes.s, backgroundColor: colors.primary },
+  saveButton: {
+    paddingHorizontal: sizes.m,
+    paddingVertical: sizes.s,
+    borderRadius: sizes.s,
+    backgroundColor: colors.primary,
+  },
   saveButtonDisabled: { opacity: 0.5 },
   saveButtonText: { fontSize: font.s, color: colors.white, fontWeight: "600" },
 });

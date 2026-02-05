@@ -1,6 +1,6 @@
-import ThreadScreen from "@/src/screens/ThreadScreen";
 import { useLocalSearchParams } from "expo-router";
 import useAuthStore from "@/src/shared/authStore";
+import ThreadScreen from "@/src/screens/ThreadScreen";
 
 export default function ThreadDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();

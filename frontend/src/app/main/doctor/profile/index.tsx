@@ -195,7 +195,6 @@ export default function DoctorProfileScreen() {
 
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
-          onChangePassword={handleChangePassword}
           onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />

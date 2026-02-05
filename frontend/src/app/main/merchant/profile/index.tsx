@@ -179,7 +179,6 @@ export default function MerchantProfileScreen() {
 
         <AccountActionsCard
           onSendFeedback={handleSendFeedback}
-          onChangePassword={handleChangePassword}
           onLogOut={utils.handleSignOut}
           onDeleteAccount={handleDeleteAccount}
         />
