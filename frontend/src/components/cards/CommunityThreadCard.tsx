@@ -1,13 +1,13 @@
 // src/components/cards/CommunityThreadCard.tsx
 
-import useAuthStore from "@/src/shared/authStore";
-import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
-import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
-import { useLikeThread, useUnlikeThread } from "@/src/shared/hooks/useThreads";
-import { ThreadPreviewData } from "@/src/shared/typesAndInterfaces";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { usePathname } from "expo-router";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useLikeThread, useUnlikeThread } from "@/src/shared/hooks/useThreads";
+import { colors, font, shadows, sizes } from "@/src/shared/designSystem";
+import { ThreadPreviewData } from "@/src/shared/typesAndInterfaces";
+import { useGuestGate } from "@/src/shared/hooks/useGuestGate";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import useAuthStore from "@/src/shared/authStore";
+import { usePathname } from "expo-router";
 
 interface CommunityThreadCardProps {
   thread: ThreadPreviewData;
@@ -28,7 +28,7 @@ export default function CommunityThreadCard({
 }: CommunityThreadCardProps) {
   const likeThreadMutation = useLikeThread();
   const unlikeThreadMutation = useUnlikeThread();
-  const openGuestGate = useGuestGate((state) => state.open);
+  // const openGuestGate = useGuestGate((state) => state.open);
 
   const me = useAuthStore((s) => s.me);
   const isLoggedIn = !!me?.id;
