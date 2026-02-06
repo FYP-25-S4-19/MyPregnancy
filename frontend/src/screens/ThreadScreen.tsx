@@ -423,25 +423,9 @@ export default function ThreadScreen({
 
           <View style={{ height: 100 }} />
         </ScrollView>
-        {/* Comment Input (Guests can see it, but pressing Send triggers modal) */}
-        <View style={threadStyles.inputContainer}>
-          <TextInput
-            style={threadStyles.input}
-            placeholder={isAuthed ? "Write a comment..." : "Sign in to comment..."}
-            placeholderTextColor={colors.lightGray}
-            value={commentText}
-            onChangeText={setCommentText}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={localStyles.guestInputContainer}
-            onPress={() => openGuestGate(`/main/(notab)/threads/${threadId}`)}
-            activeOpacity={0.7}
-          >
-            <Text style={localStyles.guestInputText}>Sign in to comment...</Text>
-          </TouchableOpacity>
-          ) : (
+
+        {/* Comment Input */}
+        {isAuthed ? (
           <View style={threadStyles.inputContainer}>
             <TextInput
               style={threadStyles.input}
@@ -469,8 +453,23 @@ export default function ThreadScreen({
               )}
             </TouchableOpacity>
           </View>
-        </View>
-        )
+        ) : (
+          <View style={threadStyles.inputContainer}>
+            <TextInput
+              style={threadStyles.input}
+              placeholder="Sign in to comment..."
+              placeholderTextColor={colors.lightGray}
+              editable={false}
+            />
+            <TouchableOpacity
+              onPress={() => openGuestGate(`/main/(notab)/threads/${threadId}`)}
+              style={threadStyles.sendButton}
+              activeOpacity={0.7}
+            >
+              <Text style={threadStyles.sendButtonText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -540,4 +539,6 @@ const localStyles = StyleSheet.create({
   },
   saveButtonDisabled: { opacity: 0.5 },
   saveButtonText: { fontSize: font.s, color: colors.white, fontWeight: "600" },
+  guestInputContainer: {},
+  guestInputText: {},
 });

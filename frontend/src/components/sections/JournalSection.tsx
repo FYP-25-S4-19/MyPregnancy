@@ -1,5 +1,4 @@
 import { useJournalPreviewData } from "@/src/shared/hooks/useJournalMetrics";
-import { useHeartRate } from "@/src/shared/hooks/useHealthConnectHeartRate";
 import { colors, font, sizes, shadows } from "@/src/shared/designSystem";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
@@ -10,20 +9,6 @@ interface JournalSectionProps {
 
 export default function JournalSection({ doFetchMetrics = false, onEdit }: JournalSectionProps) {
   const { data, isLoading, isFetching, isError } = useJournalPreviewData(new Date());
-  const { heartRateData, isLoading: hrLoading, error: hrError, fetchHeartRate, runDiagnostics } = useHeartRate();
-
-  // Get the latest heart rate reading
-  const latestHeartRate =
-    heartRateData.length > 0 ? heartRateData[heartRateData.length - 1]?.samples?.[0]?.beatsPerMinute : null;
-
-  // Debug logging
-  console.log("Heart Rate Debug:", {
-    recordCount: heartRateData.length,
-    isLoading: hrLoading,
-    error: hrError,
-    latestHeartRate,
-    firstRecord: heartRateData[0],
-  });
 
   if (!doFetchMetrics) {
     return (
@@ -73,7 +58,6 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
         <View>
           <Text style={styles.title}>My Journal</Text>
           <Text style={styles.subtitle}>Tap to write your daily journal!</Text>
-          {hrError && <Text style={{ color: "red", fontSize: font.xs, marginTop: sizes.xs }}>HR Error: {hrError}</Text>}
         </View>
         {onEdit && (
           <TouchableOpacity onPress={onEdit}>
@@ -90,15 +74,7 @@ export default function JournalSection({ doFetchMetrics = false, onEdit }: Journ
           unit=""
         />
         <MetricRow label="Sugar Level" value={data.sugar_level?.toString() || ""} unit="mmol/L" />
-        <MetricRow
-          label="Heart Rate"
-          value={
-            latestHeartRate !== null && latestHeartRate !== undefined
-              ? latestHeartRate.toString()
-              : data.heart_rate?.toString() || ""
-          }
-          unit="bpm"
-        />
+        <MetricRow label="Heart Rate" value={data.heart_rate?.toString() || ""} unit="bpm" />
         <MetricRow label="Weight" value={data.weight?.toString() || ""} unit="kg" />
         <MetricRow label="Kick Counter" value={data.kick_count?.toString() || ""} unit="kicks" />
       </View>

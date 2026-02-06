@@ -576,7 +576,7 @@ class KickTrackerDataPoint(Base):
 class Product(Base):
     __tablename__ = "products"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(255), unique=True)
+    name: Mapped[str] = mapped_column(String(255))
 
     merchant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("merchants.id"))
     merchant: Mapped[Merchant] = relationship(back_populates="products")

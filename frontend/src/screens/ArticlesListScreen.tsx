@@ -180,7 +180,7 @@ export default function ArticlesListScreen({
         const cats = (categoriesQuery.data ?? []).map((c) => c.label);
         const results = await Promise.all(
           cats.map(async (cat) => {
-            const res = await api.get<ArticleOverview[]>(`/articles/?category=${encodeURIComponent(cat)}`);
+            const res = await api.get<ArticleOverview[]>(`/articles?category=${encodeURIComponent(cat)}`);
             return res.data;
           }),
         );
@@ -191,7 +191,7 @@ export default function ArticlesListScreen({
         return Array.from(map.values());
       }
 
-      const res = await api.get<ArticleOverview[]>(`/articles/?category=${encodeURIComponent(selectedCategory)}`);
+      const res = await api.get<ArticleOverview[]>(`/articles?category=${encodeURIComponent(selectedCategory)}`);
       return res.data;
     },
     enabled: selectedCategory === "All" ? !!categoriesQuery.data?.length : true,

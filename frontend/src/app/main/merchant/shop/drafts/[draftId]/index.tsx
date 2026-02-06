@@ -62,7 +62,7 @@ export default function EditProductDraftScreen() {
       }
 
       try {
-        const response = await api.get<ProductDraft>(`/products/drafts/${draftId}/`);
+        const response = await api.get<ProductDraft>(`/products/drafts/${draftId}`);
         const draft = response.data;
         setDraftName(draft.name || "");
         setCategoryId(draft.category_id ? draft.category_id.toString() : null);

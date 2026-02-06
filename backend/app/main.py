@@ -32,13 +32,20 @@ if not settings.APP_ENV:
 
 APP_TITLE: str = "MyPregnancy API"
 app = (
-    FastAPI(title=APP_TITLE, docs_url=None, redoc_url=None, openapi_url=None, default_response_class=UJSONResponse)
+    FastAPI(
+        title=APP_TITLE,
+        redirect_slashes=False,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+        default_response_class=UJSONResponse,
+    )
     if (
         (settings.DOCS_USERNAME and len(settings.DOCS_USERNAME) > 1)
         and (settings.DOCS_PASSWORD and len(settings.DOCS_PASSWORD) > 1)
         and settings.APP_ENV != "dev"  # Unless explicitly set to dev....will protect the docs
     )
-    else FastAPI(title=APP_TITLE)
+    else FastAPI(title=APP_TITLE, redirect_slashes=False)
 )
 app.add_middleware(
     CORSMiddleware,

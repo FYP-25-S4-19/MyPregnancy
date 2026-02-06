@@ -1,11 +1,9 @@
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
-import React from "react";
+import { useSavedArticles } from "@/src/shared/hooks/useArticles";
+import { colors, sizes, font } from "@/src/shared/designSystem";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-import { colors, sizes, font } from "@/src/shared/designSystem";
-import { useSavedArticles } from "@/src/shared/hooks/useArticles";
 
 /* ================= TYPES ================= */
 
