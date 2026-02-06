@@ -127,7 +127,7 @@ export default function DynamicPage() {
       if (pageSlug) {
         try {
           const response = await websiteAPI.getBackgroundImageUrl(pageSlug);
-          console.log("PublicPage S3 URL:", response.data.background_image_url);
+          // console.log("PublicPage S3 URL:", response.data.background_image_url);
           if (response.data.background_image_url) {
             setBackgroundImageUrl(response.data.background_image_url);
           } else {
@@ -290,7 +290,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
     case "navbar":
       return (
         <nav
-          style={{ backgroundColor: section.content.bgColor, color: section.content.textColor }}
+          style={{ backgroundColor: "transparent", color: section.content.textColor }}
           className="px-8 py-4 flex items-center justify-between"
         >
           <div className="font-bold text-lg">{section.content.logo}</div>
@@ -322,7 +322,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
     case "hero":
       return (
         <div
-          style={{ backgroundColor: section.content.bgColor }}
+          style={{ backgroundColor: "transparent" }}
           className="p-12 text-center min-h-screen flex flex-col items-center justify-center"
         >
           <h1 className="text-4xl font-bold text-gray-900 mb-4">{section.content.heading}</h1>
@@ -332,7 +332,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
       );
     case "features":
       return (
-        <div className="bg-white p-12">
+        <div className="bg-transparent p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">{section.content.title}</h2>
           <div className="grid grid-cols-3 gap-8 max-w-6xl mx-auto">
             {section.content.items.map((item: any, idx: number) => (
@@ -350,7 +350,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
       );
     case "about":
       return (
-        <div className="bg-white p-12">
+        <div className="bg-transparent p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">{section.content.title}</h2>
           <p className="text-gray-700 leading-relaxed">{section.content.description}</p>
           {section.content.image && (
@@ -360,7 +360,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
       );
     case "cta":
       return (
-        <div style={{ backgroundColor: section.content.bgColor }} className="p-12 text-center text-white">
+        <div style={{ backgroundColor: "transparent" }} className="p-12 text-center text-white">
           <h2 className="text-3xl font-bold mb-6">{section.content.heading}</h2>
           <button className="px-8 py-3 bg-white text-gray-900 rounded-lg hover:bg-gray-100 transition font-medium">
             {section.content.buttonText}
@@ -369,7 +369,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
       );
     case "faq":
       return (
-        <div className="bg-white p-12">
+        <div className="bg-transparent p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
           <div className="max-w-3xl mx-auto space-y-4">
             {section.content.items.map((item: any, idx: number) => (
@@ -383,7 +383,7 @@ function SectionDisplay({ section, onLoginClick }: any) {
       );
     case "testimonials":
       return (
-        <div className="bg-gray-50 p-12">
+        <div className="bg-transparent p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{section.content.title}</h2>
           {section.content.useBackend ? (
             <div className="max-w-5xl mx-auto">

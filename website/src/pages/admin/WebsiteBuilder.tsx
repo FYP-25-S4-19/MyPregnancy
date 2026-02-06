@@ -368,8 +368,8 @@ export default function WebsiteBuilder() {
 
                       // Fetch the presigned URL to display
                       const response = await websiteAPI.getBackgroundImageUrl(selectedPage);
+                      console.log("Successfully fetched img url:", response.data);
                       const imgUrl = response.data.background_image_url;
-                      // console.log("Successfully fetched img url:", imgUrl);
                       setBackgroundImage(imgUrl);
 
                       alert("Background image uploaded successfully!");
