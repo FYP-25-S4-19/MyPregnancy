@@ -521,8 +521,8 @@ async def get_background_image(slug: str, db: AsyncSession = Depends(get_db)):
         )
 
         return {
-            "background_image_url": s3_url,
-            "s3_key": page.background_image,
+            "background_image_url": page.background_image,
+            # "s3_key": page.background_image,
         }
     except HTTPException:
         raise

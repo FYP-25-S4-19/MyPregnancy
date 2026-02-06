@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { websiteAPI } from "../../lib/api";
 import { Save, Eye, ArrowLeft, Plus, Trash2, Copy, Settings, GripVertical, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ interface Section {
 
 export default function WebsiteBuilder() {
   const editorRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
   const [selectedPage, _] = useState<string>("home");
   const [editor, setEditor] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([
@@ -40,14 +41,28 @@ export default function WebsiteBuilder() {
     queryKey: ["page", selectedPage],
     queryFn: () => websiteAPI.getPage(selectedPage).then((res) => res.data),
     enabled: !!selectedPage,
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Always consider data stale to refetch when navigating back
   });
 
   const currentPage = currentPageData?.page;
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => websiteAPI.updatePage(selectedPage, data),
-    onSuccess: () => {
+    onSuccess: async () => {
       alert("Website saved successfully!");
+      // Invalidate and refetch the page data
+      await queryClient.invalidateQueries({ queryKey: ["page", selectedPage] });
+      // Reload background image to ensure it's in sync
+      try {
+        const response = await websiteAPI.getBackgroundImageUrl(selectedPage);
+        const imgUrl = response.data.s3_key;
+        if (imgUrl) {
+          setBackgroundImage(imgUrl);
+        }
+      } catch (error) {
+        console.error("Failed to reload background image after save:", error);
+      }
     },
     onError: () => {
       alert("Failed to save website");
@@ -103,8 +118,10 @@ export default function WebsiteBuilder() {
       if (selectedPage) {
         try {
           const response = await websiteAPI.getBackgroundImageUrl(selectedPage);
-          if (response.data.background_image_url) {
-            setBackgroundImage(response.data.background_image_url);
+          // Use s3_key which contains the full public URL
+          const imgUrl = response.data.s3_key;
+          if (imgUrl) {
+            setBackgroundImage(imgUrl);
           } else {
             setBackgroundImage("");
           }
@@ -117,6 +134,27 @@ export default function WebsiteBuilder() {
 
     loadBackgroundImage();
   }, [selectedPage]);
+
+  // Load sections from backend when page data is available
+  useEffect(() => {
+    if (currentPage?.sections) {
+      try {
+        const loadedSections = JSON.parse(currentPage.sections);
+        if (Array.isArray(loadedSections) && loadedSections.length > 0) {
+          setSections(loadedSections);
+          // Set first section as selected if none selected (only on initial load)
+          setSelectedSection((current) => {
+            if (!current && loadedSections[0]) {
+              return loadedSections[0].id;
+            }
+            return current;
+          });
+        }
+      } catch (error) {
+        console.error("Failed to parse sections:", error);
+      }
+    }
+  }, [currentPage]);
 
   const sectionTemplates = [
     { type: "navbar", label: "Navbar" },
@@ -368,9 +406,12 @@ export default function WebsiteBuilder() {
 
                       // Fetch the presigned URL to display
                       const response = await websiteAPI.getBackgroundImageUrl(selectedPage);
-                      console.log("Successfully fetched img url:", response.data);
-                      const imgUrl = response.data.background_image_url;
+                      // Use s3_key which contains the full public URL
+                      const imgUrl = response.data.s3_key;
                       setBackgroundImage(imgUrl);
+
+                      // Invalidate query cache to ensure data consistency
+                      await queryClient.invalidateQueries({ queryKey: ["page", selectedPage] });
 
                       alert("Background image uploaded successfully!");
                     } catch (error) {
@@ -396,6 +437,8 @@ export default function WebsiteBuilder() {
                         background_image: null,
                       });
                       setBackgroundImage("");
+                      // Invalidate query cache to ensure data consistency
+                      await queryClient.invalidateQueries({ queryKey: ["page", selectedPage] });
                       alert("Background image removed successfully!");
                     } catch (error) {
                       console.error("Failed to remove background:", error);
