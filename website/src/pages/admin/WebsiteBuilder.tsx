@@ -36,13 +36,6 @@ export default function WebsiteBuilder() {
   const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const { data: pagesData } = useQuery({
-    queryKey: ["admin-pages"],
-    queryFn: () => websiteAPI.getAllPages().then((res) => res.data),
-  });
-
-  const pages = pagesData?.pages || [];
-
   const { data: currentPageData } = useQuery({
     queryKey: ["page", selectedPage],
     queryFn: () => websiteAPI.getPage(selectedPage).then((res) => res.data),
@@ -124,26 +117,6 @@ export default function WebsiteBuilder() {
 
     loadBackgroundImage();
   }, [selectedPage]);
-
-  const handleSave = () => {
-    if (!editor) return;
-
-    const html = editor.getHtml();
-    const css = editor.getCss();
-    const components = JSON.stringify(editor.getComponents());
-    const styles = JSON.stringify(editor.getStyle());
-
-    saveMutation.mutate({
-      grapesjs_html: html,
-      grapesjs_css: css,
-      grapesjs_components: components,
-      grapesjs_styles: styles,
-    });
-  };
-
-  const handlePreview = () => {
-    window.open(`/${selectedPage}`, "_blank");
-  };
 
   const sectionTemplates = [
     { type: "navbar", label: "Navbar" },
@@ -255,51 +228,6 @@ export default function WebsiteBuilder() {
     }
   };
 
-  const moveSection = (id: string, direction: "up" | "down") => {
-    const index = sections.findIndex((s) => s.id === id);
-    if (direction === "up" && index > 0) {
-      const newSections = [...sections];
-      [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]];
-      setSections(newSections);
-    } else if (direction === "down" && index < sections.length - 1) {
-      const newSections = [...sections];
-      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-      setSections(newSections);
-    }
-  };
-
-  const handleDragStart = (id: string) => {
-    setDraggedSectionId(id);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (targetId: string) => {
-    if (!draggedSectionId || draggedSectionId === targetId) {
-      setDraggedSectionId(null);
-      return;
-    }
-
-    const draggedIndex = sections.findIndex((s) => s.id === draggedSectionId);
-    const targetIndex = sections.findIndex((s) => s.id === targetId);
-
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-      const newSections = [...sections];
-      const [draggedSection] = newSections.splice(draggedIndex, 1);
-      newSections.splice(targetIndex, 0, draggedSection);
-      setSections(newSections);
-    }
-
-    setDraggedSectionId(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedSectionId(null);
-  };
-
   if (showPreview) {
     return (
       <div
@@ -326,7 +254,7 @@ export default function WebsiteBuilder() {
   const handleSaveWebsite = () => {
     saveMutation.mutate({
       sections: sections,
-      // background_image is now handled separately via S3 upload
+      background_image: backgroundImage,
     });
   };
 
@@ -440,7 +368,9 @@ export default function WebsiteBuilder() {
 
                       // Fetch the presigned URL to display
                       const response = await websiteAPI.getBackgroundImageUrl(selectedPage);
-                      setBackgroundImage(response.data.background_image_url);
+                      const imgUrl = response.data.background_image_url;
+                      // console.log("Successfully fetched img url:", imgUrl);
+                      setBackgroundImage(imgUrl);
 
                       alert("Background image uploaded successfully!");
                     } catch (error) {

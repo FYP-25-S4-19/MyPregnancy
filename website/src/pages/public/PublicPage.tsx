@@ -127,7 +127,7 @@ export default function DynamicPage() {
       if (pageSlug) {
         try {
           const response = await websiteAPI.getBackgroundImageUrl(pageSlug);
-          console.log("URL:", response.data.background_image_url);
+          console.log("PublicPage S3 URL:", response.data.background_image_url);
           if (response.data.background_image_url) {
             setBackgroundImageUrl(response.data.background_image_url);
           } else {
@@ -168,6 +168,7 @@ export default function DynamicPage() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
+        // minHeight: "100vh",
       }}
     >
       {/* Fixed Login Button - Top Right */}
@@ -208,7 +209,7 @@ export default function DynamicPage() {
             {/* Error Alert */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
-                <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-red-700 text-sm font-medium">Login Failed</p>
                   <p className="text-red-600 text-sm mt-1">{error}</p>
@@ -285,8 +286,6 @@ export default function DynamicPage() {
 }
 
 function SectionDisplay({ section, onLoginClick }: any) {
-  const navigate = useNavigate();
-
   switch (section.type) {
     case "navbar":
       return (

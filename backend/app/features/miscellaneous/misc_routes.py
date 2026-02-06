@@ -503,7 +503,7 @@ async def upload_background_image(
 
 @router.get("/pages/{slug}/background-image")
 async def get_background_image(slug: str, db: AsyncSession = Depends(get_db)):
-    """Get a presigned URL for a page's background image"""
+    """Get the direct S3 URL for a page's background image"""
     try:
         # Get page
         result = await db.execute(select(Page).filter(Page.slug == slug))
@@ -515,14 +515,13 @@ async def get_background_image(slug: str, db: AsyncSession = Depends(get_db)):
         if not page.background_image:
             return {"background_image_url": None, "message": "No background image set for this page"}
 
-        # Generate presigned URL (valid for 1 hour)
-        presigned_url = S3StorageInterface.get_presigned_url(page.background_image, expires_in_seconds=3600)
-
-        if not presigned_url:
-            raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
+        # The "page.background_image" stores the S3 key of the image
+        s3_url = (
+            f"https://{settings.S3_BUCKET_NAME}.s3.{settings.S3_BUCKET_REGION}.amazonaws.com/{page.background_image}"
+        )
 
         return {
-            "background_image_url": presigned_url,
+            "background_image_url": s3_url,
             "s3_key": page.background_image,
         }
     except HTTPException:
