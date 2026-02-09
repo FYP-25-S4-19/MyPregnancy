@@ -1,7 +1,6 @@
-"""
-Risk prediction API endpoints.
+"""Risk prediction API endpoints."""
 
-"""
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -25,7 +24,70 @@ MODEL_PATH = MODELS_DIR / "risk_model.joblib"
 SCALER_PATH = MODELS_DIR / "risk_scaler.joblib"
 
 
-def load_model_artifacts():
+def _rule_based_risk_override(*, systolic_bp: float, diastolic_bp: float, bs: float, heart_rate: float) -> str | None:
+    """Clinical heuristics override.
+
+    Mirrors the rules used during training label derivation in `app/ml/train_risk_model.py`.
+
+    Returns: "high" | "mid" | None
+    """
+
+    # High-risk overrides
+    if bs < 4.0:
+        return "high"
+    if heart_rate > 120:
+        return "high"
+    if systolic_bp > 160 or diastolic_bp > 100:
+        return "high"
+    if systolic_bp < 80 or diastolic_bp < 50:
+        return "high"
+
+    # Mid-risk overrides
+    if 100 < heart_rate <= 120:
+        return "mid"
+    if systolic_bp > 140 or diastolic_bp > 90:
+        return "mid"
+    if systolic_bp < 90 or diastolic_bp < 60:
+        return "mid"
+
+    return None
+
+
+def _more_severe_risk(a: str, b: str) -> str:
+    order = {"low": 0, "mid": 1, "high": 2}
+    return a if order.get(a, 0) >= order.get(b, 0) else b
+
+
+def _build_features_df(request: RiskPredictionRequest):
+    """Build a single-row DataFrame of features for model/scaler.
+
+    Supports both:
+    - newer artifacts trained on [Age,SystolicBP,DiastolicBP,BS,HeartRate]
+    - older artifacts trained on [Age,MeanBP,BS,HeartRate]
+    """
+
+    import pandas as pd
+
+    sbp = float(request.systolic_bp)
+    dbp = float(request.diastolic_bp)
+    mean_bp = (sbp + dbp) / 2.0
+
+    df = pd.DataFrame(
+        [
+            {
+                "Age": float(request.age),
+                "SystolicBP": sbp,
+                "DiastolicBP": dbp,
+                "MeanBP": mean_bp,
+                "BS": float(request.bs),
+                "HeartRate": float(request.heart_rate),
+            }
+        ]
+    )
+    return df, mean_bp
+
+
+def load_model_artifacts() -> None:
     """Load model and scaler from disk (once)."""
     global _MODEL, _SCALER, _LOAD_ERROR
 
@@ -59,88 +121,101 @@ def load_model_artifacts():
     description="Predict high-risk pregnancy based on vital signs and health metrics",
 )
 async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
-    # Load model on first call
     load_model_artifacts()
 
     if _MODEL is None or _SCALER is None:
-        logger.error(f"Model not available: {_LOAD_ERROR}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=_LOAD_ERROR or "Risk prediction model not available. Please train the model first.",
         )
 
     try:
-        # Calculate mean blood pressure
-        mean_bp = (request.systolic_bp + request.diastolic_bp) / 2.0
+        features_df, mean_bp = _build_features_df(request)
 
-        # Prepare features as DataFrame to preserve feature names
-        import pandas as pd
-
-        features_df = pd.DataFrame(
-            [
-                {
-                    "Age": float(request.age),
-                    "MeanBP": float(mean_bp),
-                    "BS": float(request.bs),
-                    "HeartRate": float(request.heart_rate),
-                }
-            ]
-        )
-
-        # Reindex to scaler feature order if available (prevents sklearn warnings)
+        # Align to scaler's expected feature order, if available.
         if hasattr(_SCALER, "feature_names_in_"):
-            features_df = features_df.reindex(columns=list(getattr(_SCALER, "feature_names_in_")))
+            expected = list(getattr(_SCALER, "feature_names_in_"))
+            features_df = features_df.reindex(columns=expected)
 
-        logger.info(f"Input features for prediction: {features_df.to_dict(orient='records')[0]}")
+            # Backfill any NaNs introduced by reindexing.
+            backfill = {
+                "Age": float(request.age),
+                "SystolicBP": float(request.systolic_bp),
+                "DiastolicBP": float(request.diastolic_bp),
+                "MeanBP": float(mean_bp),
+                "BS": float(request.bs),
+                "HeartRate": float(request.heart_rate),
+            }
+            for col, value in backfill.items():
+                if col in features_df.columns and features_df[col].isna().any():
+                    features_df[col] = value
 
-        # Scale features using the loaded scaler
+        logger.info("Input features for prediction: {}", features_df.to_dict(orient="records")[0])
+
+        # Scale features
         features_scaled = _SCALER.transform(features_df)
 
-        # Get raw prediction
+        # Predict
         pred = int(_MODEL.predict(features_scaled)[0])
 
-        # Map numeric classes to labels using label map if present
+        # Label mapping
         label_map_path = MODELS_DIR / "risk_label_map.joblib"
         if label_map_path.exists():
             num_to_label = {v: k for k, v in joblib.load(label_map_path).items()}
         else:
             num_to_label = {0: "low", 1: "mid", 2: "high"}
 
-        # Compute per-class probabilities
-        class_probs = {"low": 0.0, "mid": 0.0, "high": 0.0}
+        # Probabilities (if available)
+        model_probs = {"low": 0.0, "mid": 0.0, "high": 0.0}
         if hasattr(_MODEL, "predict_proba"):
             probs = _MODEL.predict_proba(features_scaled)[0]
             for class_idx, prob in zip(_MODEL.classes_, probs):
                 label = num_to_label.get(int(class_idx), str(class_idx))
-                class_probs[label] = float(prob)
+                model_probs[label] = float(prob)
         else:
-            # Fallback: set predicted class probability to 1.0
             label = num_to_label.get(pred, str(pred))
-            class_probs[label] = 1.0
+            model_probs[label] = 1.0
 
-        # Determine risk level and probability
-        risk_level = max(class_probs, key=lambda k: class_probs[k])
+        risk_level = max(model_probs, key=lambda k: model_probs[k])
+
+        # Clinical override so extreme SBP/DBP can't be masked by MeanBP.
+        override_level = _rule_based_risk_override(
+            systolic_bp=float(request.systolic_bp),
+            diastolic_bp=float(request.diastolic_bp),
+            bs=float(request.bs),
+            heart_rate=float(request.heart_rate),
+        )
+        if override_level is not None:
+            risk_level = _more_severe_risk(risk_level, override_level)
+
+        # Keep probabilities consistent with final risk level when overridden.
+        if override_level is not None and risk_level in {"mid", "high"}:
+            class_probs = {"low": 0.0, "mid": 0.0, "high": 0.0}
+            class_probs[risk_level] = 1.0
+        else:
+            class_probs = model_probs
+
         risk_probability = float(class_probs.get("high", 0.0))
         is_high_risk = risk_level == "high"
 
-        # Message: exact text for high risk
         if risk_level == "high":
             message = "go to nearby hospital for checkup"
         else:
             message = f"{risk_level.capitalize()} risk assessment. Please follow up as needed."
 
-        response_data = {
-            "risk_level": risk_level,
-            "probabilities": class_probs,
-            "message": message,
-            "mean_bp": float(mean_bp),
-            "is_high_risk": is_high_risk,
-            "risk_probability": risk_probability,
-        }
-
-        logger.info(f"Risk prediction response (pre-validate): {response_data}")
-
-        return JSONResponse(status_code=status.HTTP_200_OK, content=response_data)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "risk_level": risk_level,
+                "probabilities": class_probs,
+                "model_probabilities": model_probs,
+                "rule_override": override_level,
+                "message": message,
+                "mean_bp": float(mean_bp),
+                "is_high_risk": is_high_risk,
+                "risk_probability": risk_probability,
+            },
+        )
 
     except Exception as e:
         logger.exception(f"Risk prediction error: {str(e)}")
@@ -152,7 +227,7 @@ async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
             "is_high_risk": False,
             "risk_probability": 0.0,
         }
-        logger.info("Returning safe fallback after exception: %s", safe)
+        logger.info("Returning safe fallback after exception: {}", safe)
         return JSONResponse(status_code=status.HTTP_200_OK, content=safe)
 
 
@@ -163,9 +238,7 @@ async def predict_risk(request: RiskPredictionRequest) -> JSONResponse:
     description="Check if risk prediction model is loaded and available",
 )
 async def health_check():
-    """Check if risk model is available."""
     load_model_artifacts()
-
     return {
         "status": "healthy" if _MODEL is not None and _SCALER is not None else "unavailable",
         "model_loaded": _MODEL is not None,
