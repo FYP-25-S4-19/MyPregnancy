@@ -1,5 +1,5 @@
-import useAuthStore from "@/src/shared/authStore";
 import { useProtectedRoute } from "@/src/shared/hooks/useProtectedRoute";
+import useAuthStore from "@/src/shared/authStore";
 import { Stack } from "expo-router";
 
 export default function MainLayout() {

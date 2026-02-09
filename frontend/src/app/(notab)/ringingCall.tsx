@@ -1,9 +1,9 @@
 import { CallingState, RingingCallContent, StreamCall, useCalls } from "@stream-io/video-react-native-sdk";
 import { SafeAreaView } from "react-native-safe-area-context";
+import IncomingCall from "@/src/screens/IncomingCallScreen";
 import { StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import IncomingCall from "@/src/screens/IncomingCallScreen";
 
 export default function RingingScreen() {
   const allRingingCalls = useCalls().filter((c) => c.state.callingState === CallingState.RINGING);

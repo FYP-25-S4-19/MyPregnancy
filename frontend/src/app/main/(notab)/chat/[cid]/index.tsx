@@ -13,17 +13,17 @@ import { Channel as ChannelElement, MessageInput, MessageList, useChatContext } 
 import ConsultationMessageFooter from "@/src/components/ConsultationMessageFooter";
 import { useStreamVideoClient } from "@stream-io/video-react-native-sdk";
 import ConsultRequestChip from "@/src/components/ConsultRequestChip";
+import { colors, sizes, font } from "@/src/shared/designSystem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ChatHeader from "@/src/components/headers/ChatHeader";
-import { colors, sizes, font } from "@/src/shared/designSystem";
+import React, { useState, useMemo, useEffect } from "react";
 import { Calendar, DateData } from "react-native-calendars";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import useAuthStore from "@/src/shared/authStore";
-import React, { useState, useMemo, useEffect } from "react";
 import utils from "@/src/shared/utils";
 import uuid from "react-native-uuid";
 import api from "@/src/shared/api";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 const AVAILABILITY_CONFIG = {
   START_HOUR: 8, // 8am
@@ -220,11 +220,15 @@ You'll be notified when they respond.
   // Only doctors can initiate calls
   const callPressHandler = isDoctor
     ? async (isVideo: boolean): Promise<void> => {
+        console.log("Call pressed!");
         if (!streamVideoClient?.state.connectedUser?.id || !otherMember.id) {
           return;
         }
+        console.log("Valid stream client");
 
         const call = streamVideoClient.call("default", uuid.v4(), { reuseInstance: false });
+        // console.log("Call obj: ", call);
+        // console.log("About to create call....");
         await call.getOrCreate({
           ring: true,
           video: isVideo,
@@ -232,6 +236,7 @@ You'll be notified when they respond.
             members: [{ user_id: streamVideoClient.state.connectedUser.id }, { user_id: otherMember.id }],
           },
         });
+        console.log("Call created and ringing!");
       }
     : undefined;
 
