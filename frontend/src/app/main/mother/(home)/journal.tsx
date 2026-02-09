@@ -1035,9 +1035,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   kickBtnActive: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: colors.primary,
+    backgroundColor: colors.fail,
   },
   kickBtnText: {
     color: colors.white,
