@@ -161,7 +161,7 @@ export default function AddRecipeScreen() {
         createdDraftId = draftIdToUpdate;
       } else {
         // Create new draft
-        const response = await api.post(`/recipes/drafts/`, draftPayload);
+        const response = await api.post(`/recipes/drafts`, draftPayload);
         createdDraftId = response.data.id;
       }
 
@@ -264,7 +264,7 @@ export default function AddRecipeScreen() {
           }
 
           // console.log("About to POST recipe data...", formData);
-          await api.post(`/recipes/`, formData, {
+          await api.post(`/recipes`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
           Alert.alert("Success", "Recipe created successfully");

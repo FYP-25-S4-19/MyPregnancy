@@ -30,7 +30,7 @@ export default function NutritionistRecipeDraftsScreen() {
   const fetchDrafts = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get<DraftRecipe[]>("/recipes/drafts/");
+      const res = await api.get<DraftRecipe[]>("/recipes/drafts");
       setDrafts(res.data);
     } catch (err) {
       console.log("Failed to fetch drafts", err);

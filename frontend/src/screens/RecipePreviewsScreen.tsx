@@ -3,7 +3,6 @@ import { useSaveRecipe, useUnsaveRecipe } from "../shared/hooks/useRecipes";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, sizes } from "../shared/designSystem";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import RecipeCard from "../components/cards/RecipeCard";
 import { router } from "expo-router";
 import { useState } from "react";

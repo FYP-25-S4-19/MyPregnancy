@@ -190,7 +190,7 @@ export default function IndividualChatScreen() {
 
     setIsBooking(true);
     try {
-      const res = await api.post("/appointments/", {
+      const res = await api.post("/appointments", {
         doctor_id: otherMember.id,
         start_time: selectedTimeSlot.datetime.toISOString(),
       });

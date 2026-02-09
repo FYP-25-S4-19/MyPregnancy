@@ -31,7 +31,7 @@ export const useAllAppointments = () => {
   return useQuery({
     queryKey: ["appointments"],
     queryFn: async (): Promise<AppointmentData[]> => {
-      const response = await api.get<AppointmentData[]>("/appointments/");
+      const response = await api.get<AppointmentData[]>("/appointments");
       return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

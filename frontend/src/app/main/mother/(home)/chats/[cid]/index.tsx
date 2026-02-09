@@ -37,7 +37,7 @@ const ConsultRequestChip = ({ channel }: { channel: ChannelType }) => {
     try {
       const today = new Date();
       const startDatetime = new Date(today.setDate(today.getDate() + 7));
-      const res = await api.post("/appointments/", {
+      const res = await api.post("/appointments", {
         doctor_id: doctor.id,
         start_time: startDatetime.toISOString(),
       });
