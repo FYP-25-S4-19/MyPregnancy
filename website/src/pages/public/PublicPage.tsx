@@ -145,10 +145,14 @@ export default function DynamicPage() {
 
   // If root (/) has no website-builder data, fall back to static /home
   useEffect(() => {
-    if (!slug && pageError) {
-      navigate("/home", { replace: true });
+    if (!slug && !isLoading) {
+      // Check if there's an error or if the page data is empty (no content)
+      const hasContent = pageData?.page?.sections && pageData.page.sections.length > 0;
+      if (pageError || !hasContent) {
+        navigate("/home", { replace: true });
+      }
     }
-  }, [slug, pageError, navigate]);
+  }, [slug, isLoading, pageError, pageData, navigate]);
 
   // useEffect(() => {
   //   console.log("Init!");
