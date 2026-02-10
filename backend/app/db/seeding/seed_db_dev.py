@@ -23,6 +23,7 @@ from app.db.seeding.generators.defaults_generator import DefaultsGenerator
 from app.db.seeding.generators.edu_articles_generator import EduArticlesGenerator
 from app.db.seeding.generators.journal_and_metrics_generator import JournalAndMetricsGenerator
 from app.db.seeding.generators.misc_generator import MiscGenerator
+from app.db.seeding.generators.notifications_generator import NotificationsGenerator
 from app.db.seeding.generators.recipes_generator import RecipesGenerator
 from app.db.seeding.generators.users_generator import UsersGenerator
 from app.shared.utils import clear_db
@@ -86,7 +87,7 @@ if __name__ == "__main__":
             db_session, faker, all_users, all_community_threads, 25
         )
         CommunityThreadGenerator.generate_thread_likes(db_session, all_users, all_community_threads)
-        CommunityThreadGenerator.generate_comment_likes(db_session, preg_women, all_thread_comments)
+        all_comment_likes = CommunityThreadGenerator.generate_comment_likes(db_session, preg_women, all_thread_comments)
         print("Finished seeding forum content!\n")
 
         # ---- Generation of journal entries (and corresponding 'random' metric logs) -----
@@ -115,6 +116,9 @@ if __name__ == "__main__":
             db_session, preg_women, nutritionists, faker, "./seed_data/recipes/_data.json"
         )
         print("Finished seeding all recipes!\n")
+
+        db_session.flush()
+        NotificationsGenerator.generate_comment_likes_notifs(db_session, faker, all_comment_likes)
 
         # ------- Generation of miscellaneous content -------
         MiscGenerator.generate_user_app_feedback(db_session, faker, all_users, 0.25)

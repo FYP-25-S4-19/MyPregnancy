@@ -20,7 +20,7 @@ class ThreadCommentNotificationPreset(NotificationPreset):
 
 
 class CommentLikeNotificationPreset(NotificationPreset):
-    sender_name: Optional[str] = None
+    liker_name: Optional[str] = None
     thread_title: Optional[str] = None
 
 
@@ -125,7 +125,7 @@ def get_rand_thread_comment_notif(
     )
 
 
-def get_rand_comment_like_notif(sender_name: str, thread_title: str) -> CommentLikeNotificationPreset:
+def get_rand_comment_like_notif(liker_name: str, thread_title: str) -> CommentLikeNotificationPreset:
     presets = [
         CommentLikeNotificationPreset(
             title="Someone liked your comment",
@@ -137,7 +137,7 @@ def get_rand_comment_like_notif(sender_name: str, thread_title: str) -> CommentL
         ),
         CommentLikeNotificationPreset(
             title="Nice reaction!",
-            body='{sender_name} liked your comment on "{thread_title}".',
+            body='{liker_name} liked your comment on "{thread_title}".',
         ),
         CommentLikeNotificationPreset(
             title="Your comment got a like",
@@ -149,12 +149,12 @@ def get_rand_comment_like_notif(sender_name: str, thread_title: str) -> CommentL
         ),
     ]
     preset = random.choice(presets)
-    formatted_title = preset.title.format(sender_name=sender_name, thread_title=thread_title)
-    formatted_body = preset.body.format(sender_name=sender_name, thread_title=thread_title)
+    formatted_title = preset.title.format(liker_name=liker_name, thread_title=thread_title)
+    formatted_body = preset.body.format(liker_name=liker_name, thread_title=thread_title)
     return CommentLikeNotificationPreset(
         title=formatted_title,
         body=formatted_body,
-        sender_name=sender_name,
+        liker_name=liker_name,
         thread_title=thread_title,
     )
 

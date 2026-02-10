@@ -69,7 +69,7 @@ class CommunityThreadGenerator:
 
         all_thread_comments: list[ThreadComment] = []
         for community_thread in all_community_threads:
-            num_comments = random.randint(0, max_comments_per_thread)
+            num_comments = max_comments_per_thread
             for _ in range(num_comments):
                 comment = ThreadComment(
                     thread=community_thread,
@@ -96,12 +96,17 @@ class CommunityThreadGenerator:
     @staticmethod
     def generate_comment_likes(
         db: Session, all_mothers: list[PregnantWoman], all_thread_comments: list[ThreadComment]
-    ) -> None:
+    ) -> list[CommentLike]:
         print("Generating comment likes.....")
 
+        all_comment_likes: list[CommentLike] = []
         for comment in all_thread_comments:
             num_likes: int = random.randint(0, len(all_mothers))
             random_likers: list[PregnantWoman] = random.sample(all_mothers, num_likes)
             for mother in random_likers:
-                comment.comment_likes.append(CommentLike(comment=comment, liker=mother))
+                cl = CommentLike(comment=comment, liker=mother)
+                all_comment_likes.append(cl)
+                comment.comment_likes.append(cl)
                 db.add(comment)
+
+        return all_comment_likes
