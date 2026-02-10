@@ -352,7 +352,7 @@ export const useCreateThread = () => {
 
   return useMutation({
     mutationFn: async (threadData: CreateThreadData) => {
-      const response = await api.post("/threads/", threadData);
+      const response = await api.post("/threads", threadData);
       return response.data;
     },
     onSuccess: () => {

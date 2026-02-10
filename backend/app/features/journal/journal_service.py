@@ -157,11 +157,12 @@ class JournalService:
         # 1. Check for Existing Entry (Eager load relationships for update/create)
         stmt = (
             select(JournalEntry)
-            .where(JournalEntry.author_id == mother_id, JournalEntry.logged_on == entry_date)
             .options(
-                selectinload(JournalEntry.journal_binary_metric_logs),
-                selectinload(JournalEntry.journal_scalar_metric_logs),
+                selectinload(JournalEntry.author),
+                selectinload(JournalEntry.journal_binary_metric_logs).joinedload(JournalBinaryMetricLog.binary_metric),
+                selectinload(JournalEntry.journal_scalar_metric_logs).joinedload(JournalScalarMetricLog.scalar_metric),
             )
+            .where(JournalEntry.author_id == mother_id, JournalEntry.logged_on == entry_date)
         )
         result = await self.db.execute(stmt)
         entry = result.scalars().first()
@@ -176,6 +177,9 @@ class JournalService:
             )
             self.db.add(entry)
             await self.db.flush()
+
+            # Refresh the entry with eager loading to prevent greenlet spawn errors
+            await self.db.refresh(entry, ["journal_binary_metric_logs", "journal_scalar_metric_logs"])
 
         if request.content is not None:
             entry.content = request.content
