@@ -94,6 +94,9 @@ const LandingPage: React.FC = () => {
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:ital,wght@0,700;0,900;1,400&display=swap');
+          html {
+            scroll-behavior: smooth;
+          }
           .font-serif-brand { font-family: 'Merriweather', serif; }
           .font-sans-brand { font-family: 'DM Sans', sans-serif; }
         `}
@@ -108,13 +111,18 @@ const LandingPage: React.FC = () => {
           </div>
 
           <nav className="hidden md:flex items-center gap-8 lg:gap-12 absolute left-1/2 -translate-x-1/2">
-            {["About Us", "Features", "How It Works", "FAQ", "Reviews"].map((link) => (
+            {[
+              { name: "About Us", href: "#about-us" },
+              { name: "Features", href: "#features" },
+              { name: "How It Works", href: "#how-it-works" },
+              { name: "FAQ", href: "#faq" },
+            ].map((link) => (
               <a
-                key={link}
-                href="#"
+                key={link.name}
+                href={link.href}
                 className="font-sans-brand font-bold text-[#592E2E] text-sm lg:text-base hover:text-[#8a4a4a] transition-colors"
               >
-                {link}
+                {link.name}
               </a>
             ))}
           </nav>
@@ -154,7 +162,7 @@ const LandingPage: React.FC = () => {
       </main>
 
       {/* --- About Us Section --- */}
-      <section className="w-full px-6 py-20 md:py-32">
+      <section id="about-us" className="w-full px-6 py-20 md:py-32">
         <div className="max-w-7xl mx-auto">
           <h2 className="font-serif-brand font-bold text-4xl md:text-5xl text-[#592E2E] text-center mb-16">About Us</h2>
 
@@ -355,7 +363,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* --- Features Section --- */}
-      <section className="w-full px-6 py-20 bg-white/30 backdrop-blur-sm">
+      <section id="features" className="w-full px-6 py-20 bg-white/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto text-center">
           {/* Header */}
           <div className="mb-16">
@@ -418,7 +426,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       {/* --- How It Works Section --- */}
-      <section className="w-full px-6 py-20 relative overflow-hidden">
+      <section id="how-it-works" className="w-full px-6 py-20 relative overflow-hidden">
         {/* Decorative Background Blobs */}
         <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-[#fae6e6] rounded-full mix-blend-multiply filter blur-3xl opacity-70 -z-10"></div>
         <div className="absolute top-1/3 right-0 w-[30rem] h-[30rem] bg-[#fcecec] rounded-full mix-blend-multiply filter blur-3xl opacity-70 -z-10"></div>
@@ -496,7 +504,10 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       {/* --- FAQ Section --- */}
-      <section className="w-full px-6 py-20 relative overflow-hidden flex flex-col items-center justify-center bg-white/30 backdrop-blur-sm">
+      <section
+        id="faq"
+        className="w-full px-6 py-20 relative overflow-hidden flex flex-col items-center justify-center bg-white/30 backdrop-blur-sm"
+      >
         {/* Background Blobs (Rotated positions for variety) */}
         <div className="absolute top-0 right-0 -translate-y-1/2 w-[40rem] h-[40rem] bg-[#ffe4e4] rounded-full mix-blend-multiply filter blur-3xl opacity-60 -z-10"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/3 w-96 h-96 bg-[#ffd1d1] rounded-full mix-blend-multiply filter blur-3xl opacity-60 -z-10"></div>

@@ -1,7 +1,6 @@
 import json
 
 from faker import Faker
-from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
 from app.db.db_schema import CommentLike, Notification, NotificationType
