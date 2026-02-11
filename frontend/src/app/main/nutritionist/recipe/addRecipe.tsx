@@ -141,17 +141,46 @@ export default function AddRecipeScreen() {
   /* ==================== SUBMIT DRAFT ==================== */
   const submitDraft = async (draftIdToUpdate?: number): Promise<number | null> => {
     try {
-      const draftPayload = {
-        name: formState.name || null,
-        description: formState.description || null,
-        ingredients: formState.ingredients || null,
-        instructions_markdown: formState.instructions || null,
-        est_calories: formState.estCalories || null,
-        pregnancy_benefit: formState.pregnancyBenefit || null,
-        serving_count: formState.servingCount || null,
-        trimester: formState.trimester || null,
-        category_id: formState.categoryID || null,
+      const draftPayload: any = {
+        name: null,
+        description: null,
+        ingredients: null,
+        instructions_markdown: null,
+        est_calories: null,
+        pregnancy_benefit: null,
+        serving_count: null,
+        trimester: null,
+        category_id: null,
       };
+
+      // Only include fields that have meaningful values
+      if (formState.name && formState.name.trim() !== "") {
+        draftPayload.name = formState.name;
+      }
+      if (formState.description && formState.description.trim() !== "") {
+        draftPayload.description = formState.description;
+      }
+      if (formState.ingredients && formState.ingredients.trim() !== "") {
+        draftPayload.ingredients = formState.ingredients;
+      }
+      if (formState.instructions && formState.instructions.trim() !== "") {
+        draftPayload.instructions_markdown = formState.instructions;
+      }
+      if (formState.estCalories && formState.estCalories.trim() !== "") {
+        draftPayload.est_calories = formState.estCalories;
+      }
+      if (formState.pregnancyBenefit && formState.pregnancyBenefit.trim() !== "") {
+        draftPayload.pregnancy_benefit = formState.pregnancyBenefit;
+      }
+      if (formState.servingCount && formState.servingCount > 0) {
+        draftPayload.serving_count = formState.servingCount;
+      }
+      if (formState.trimester && formState.trimester >= 1 && formState.trimester <= 3) {
+        draftPayload.trimester = formState.trimester;
+      }
+      if (formState.categoryID && formState.categoryID > 0) {
+        draftPayload.category_id = formState.categoryID;
+      }
 
       let createdDraftId: number | null = null;
 
@@ -180,8 +209,10 @@ export default function AddRecipeScreen() {
       }
 
       return createdDraftId;
-    } catch (err) {
+    } catch (err: any) {
       console.log("Error submitting draft", err);
+      console.log("Error response:", err.response?.data);
+      console.log("Error status:", err.response?.status);
       throw err;
     }
   };
@@ -271,9 +302,11 @@ export default function AddRecipeScreen() {
           router.back();
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.log("Error submitting recipe", err);
-      Alert.alert("Error", "Failed to save recipe");
+      console.log("Error response:", err.response?.data);
+      console.log("Error status:", err.response?.status);
+      Alert.alert("Error", `Failed to save recipe: ${err.response?.data?.detail || err.message || "Unknown error"}`);
     } finally {
       setLoading(false);
     }

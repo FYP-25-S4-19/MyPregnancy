@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  ImageBackground,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ImageBackground, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import { colors, sizes, font, shadows } from "@/src/shared/designSystem";
 
@@ -48,14 +41,6 @@ export default function WhoAreYouJoiningAsScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.btnOutlineText}>I'm a Specialist</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.adminLinkWrap}
-          onPress={() => console.log("Admin Login pressed")}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.adminLink}>Admin Login →</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>

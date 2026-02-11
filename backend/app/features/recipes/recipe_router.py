@@ -49,99 +49,11 @@ async def get_recipe_previews(
     return await service.get_recipe_previews(limit, user, cursor)
 
 
-@recipe_router.post("", status_code=status.HTTP_201_CREATED)
-async def create_recipe(
-    name: str = Form(...),
-    instructions: str = Form(...),
-    ingredients: str = Form(...),
-    description: str = Form(...),
-    est_calories: str = Form(...),
-    pregnancy_benefit: str = Form(...),
-    serving_count: int = Form(...),
-    trimester: int = Form(...),
-    category_id: int = Form(...),
-    image_file: UploadFile = File(),
-    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
-    db: AsyncSession = Depends(get_db),
-    service: RecipeService = Depends(get_recipe_service),
-):
-    try:
-        await service.create_recipe(
-            name,
-            instructions,
-            ingredients,
-            description,
-            est_calories,
-            pregnancy_benefit,
-            int(serving_count),
-            int(trimester),
-            int(category_id),
-            image_file,
-            nutritionist,
-        )
-        await db.commit()
-    except:
-        await db.rollback()
-        raise
-
-
-@recipe_router.get("/{recipe_id}", response_model=RecipeDetailedResponse)
-async def get_recipe_by_id(
-    recipe_id: int,
-    user: User | None = Depends(optional_current_active_user),
-    service: RecipeService = Depends(get_recipe_service),
-) -> RecipeDetailedResponse:
-    return await service.get_recipe_by_id(recipe_id, user)
-
-
-@recipe_router.post("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_recipe(
-    recipe_id: int,
-    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
-    service: RecipeService = Depends(get_recipe_service),
-    db: AsyncSession = Depends(get_db),
-):
-    try:
-        await service.delete_recipe(recipe_id, nutritionist.id)
-        await db.commit()
-    except:
-        await db.rollback()
-        raise
-
-
-@recipe_router.post("/{recipe_id}/save", status_code=status.HTTP_204_NO_CONTENT)
-async def save_recipe(
-    recipe_id: int,
-    user: User = Depends(current_active_user),
-    service: RecipeService = Depends(get_recipe_service),
-    db: AsyncSession = Depends(get_db),
-):
-    try:
-        await service.save_recipe(recipe_id, user.id)
-        await db.commit()
-    except:
-        await db.rollback()
-        raise
-
-
-@recipe_router.delete("/{recipe_id}/save", status_code=status.HTTP_204_NO_CONTENT)
-async def unsave_recipe(
-    recipe_id: int,
-    user: User = Depends(current_active_user),
-    service: RecipeService = Depends(get_recipe_service),
-    db: AsyncSession = Depends(get_db),
-):
-    try:
-        await service.unsave_recipe(recipe_id, user.id)
-        await db.commit()
-    except:
-        await db.rollback()
-        raise
-
-
 # =================================================================
 # ====================== DRAFT ENDPOINTS ==========================
 # =================================================================
+# NOTE: Draft endpoints MUST come before parameterized routes like /{recipe_id}
+# to prevent FastAPI from matching /drafts to /{recipe_id}
 
 
 @recipe_router.post("/drafts", status_code=status.HTTP_201_CREATED, response_model=RecipeDraftResponse)
@@ -236,6 +148,101 @@ async def publish_recipe_draft(
         recipe = await service.publish_recipe_draft(draft_id, nutritionist)
         await db.commit()
         return {"message": "Recipe published successfully", "recipe_id": recipe.id}
+    except:
+        await db.rollback()
+        raise
+
+
+# =================================================================
+# ==================== RECIPE ENDPOINTS ===========================
+# =================================================================
+
+
+@recipe_router.post("", status_code=status.HTTP_201_CREATED)
+async def create_recipe(
+    name: str = Form(...),
+    instructions: str = Form(...),
+    ingredients: str = Form(...),
+    description: str = Form(...),
+    est_calories: str = Form(...),
+    pregnancy_benefit: str = Form(...),
+    serving_count: int = Form(...),
+    trimester: int = Form(...),
+    category_id: int = Form(...),
+    image_file: UploadFile = File(),
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    db: AsyncSession = Depends(get_db),
+    service: RecipeService = Depends(get_recipe_service),
+):
+    try:
+        await service.create_recipe(
+            name,
+            instructions,
+            ingredients,
+            description,
+            est_calories,
+            pregnancy_benefit,
+            int(serving_count),
+            int(trimester),
+            int(category_id),
+            image_file,
+            nutritionist,
+        )
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.get("/{recipe_id}", response_model=RecipeDetailedResponse)
+async def get_recipe_by_id(
+    recipe_id: int,
+    user: User | None = Depends(optional_current_active_user),
+    service: RecipeService = Depends(get_recipe_service),
+) -> RecipeDetailedResponse:
+    return await service.get_recipe_by_id(recipe_id, user)
+
+
+@recipe_router.post("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recipe(
+    recipe_id: int,
+    nutritionist: Nutritionist = Depends(require_role(Nutritionist)),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.delete_recipe(recipe_id, nutritionist.id)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.post("/{recipe_id}/save", status_code=status.HTTP_204_NO_CONTENT)
+async def save_recipe(
+    recipe_id: int,
+    user: User = Depends(current_active_user),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.save_recipe(recipe_id, user.id)
+        await db.commit()
+    except:
+        await db.rollback()
+        raise
+
+
+@recipe_router.delete("/{recipe_id}/save", status_code=status.HTTP_204_NO_CONTENT)
+async def unsave_recipe(
+    recipe_id: int,
+    user: User = Depends(current_active_user),
+    service: RecipeService = Depends(get_recipe_service),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await service.unsave_recipe(recipe_id, user.id)
+        await db.commit()
     except:
         await db.rollback()
         raise

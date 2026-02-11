@@ -1,4 +1,8 @@
-import { useAddNewProductMutation, useProductCategories } from "@/src/shared/hooks/useProducts";
+import {
+  useProductCategories,
+  useAddNewProductMutation,
+  useCreateProductDraftMutation,
+} from "@/src/shared/hooks/useProducts";
 import {
   View,
   Text,
@@ -178,6 +182,7 @@ export default function AddProductScreen() {
 
   const { data: productCategories } = useProductCategories();
   const { mutate: addNewProduct, isPending } = useAddNewProductMutation();
+  const { mutate: createProductDraftMutate, isPending: isDraftPending } = useCreateProductDraftMutation();
 
   const scanProductFromImage = async (uri: string) => {
     if (scanning) return;
@@ -369,6 +374,33 @@ export default function AddProductScreen() {
     );
   };
 
+  const createProductDraftHandler = (): void => {
+    // For drafts, we don't require an image
+    if (!productName.trim() && !category && !price.trim() && !description.trim()) {
+      Alert.alert("Validation Error", "Please fill in at least one field");
+      return;
+    }
+
+    const priceCents = price.trim() ? Math.round(Number(price) * 100) : null;
+
+    createProductDraftMutate(
+      {
+        name: productName.trim() || null,
+        category_id: category ? parseInt(category) : null,
+        price_cents: priceCents,
+        description: description.trim() || null,
+      },
+      {
+        onSuccess: () => {
+          Alert.alert("Success", "Product draft saved successfully!", [{ text: "OK", onPress: () => router.back() }]);
+        },
+        onError: (error: any) => {
+          Alert.alert("Error", error.response?.data?.detail || "Failed to save product draft");
+        },
+      },
+    );
+  };
+
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -547,7 +579,11 @@ export default function AddProductScreen() {
 
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={[styles.button, styles.draftButton]} disabled={isPending}>
+            <TouchableOpacity
+              onPress={createProductDraftHandler}
+              style={[styles.button, styles.draftButton]}
+              disabled={isPending}
+            >
               <Text style={styles.draftButtonText}>Draft</Text>
             </TouchableOpacity>
             <TouchableOpacity
