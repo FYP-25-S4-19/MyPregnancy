@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { PendingRequest } from "../pages/admin/PendingUsers";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -71,13 +72,13 @@ export const adminAPI = {
   unsuspendUser: (userId: string) => api.post(`/admin/users/${userId}/unsuspend`),
 
   // Account Creation Requests
-  getAccountCreationRequests: () => api.get("/account-requests"),
-  acceptDoctorRequest: (requestId: number) => api.patch(`/account-requests/doctors/${requestId}/accept`),
+  getAccountCreationRequests: () => api.get<PendingRequest[]>("/accounts"),
+  acceptDoctorRequest: (requestId: number) => api.patch(`/accounts/doctors/${requestId}/accept`),
   rejectDoctorRequest: (requestId: number, reason: string) =>
-    api.patch(`/account-requests/doctors/${requestId}/reject`, { reject_reason: reason }),
-  acceptNutritionistRequest: (requestId: number) => api.patch(`/account-requests/nutritionists/${requestId}/accept`),
+    api.patch(`/accounts/doctors/${requestId}/reject`, { reject_reason: reason }),
+  acceptNutritionistRequest: (requestId: number) => api.patch(`/accounts/nutritionists/${requestId}/accept`),
   rejectNutritionistRequest: (requestId: number, reason: string) =>
-    api.patch(`/account-requests/nutritionists/${requestId}/reject`, { reject_reason: reason }),
+    api.patch(`/accounts/nutritionists/${requestId}/reject`, { reject_reason: reason }),
 };
 
 export const recipesAPI = {

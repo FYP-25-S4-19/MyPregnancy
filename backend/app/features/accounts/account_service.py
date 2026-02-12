@@ -3,6 +3,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.settings import settings
 from app.db.db_schema import (
     AccountCreationRequestStatus,
     DoctorAccountCreationRequest,
@@ -121,7 +122,10 @@ class AccountService:
                 middle_name=req.middle_name,
                 last_name=req.last_name,
                 email=req.email,
-                qualification_img_url=req.qualification_img_key,  # or convert to URL if you do that elsewhere
+                qualification_img_url=S3StorageInterface.get_presigned_url(
+                    req.qualification_img_key, settings.PRESIGNED_URL_EXP_SECONDS
+                )
+                or "",  # or convert to URL if you do that elsewhere
                 account_status=req.account_status.value if hasattr(req.account_status, "value") else req.account_status,
                 reject_reason=req.reject_reason,
                 submitted_at=req.submitted_at,
@@ -137,7 +141,10 @@ class AccountService:
                 middle_name=req.middle_name,
                 last_name=req.last_name,
                 email=req.email,
-                qualification_img_url=req.qualification_img_key,
+                qualification_img_url=S3StorageInterface.get_presigned_url(
+                    req.qualification_img_key, settings.PRESIGNED_URL_EXP_SECONDS
+                )
+                or "",  # or convert to URL if you do that elsewhere
                 account_status=req.account_status.value if hasattr(req.account_status, "value") else req.account_status,
                 reject_reason=req.reject_reason,
                 submitted_at=req.submitted_at,
@@ -190,13 +197,19 @@ class AccountService:
 
         mcr_stmt = select(MCRNumber).where(MCRNumber.value == mcr_no)
         mcr_result = (await self.db.execute(mcr_stmt)).scalar_one_or_none()
+        print("About to see if MCR is none....")
         if mcr_result is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MCR number not found")
+        print("MCR is valid")
 
+        print("About to query specialisation")
         specialisation_stmt = select(DoctorSpecialisation).where(DoctorSpecialisation.specialisation == specialisation)
         specialisation_result = (await self.db.execute(specialisation_stmt)).scalar_one_or_none()
+
+        print("About to see if queried specialisation")
         if specialisation_result is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor specialisation not found")
+        print("specialisation is valid")
 
         self.db.add(
             DoctorAccountCreationRequest(
