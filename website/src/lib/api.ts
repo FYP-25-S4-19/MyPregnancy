@@ -69,6 +69,15 @@ export const adminAPI = {
   getAllMerchants: () => api.get("/admin/users/merchants"),
   suspendUser: (userId: string) => api.post(`/admin/users/${userId}/suspend`),
   unsuspendUser: (userId: string) => api.post(`/admin/users/${userId}/unsuspend`),
+
+  // Account Creation Requests
+  getAccountCreationRequests: () => api.get("/account-requests"),
+  acceptDoctorRequest: (requestId: number) => api.patch(`/account-requests/doctors/${requestId}/accept`),
+  rejectDoctorRequest: (requestId: number, reason: string) =>
+    api.patch(`/account-requests/doctors/${requestId}/reject`, { reject_reason: reason }),
+  acceptNutritionistRequest: (requestId: number) => api.patch(`/account-requests/nutritionists/${requestId}/accept`),
+  rejectNutritionistRequest: (requestId: number, reason: string) =>
+    api.patch(`/account-requests/nutritionists/${requestId}/reject`, { reject_reason: reason }),
 };
 
 export const recipesAPI = {

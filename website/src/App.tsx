@@ -1,14 +1,15 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import './App.css'
-import AdminLayout from './layouts/AdminLayout'
-import ManageAccount from './pages/admin/manageAccount'
-import WebsiteBuilder from './pages/admin/WebsiteBuilder'
-import ArticleCategories from './pages/admin/ArticleCategories'
-import DoctorSpecialization from './pages/admin/DoctorSpecialization'
-import RecipeCategories from './pages/admin/RecipeCategories'
-import Feedback from './pages/admin/Feedback'
+import { Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
+import AdminLayout from "./layouts/AdminLayout";
+import ManageAccount from "./pages/admin/manageAccount";
+import PendingUsers from "./pages/admin/PendingUsers";
+import WebsiteBuilder from "./pages/admin/WebsiteBuilder";
+import ArticleCategories from "./pages/admin/ArticleCategories";
+import DoctorSpecialization from "./pages/admin/DoctorSpecialization";
+import RecipeCategories from "./pages/admin/RecipeCategories";
+import Feedback from "./pages/admin/Feedback";
 import PublicPage from "./pages/public/PublicPage";
-import Home from './pages/public/Home'
+import Home from "./pages/public/Home";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route index element={<Navigate to="/admin/website-builder" replace />} />
         <Route path="manage-account" element={<ManageAccount />} />
         <Route path="website-builder" element={<WebsiteBuilder />} />
+        <Route path="pending-users" element={<PendingUsers />} />
         <Route path="recipe-categories" element={<RecipeCategories />} />
         <Route path="article-categories" element={<ArticleCategories />} />
         <Route path="doctor-specialization" element={<DoctorSpecialization />} />
@@ -31,7 +33,7 @@ function App() {
       {/* Dynamic Page Route - LAST */}
       <Route path="/:slug" element={<PublicPage />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

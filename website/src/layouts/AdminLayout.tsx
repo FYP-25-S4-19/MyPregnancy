@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   BookOpen,
   Globe,
@@ -11,15 +11,16 @@ import {
   UtensilsCrossed,
   Users,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 
 const navigation = [
-  { name: 'Website Builder', href: '/admin/website-builder', icon: Globe },
-  { name: 'Users', href: '/admin/manage-account', icon: Users },
-  { name: 'Recipe Categories', href: '/admin/recipe-categories', icon: UtensilsCrossed },
-  { name: 'Article Categories', href: '/admin/article-categories', icon: BookOpen },
-  { name: 'Doctor Specialization', href: '/admin/doctor-specialization', icon: Stethoscope },
-  { name: 'Feedback', href: '/admin/feedback', icon: MessageSquare },
+  { name: "Website Builder", href: "/admin/website-builder", icon: Globe },
+  { name: "Users", href: "/admin/manage-account", icon: Users },
+  { name: "Pending Users", href: "/admin/pending-users", icon: Users },
+  { name: "Recipe Categories", href: "/admin/recipe-categories", icon: UtensilsCrossed },
+  { name: "Article Categories", href: "/admin/article-categories", icon: BookOpen },
+  { name: "Doctor Specialization", href: "/admin/doctor-specialization", icon: Stethoscope },
+  { name: "Feedback", href: "/admin/feedback", icon: MessageSquare },
 ];
 
 export default function AdminLayout() {
@@ -27,11 +28,11 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_email');
-    navigate('/');
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_role");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_email");
+    navigate("/");
   };
 
   return (
@@ -56,13 +57,15 @@ export default function AdminLayout() {
               key={item.name}
               to={item.href}
               className={({ isActive }) => `
-                group flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors border 
-                ${isActive ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-100'}
+                group flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors border
+                ${isActive ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-100"}
               `}
             >
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                item.name === 'Website Builder' && 'bg-pink-100'
-              } ${item.name !== 'Website Builder' && 'bg-gray-100'} group-hover:bg-blue-100`}>
+              <span
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  item.name === "Website Builder" && "bg-pink-100"
+                } ${item.name !== "Website Builder" && "bg-gray-100"} group-hover:bg-blue-100`}
+              >
                 <item.icon size={18} />
               </span>
               <span className="text-sm font-medium">{item.name}</span>
@@ -81,10 +84,7 @@ export default function AdminLayout() {
 
         {/* Mobile slide-over (optional) */}
         {sidebarOpen && (
-          <div 
-            className="fixed inset-0 z-50 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
+          <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setSidebarOpen(false)}>
             <div className="absolute inset-0 bg-black/40" />
             <div className="absolute top-0 left-0 h-full w-64 bg-white shadow-xl">
               <div className="flex items-center justify-between h-16 px-4 border-b">
@@ -101,7 +101,7 @@ export default function AdminLayout() {
                     onClick={() => setSidebarOpen(false)}
                     className={({ isActive }) => `
                       flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
-                      ${isActive ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}
+                      ${isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"}
                     `}
                   >
                     <item.icon size={18} />
