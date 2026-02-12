@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, X, Eye, Search } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { adminAPI } from "../../lib/api";
 
 export interface PendingRequest {
@@ -11,7 +11,7 @@ export interface PendingRequest {
   last_name: string;
   email: string;
   account_status: "PENDING" | "APPROVED" | "REJECTED";
-  qualification_img_url?: string;
+  qualification_img_url: string;
   submitted_at: string;
 }
 
@@ -31,6 +31,7 @@ export default function PendingUsers() {
       return res.data;
     },
   });
+
   // Filter only PENDING requests
   const pendingRequests = useMemo(
     () => requestsData.filter((req: PendingRequest) => req.account_status === "PENDING"),

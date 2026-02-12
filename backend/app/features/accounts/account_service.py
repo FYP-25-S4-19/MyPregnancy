@@ -3,6 +3,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.settings import settings
 from app.db.db_schema import (
     AccountCreationRequestStatus,
     DoctorAccountCreationRequest,
@@ -121,7 +122,10 @@ class AccountService:
                 middle_name=req.middle_name,
                 last_name=req.last_name,
                 email=req.email,
-                qualification_img_url=req.qualification_img_key,  # or convert to URL if you do that elsewhere
+                qualification_img_url=S3StorageInterface.get_presigned_url(
+                    req.qualification_img_key, settings.PRESIGNED_URL_EXP_SECONDS
+                )
+                or "",  # or convert to URL if you do that elsewhere
                 account_status=req.account_status.value if hasattr(req.account_status, "value") else req.account_status,
                 reject_reason=req.reject_reason,
                 submitted_at=req.submitted_at,
@@ -137,7 +141,10 @@ class AccountService:
                 middle_name=req.middle_name,
                 last_name=req.last_name,
                 email=req.email,
-                qualification_img_url=req.qualification_img_key,
+                qualification_img_url=S3StorageInterface.get_presigned_url(
+                    req.qualification_img_key, settings.PRESIGNED_URL_EXP_SECONDS
+                )
+                or "",  # or convert to URL if you do that elsewhere
                 account_status=req.account_status.value if hasattr(req.account_status, "value") else req.account_status,
                 reject_reason=req.reject_reason,
                 submitted_at=req.submitted_at,
