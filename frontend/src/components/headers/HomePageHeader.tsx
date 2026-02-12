@@ -1,9 +1,8 @@
-import { Text, TouchableOpacity, View, StyleSheet, ActivityIndicator } from "react-native";
+import { Text, TouchableOpacity, View, StyleSheet, ActivityIndicator, Image } from "react-native";
 import { useUnreadNotifications } from "@/src/shared/hooks/useNotifications";
 import { useGetProfileImgUrl } from "@/src/shared/hooks/useProfile";
 import { colors, font, sizes } from "@/src/shared/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { FC } from "react";
 
 interface HomePageHeaderProps {

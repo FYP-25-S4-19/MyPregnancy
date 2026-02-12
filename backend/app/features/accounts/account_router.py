@@ -1,12 +1,22 @@
 from argon2 import PasswordHasher
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.password_hasher import get_password_hasher
 from app.core.security import require_role
 from app.core.users_manager import current_active_user
 from app.db.db_config import get_db
-from app.db.db_schema import Admin, Merchant, Nutritionist, PregnantWoman, User, UserRole, VolunteerDoctor
+from app.db.db_schema import (
+    Admin,
+    DoctorSpecialisation,
+    Merchant,
+    Nutritionist,
+    PregnantWoman,
+    User,
+    UserRole,
+    VolunteerDoctor,
+)
 from app.features.accounts.account_models import (
     AccountCreationRequestView,
     DoctorUpdateRequest,
@@ -19,6 +29,7 @@ from app.features.accounts.account_models import (
     RejectAccountCreationRequestReason,
 )
 from app.features.accounts.account_service import AccountService
+from app.features.admin.admin_models import DoctorSpecialisationModel
 
 account_router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
@@ -71,6 +82,16 @@ async def get_account_creation_requests(
     service: AccountService = Depends(get_account_service),
 ) -> list[AccountCreationRequestView]:
     return await service.get_account_creation_requests()
+
+
+@account_router.get("/doctors/specialisations", response_model=list[DoctorSpecialisationModel])
+async def get_doctor_specialisations(
+    db: AsyncSession = Depends(get_db),
+) -> list[DoctorSpecialisationModel]:
+    """Get all available doctor specialisations (public endpoint)"""
+    result = await db.execute(select(DoctorSpecialisation).order_by(DoctorSpecialisation.specialisation))
+    specialisations = result.scalars().all()
+    return [DoctorSpecialisationModel(id=spec.id, specialisation=spec.specialisation) for spec in specialisations]
 
 
 @account_router.post("/doctors", status_code=status.HTTP_201_CREATED)

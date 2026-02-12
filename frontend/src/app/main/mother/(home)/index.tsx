@@ -39,7 +39,11 @@ export default function MotherHomeScreen() {
   const me = useAuthStore((state) => state.me);
   const fullname = me ? utils.formatFullname(me) : "";
 
-  const { data: profile, isLoading, isFetching } = useQuery({
+  const {
+    data: profile,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ["myProfile"],
     queryFn: async () => {
       const res = await api.get<MyProfileResponse>("/accounts/me/profile");

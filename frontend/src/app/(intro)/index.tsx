@@ -246,7 +246,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: sizes.m,
     paddingBottom: sizes.xl - sizes.s,
-    marginTop: sizes.m - sizes.xs,
+    marginTop: sizes.m,
+    marginBottom: sizes.xl,
     gap: sizes.m - sizes.xs,
   },
   btn: {

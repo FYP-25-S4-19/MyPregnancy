@@ -1,18 +1,18 @@
-import { Check, X, Eye, Search } from "lucide-react";
-import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, X, Eye, Search } from "lucide-react";
+import { useState, useMemo } from "react";
 import { adminAPI } from "../../lib/api";
 
-interface PendingRequest {
-  id: number;
-  email: string;
+export interface PendingRequest {
+  request_id: number;
+  user_role: string;
   first_name: string;
   middle_name?: string;
   last_name: string;
-  role: string;
+  email: string;
+  account_status: "PENDING" | "APPROVED" | "REJECTED";
   qualification_img_url?: string;
-  created_at: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  submitted_at: string;
 }
 
 export default function PendingUsers() {
@@ -26,24 +26,41 @@ export default function PendingUsers() {
   // Fetch pending account creation requests
   const { data: requestsData = [], isLoading } = useQuery({
     queryKey: ["pending-account-requests"],
-    queryFn: () => adminAPI.getAccountCreationRequests().then((res) => res.data),
+    queryFn: async () => {
+      const res = await adminAPI.getAccountCreationRequests();
+      return res.data;
+    },
   });
-
   // Filter only PENDING requests
-  const pendingRequests = requestsData.filter((req: PendingRequest) => req.status === "PENDING");
+  const pendingRequests = useMemo(
+    () => requestsData.filter((req: PendingRequest) => req.account_status === "PENDING"),
+    [requestsData],
+  );
 
   // Apply search filter
-  const filteredRequests = pendingRequests.filter((req: PendingRequest) =>
-    `${req.first_name} ${req.last_name} ${req.email}`.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredRequests = useMemo(
+    () =>
+      pendingRequests.filter((req: PendingRequest) =>
+        `${req.first_name} ${req.last_name} ${req.email}`.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [pendingRequests, searchQuery],
   );
 
   const handleAccept = async (requestId: number, role: string) => {
+    console.log("Handle accept invoked!");
+
     setIsLoadingAction(true);
     try {
+      console.log("The Role: ", role);
+
       if (role === "VOLUNTEER_DOCTOR") {
+        console.log("Awaiting doctor accept...");
         await adminAPI.acceptDoctorRequest(requestId);
+        console.log("Accept doctor!");
       } else if (role === "NUTRITIONIST") {
+        console.log("Awaiting nutritionist accept...");
         await adminAPI.acceptNutritionistRequest(requestId);
+        console.log("Accept nutritionist!");
       }
 
       await queryClient.invalidateQueries({ queryKey: ["pending-account-requests"] });
@@ -60,10 +77,10 @@ export default function PendingUsers() {
 
     setIsLoadingAction(true);
     try {
-      if (rejectModalRequest.role === "VOLUNTEER_DOCTOR") {
-        await adminAPI.rejectDoctorRequest(rejectModalRequest.id, rejectReason);
-      } else if (rejectModalRequest.role === "NUTRITIONIST") {
-        await adminAPI.rejectNutritionistRequest(rejectModalRequest.id, rejectReason);
+      if (rejectModalRequest.user_role === "VOLUNTEER_DOCTOR") {
+        await adminAPI.rejectDoctorRequest(rejectModalRequest.request_id, rejectReason);
+      } else if (rejectModalRequest.user_role === "NUTRITIONIST") {
+        await adminAPI.rejectNutritionistRequest(rejectModalRequest.request_id, rejectReason);
       }
 
       await queryClient.invalidateQueries({ queryKey: ["pending-account-requests"] });
@@ -139,17 +156,17 @@ export default function PendingUsers() {
               </thead>
               <tbody>
                 {filteredRequests.map((request: PendingRequest, index: number) => (
-                  <tr key={request.id} className="border-b border-gray-200 hover:bg-gray-50">
+                  <tr key={request.request_id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
                     <td className="px-6 py-4 text-sm text-gray-900 font-medium">{getFullName(request)}</td>
                     <td className="px-6 py-4 text-sm text-gray-700">{request.email}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
-                        {getRoleLabel(request.role)}
+                        {getRoleLabel(request.user_role)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {new Date(request.created_at).toLocaleDateString()}
+                      {new Date(request.submitted_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-sm flex gap-2 justify-center">
                       <button
@@ -160,7 +177,7 @@ export default function PendingUsers() {
                         <Eye size={18} className="text-gray-600" />
                       </button>
                       <button
-                        onClick={() => handleAccept(request.id, request.role)}
+                        onClick={() => handleAccept(request.request_id, request.user_role)}
                         disabled={isLoadingAction}
                         className="p-1 hover:bg-green-100 rounded transition disabled:opacity-50"
                         title="Accept request"
@@ -238,17 +255,17 @@ const PendingUserDetailModal = ({ request, onClose }: { request: PendingRequest 
               <div>
                 <p className="text-sm text-gray-600">Role</p>
                 <p className="text-base font-medium text-gray-900">
-                  {request.role === "VOLUNTEER_DOCTOR"
+                  {request.user_role === "VOLUNTEER_DOCTOR"
                     ? "Doctor"
-                    : request.role === "NUTRITIONIST"
+                    : request.user_role === "NUTRITIONIST"
                       ? "Nutritionist"
-                      : request.role}
+                      : request.user_role}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Requested Date</p>
                 <p className="text-base font-medium text-gray-900">
-                  {new Date(request.created_at).toLocaleDateString()}
+                  {new Date(request.submitted_at).toLocaleDateString()}
                 </p>
               </div>
             </div>

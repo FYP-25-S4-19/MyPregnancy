@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -15,7 +16,7 @@ import * as FileSystem from "expo-file-system";
 import api from "@/src/shared/api";
 import useAuthStore from "@/src/shared/authStore";
 
-// Use designSystem if present, fallback if not (won’t crash)
+// Use designSystem if present, fallback if not (won't crash)
 import * as DS from "@/src/shared/designSystem";
 const COLORS = (DS as any).COLORS ?? (DS as any).colors ?? {};
 const PINK = COLORS.PINK ?? "#FADADD";
@@ -24,6 +25,11 @@ const LIGHT = COLORS.LIGHT ?? "#FFF8F8";
 
 type DirectRegisterRole = "PREGNANT_WOMAN" | "MERCHANT";
 type SpecialistType = "DOCTOR" | "NUTRITIONIST";
+
+interface DoctorSpecialisation {
+  id: number;
+  specialisation: string;
+}
 
 function normalizeMcr(input: string) {
   return input.trim().toUpperCase();
@@ -71,11 +77,15 @@ export default function RegisterScreen() {
   const [fullName, setFullName] = useState("");
   const [dob, setDob] = useState(""); // UI only (not sent)
   const [email, setEmail] = useState("");
-  const [mobile, setMobile] = useState(""); // specialist figma shows Mobile
+  // const [mobile, setMobile] = useState(""); // specialist figma shows Mobile
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [mcrNumber, setMcrNumber] = useState("");
+  const [selectedSpecialisation, setSelectedSpecialisation] = useState("");
+  const [specialisations, setSpecialisations] = useState<DoctorSpecialisation[]>([]);
+  const [loadingSpecialisations, setLoadingSpecialisations] = useState(false);
+  const [showSpecialisationDropdown, setShowSpecialisationDropdown] = useState(false);
 
   const [qualificationImg, setQualificationImg] = useState<{
     uri: string;
@@ -101,6 +111,29 @@ export default function RegisterScreen() {
 
   const isSpecialist = entryRole === "specialist";
   const isDirectRegister = entryRole === "mom" || entryRole === "merchant";
+
+  // Fetch specialisations when specialist type is DOCTOR
+  useEffect(() => {
+    if (isSpecialist && specialistType === "DOCTOR") {
+      fetchSpecialisations();
+    }
+  }, [isSpecialist, specialistType]);
+
+  async function fetchSpecialisations() {
+    try {
+      setLoadingSpecialisations(true);
+      const response = await api.get("/accounts/doctors/specialisations");
+      setSpecialisations(response.data);
+      if (response.data.length > 0) {
+        setSelectedSpecialisation(response.data[0].specialisation);
+      }
+    } catch (error) {
+      console.error("Failed to fetch specialisations:", error);
+      Alert.alert("Error", "Failed to load specialisations. Please try again.");
+    } finally {
+      setLoadingSpecialisations(false);
+    }
+  }
 
   async function pickQualificationImage() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -150,6 +183,13 @@ export default function RegisterScreen() {
     if (!password) return "Password is required.";
     if (password !== confirmPassword) return "Passwords do not match.";
     if (!nameParts.first_name) return "Name is required.";
+    return null;
+  }
+
+  function validateSpecialistFields() {
+    if (specialistType === "DOCTOR") {
+      if (!selectedSpecialisation) return "Specialisation is required for doctors.";
+    }
     return null;
   }
 
@@ -211,7 +251,8 @@ export default function RegisterScreen() {
     form.append("last_name", nameParts.last_name);
 
     if (type === "DOCTOR") {
-      form.append("mcr_number", normalizeMcr(mcrNumber));
+      form.append("mcr_no", normalizeMcr(mcrNumber));
+      form.append("specialisation", selectedSpecialisation);
     }
 
     // MUST be file:// for iOS uploads. If it's ph:// or content://, it can break.
@@ -222,7 +263,7 @@ export default function RegisterScreen() {
       type: qualificationImg.type,
     } as any);
 
-    const endpoint = type === "DOCTOR" ? "/account-requests/doctors" : "/account-requests/nutritionists";
+    const endpoint = type === "DOCTOR" ? "/accounts/doctors" : "/accounts/nutritionists";
 
     const baseUrl = (api.defaults.baseURL || "").replace(/\/$/, "");
     const url = `${baseUrl}${endpoint}`;
@@ -243,6 +284,11 @@ export default function RegisterScreen() {
     const err = validateCommonFields();
     if (err) return Alert.alert("Registration Failed", err);
 
+    if (isSpecialist) {
+      const specialistErr = validateSpecialistFields();
+      if (specialistErr) return Alert.alert("Registration Failed", specialistErr);
+    }
+
     setLoading(true);
     try {
       if (isDirectRegister) {
@@ -251,7 +297,12 @@ export default function RegisterScreen() {
 
         // ✅ AUTO LOGIN DIRECT USERS (mom/merchant)
         await doLoginAfterRegister();
-        router.replace("/main");
+        if (role === "MERCHANT") {
+          router.replace("/main/merchant/(home)");
+        } else if (role === "PREGNANT_WOMAN") {
+          router.replace("/main/mother/(home)");
+        }
+        // router.replace("/main");
         return;
       }
 
@@ -377,6 +428,73 @@ export default function RegisterScreen() {
               placeholder="e.g. M12345A"
               autoCapitalize="characters"
             />
+
+            <Label text="Specialisation (required for doctors)" />
+            {loadingSpecialisations ? (
+              <View style={{ paddingVertical: 12, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator size="small" color={MAROON} />
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={() => setShowSpecialisationDropdown(!showSpecialisationDropdown)}
+                style={{
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: "#ddd",
+                  borderRadius: 10,
+                  padding: 12,
+                  marginBottom: 14,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: selectedSpecialisation ? MAROON : "#999" }}>
+                  {selectedSpecialisation || "Select a specialisation"}
+                </Text>
+                <Text style={{ color: MAROON, fontSize: 16 }}>{showSpecialisationDropdown ? "▼" : "▶"}</Text>
+              </TouchableOpacity>
+            )}
+
+            {showSpecialisationDropdown && !loadingSpecialisations && (
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: "#ddd",
+                  borderRadius: 10,
+                  marginBottom: 14,
+                  maxHeight: 200,
+                }}
+              >
+                <ScrollView nestedScrollEnabled={true}>
+                  {specialisations.map((spec) => (
+                    <TouchableOpacity
+                      key={spec.id}
+                      onPress={() => {
+                        setSelectedSpecialisation(spec.specialisation);
+                        setShowSpecialisationDropdown(false);
+                      }}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 12,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#eee",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: selectedSpecialisation === spec.specialisation ? PINK : MAROON,
+                          fontWeight: selectedSpecialisation === spec.specialisation ? "700" : "400",
+                        }}
+                      >
+                        {spec.specialisation}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </>
         )}
 

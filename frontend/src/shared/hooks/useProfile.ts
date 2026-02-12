@@ -1,9 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../api";
+import useAuthStore from "../authStore";
 
 export const useGetProfileImgUrl = (enabled: boolean = true) => {
+  const { me } = useAuthStore();
+  let userID = me?.id;
+
   return useQuery({
-    queryKey: ["profileImageUrl"],
+    queryKey: ["profileImageUrl", userID],
     queryFn: async () => {
       const response = await api.get<{ url: string | null }>(`/accounts/me/profile-img-url`);
       // Add timestamp to bust React Native Image cache

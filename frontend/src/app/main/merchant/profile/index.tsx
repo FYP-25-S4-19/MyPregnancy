@@ -156,12 +156,12 @@ export default function MerchantProfileScreen() {
               onUpdateField={setEmail}
             />
 
-            <ProfileCardInput
+            {/*<ProfileCardInput
               inputLabel="Shop Name"
               fieldValue={shopName}
               placeholder="Enter your shop name"
               onUpdateField={setShopName}
-            />
+            />*/}
 
             {/* ✅ Save Button */}
             <TouchableOpacity

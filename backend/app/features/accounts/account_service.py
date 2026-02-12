@@ -190,13 +190,19 @@ class AccountService:
 
         mcr_stmt = select(MCRNumber).where(MCRNumber.value == mcr_no)
         mcr_result = (await self.db.execute(mcr_stmt)).scalar_one_or_none()
+        print("About to see if MCR is none....")
         if mcr_result is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MCR number not found")
+        print("MCR is valid")
 
+        print("About to query specialisation")
         specialisation_stmt = select(DoctorSpecialisation).where(DoctorSpecialisation.specialisation == specialisation)
         specialisation_result = (await self.db.execute(specialisation_stmt)).scalar_one_or_none()
+
+        print("About to see if queried specialisation")
         if specialisation_result is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor specialisation not found")
+        print("specialisation is valid")
 
         self.db.add(
             DoctorAccountCreationRequest(
